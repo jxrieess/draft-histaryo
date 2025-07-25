@@ -1,0 +1,7 @@
+{
+  "name": "histaryo-f",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
