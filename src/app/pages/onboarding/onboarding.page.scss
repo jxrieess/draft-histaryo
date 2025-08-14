@@ -1,0 +1,52 @@
+.onboarding-swiper {
+  height: 100vh;
+  width: 100%;
+}
+
+.slide {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.slide img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* Centered layout for first slides */
+.centered-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Final slide layout */
+.final-slide {
+  justify-content: flex-end;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+.skip-btn {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  color: var(--ion-color-primary);
+  font-size: 14px;
+}

@@ -1,0 +1,114 @@
+/* === General Layout === */
+ion-content {
+  --background: #f9fafe;
+  padding-bottom: 80px;
+}
+
+ion-toolbar {
+  --background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #eee;
+  border-radius: 12px 12px 0 0;
+}
+
+ion-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+ion-item {
+  --background: transparent;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+ion-item:last-of-type {
+  border-bottom: none;
+}
+
+/* === Category Chips === */
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  gap: 8px;
+}
+
+.category-chip {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  background-color: #e2e8f0;
+  color: #333;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.category-chip.active {
+  background-color: #6366f1;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* === Map Container === */
+.map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  margin-top: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.recenter-button {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background-color: #4f46e5;
+  color: white;
+  padding: 10px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  font-size: 18px;
+  z-index: 10;
+}
+
+.recenter-button ion-icon {
+  font-size: 20px;
+}
+
+/* === Nearby Landmark List === */
+.nearby-list {
+  padding: 16px;
+}
+
+.nearby-list h4 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #334155;
+}
+
+.nearby-list .item {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.nearby-list .item .distance {
+  font-size: 12px;
+  color: #666;
+}

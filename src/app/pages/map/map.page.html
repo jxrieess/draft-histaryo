@@ -1,0 +1,182 @@
+<!-- <ion-header>
+  <ion-toolbar>
+    <ion-title>Explore Landmarks</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen>
+  <ion-item>
+    <ion-label>Show Only Nearby</ion-label>
+    <ion-toggle [(ngModel)]="showNearbyOnly" (ionChange)="updateMarkers()"></ion-toggle>
+  </ion-item>
+
+  <ion-item *ngIf="showNearbyOnly">
+    <ion-label>Radius (km)</ion-label>
+    <ion-range min="0.1" max="5" step="0.1" [(ngModel)]="radiusKm" (ionChange)="updateMarkers()">
+      <ion-label slot="end">{{ radiusKm }} km</ion-label>
+    </ion-range>
+  </ion-item>
+
+  <div class="map-container">
+    <div id="map"></div>
+  </div>
+</ion-content>
+
+ -->
+
+
+<!-- 
+
+ <ion-header>
+  <ion-toolbar>
+    <ion-title>Explore Landmarks</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen>
+  <ion-item lines="full">
+    <ion-label>Show Only Nearby</ion-label>
+    <ion-toggle [(ngModel)]="showNearbyOnly" (ionChange)="updateMarkers()"></ion-toggle>
+  </ion-item>
+
+  <ion-item lines="full" *ngIf="showNearbyOnly">
+    <ion-label>Radius (km)</ion-label>
+    <ion-range
+      min="0.1"
+      max="5"
+      step="0.1"
+      [(ngModel)]="radiusKm"
+      (ionChange)="updateMarkers()"
+    >
+      <ion-label slot="end">{{ radiusKm }} km</ion-label>
+    </ion-range>
+  </ion-item>
+
+  <div class="map-wrapper">
+    <div id="map"></div>
+  </div>
+</ion-content> -->
+
+<!-- <ion-header>
+  <ion-toolbar>
+    <ion-title>Explore Landmarks</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen>
+  <ion-searchbar
+  [(ngModel)]="searchQuery"
+  (ionInput)="updateMarkers()"
+  placeholder="Search landmarks"
+  debounce="300">
+</ion-searchbar>
+
+  <ion-list lines="full">
+    <ion-item>
+      <ion-label>Filter by City</ion-label>
+      <ion-select placeholder="All" (ionChange)="filterByCity($event.detail.value)">
+        <ion-select-option value="">All</ion-select-option>
+        <ion-select-option value="Cebu City">Cebu City</ion-select-option>
+        <ion-select-option value="Mandaue">Mandaue</ion-select-option>
+        <ion-select-option value="Talisay">Talisay</ion-select-option>
+        <ion-select-option value="Lapu-Lapu">Lapu-Lapu</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>Show Only Nearby</ion-label>
+      <ion-toggle [(ngModel)]="showNearbyOnly" (ionChange)="updateMarkers()"></ion-toggle>
+    </ion-item>
+
+    <ion-item *ngIf="showNearbyOnly">
+      <ion-label>Radius (km)</ion-label>
+      <ion-range
+        min="0.1"
+        max="5"
+        step="0.1"
+        [(ngModel)]="radiusKm"
+        (ionChange)="updateMarkers()"
+      >
+        <ion-label slot="end">{{ radiusKm }} km</ion-label>
+      </ion-range>
+    </ion-item>
+  </ion-list>
+
+  <div class="map-wrapper">
+    <div id="map" class="map-container"></div>
+  </div>
+
+</ion-content> -->
+
+
+
+
+
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Explore Landmarks</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen>
+  <!-- Search -->
+  <ion-searchbar
+    [(ngModel)]="searchQuery"
+    (ionInput)="updateMarkers()"
+    placeholder="Search landmarks"
+    debounce="300">
+  </ion-searchbar>
+
+  <!-- City Filter -->
+  <ion-item>
+    <ion-label>Filter by City</ion-label>
+    <ion-select [(ngModel)]="cityFilter" (ionChange)="updateMarkers()">
+      <ion-select-option value="">All</ion-select-option>
+      <ion-select-option *ngFor="let city of availableCities" [value]="city">{{ city }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Nearby Toggle & Radius -->
+  <ion-item>
+    <ion-label>Show Only Nearby</ion-label>
+    <ion-toggle [(ngModel)]="showNearbyOnly" (ionChange)="updateMarkers()"></ion-toggle>
+  </ion-item>
+  <ion-item *ngIf="showNearbyOnly">
+    <ion-label>Radius (km)</ion-label>
+    <ion-range min="0.1" max="5" step="0.1" [(ngModel)]="radiusKm" (ionChange)="updateMarkers()">
+      <ion-label slot="end">{{ radiusKm }} km</ion-label>
+    </ion-range>
+  </ion-item>
+
+  <!-- Category Filters -->
+  <div class="category-chips">
+    <div
+      class="category-chip"
+      [ngClass]="{ active: categoryFilter === '' }"
+      (click)="setCategoryFilter('')"
+    >All</div>
+    <div
+      class="category-chip"
+      *ngFor="let cat of availableCategories"
+      [ngClass]="{ active: categoryFilter === cat }"
+      (click)="setCategoryFilter(cat)"
+    >{{ cat }}</div>
+  </div>
+
+  <!-- Map -->
+  <div class="map-wrapper">
+    <div id="map"></div>
+    <button class="recenter-button" (click)="recenterToUser()">
+      <ion-icon name="locate-outline"></ion-icon>
+    </button>
+  </div>
+
+  <!-- Nearby List -->
+  <div class="nearby-list" *ngIf="showNearbyOnly">
+    <h4>Nearby Landmarks</h4>
+    <div class="item" *ngFor="let l of nearbyLandmarks">
+      <div>{{ l.name }}</div>
+      <div class="distance">{{ getDistanceFromLatLonInKm(userLat, userLng, l.coordinates[1], l.coordinates[0]).toFixed(1) }} km</div>
+    </div>
+  </div>
+</ion-content>

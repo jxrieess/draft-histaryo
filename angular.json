@@ -31,8 +31,8 @@
                 "output": "./svg"
               }
             ],
-            "styles": ["src/global.scss", "src/theme/variables.scss"],
-            "scripts": []
+            "styles": ["src/global.scss", "src/theme/variables.scss", "node_modules/mapbox-gl/dist/mapbox-gl.css", "node_modules/swiper/swiper-bundle.min.css"],
+            "scripts": [ "node_modules/mapbox-gl/dist/mapbox-gl.js"]
           },
           "configurations": {
             "production": {

@@ -1,0 +1,49 @@
+<!-- <ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>My Stamp Collection</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <ion-item lines="none">
+    <ion-label>
+      <h2>Progress</h2>
+      <p>{{ collectedStamps.length }} of {{ allLandmarks.length }} stamps collected</p>
+    </ion-label>
+    <ion-badge color="tertiary">
+      {{ ((collectedStamps.length / allLandmarks.length) * 100) | number: '1.0-0' }}%
+    </ion-badge>
+  </ion-item>
+
+  <ion-card *ngIf="showBadge" color="success">
+    <ion-card-header>
+      <ion-card-title>🏆 Congratulations!</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      You've collected all stamps and earned a digital badge!
+    </ion-card-content>
+  </ion-card>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col size="6" *ngFor="let landmark of allLandmarks">
+        <ion-card [class.locked]="!isCollected(landmark.id)">
+          <img [src]="landmark.image" />
+          <ion-card-header>
+            <ion-card-title>{{ landmark.name }}</ion-card-title>
+          </ion-card-header>
+          <ion-chip color="success" *ngIf="isCollected(landmark.id)">
+            <ion-icon name="checkmark-circle" color="success"></ion-icon>
+            <ion-label>Stamp Collected</ion-label>
+          </ion-chip>
+          <ion-chip color="medium" *ngIf="!isCollected(landmark.id)">
+            <ion-icon name="lock-closed" color="medium"></ion-icon>
+            <ion-label>Locked</ion-label>
+          </ion-chip>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content> -->
+

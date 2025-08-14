@@ -1,0 +1,21 @@
+:host ::ng-deep ion-router-outlet {
+  --animation: fade;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.98); }
+}
+
+ion-router-outlet[animated] .ion-page-in {
+  animation: fade-in 200ms ease-in forwards;
+}
+
+ion-router-outlet[animated] .ion-page-out {
+  animation: fade-out 200ms ease-out forwards;
+}
