@@ -1,0 +1,194 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>My Progress</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading your progress...</p>
+  </div>
+
+  <div *ngIf="!loading">
+
+    <ion-card class="progress-overview">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="analytics" color="primary"></ion-icon>
+          Overall Progress
+        </ion-card-title>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <div class="progress-grid">
+          
+          <div class="progress-item">
+            <div class="progress-number">{{ stats.visitedLandmarks }}</div>
+            <div class="progress-label">Landmarks Visited</div>
+            <div class="progress-sublabel">of {{ stats.totalLandmarks }}</div>
+            <ion-progress-bar 
+              [value]="stats.visitedPercentage / 100" 
+              [color]="getProgressColor(stats.visitedPercentage)">
+            </ion-progress-bar>
+            <div class="progress-percentage">{{ stats.visitedPercentage }}%</div>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-number">{{ stats.stampsCollected }}</div>
+            <div class="progress-label">Stamps Collected</div>
+            <ion-icon name="bookmark" color="success" size="large"></ion-icon>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-number">{{ stats.quizzesCompleted }}</div>
+            <div class="progress-label">Quizzes Completed</div>
+            <ion-icon name="school" color="warning" size="large"></ion-icon>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-number">{{ stats.averageQuizScore }}%</div>
+            <div class="progress-label">Avg Quiz Score</div>
+            <ion-progress-bar 
+              [value]="stats.averageQuizScore / 100" 
+              [color]="getScoreColor(stats.averageQuizScore)">
+            </ion-progress-bar>
+          </div>
+
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="achievements-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="trophy" color="warning"></ion-icon>
+          Achievements
+          <ion-chip color="success" class="badge-count">
+            <ion-label>{{ stats.badgesEarned.length }} earned</ion-label>
+          </ion-chip>
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="achievements-grid">
+          <div 
+            *ngFor="let achievement of achievements" 
+            class="achievement-item"
+            [class.unlocked]="achievement.unlocked">
+            
+            <div class="achievement-icon">
+              <ion-icon 
+                [name]="achievement.icon" 
+                [color]="achievement.unlocked ? achievement.color : 'medium'"
+                size="large">
+              </ion-icon>
+              <ion-icon 
+                *ngIf="achievement.unlocked" 
+                name="checkmark-circle" 
+                color="success" 
+                class="unlock-badge">
+              </ion-icon>
+            </div>
+            
+            <div class="achievement-details">
+              <h3 [class.unlocked-text]="achievement.unlocked">{{ achievement.title }}</h3>
+              <p>{{ achievement.description }}</p>
+              
+              <div *ngIf="achievement.progress !== undefined && achievement.maxProgress" class="achievement-progress">
+                <ion-progress-bar 
+                  [value]="achievement.progress / achievement.maxProgress"
+                  [color]="achievement.unlocked ? 'success' : 'medium'">
+                </ion-progress-bar>
+                <small>{{ achievement.progress }}/{{ achievement.maxProgress }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="activity-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="time" color="secondary"></ion-icon>
+          Recent Activity
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div *ngIf="recentActivity.length === 0" class="no-activity">
+          <ion-icon name="calendar" size="large" color="medium"></ion-icon>
+          <p>No recent activity. Start exploring landmarks to see your activity here!</p>
+          <ion-button routerLink="/home" color="primary">
+            <ion-icon name="map" slot="start"></ion-icon>
+            Start Exploring
+          </ion-button>
+        </div>
+
+        <ion-list *ngIf="recentActivity.length > 0" lines="full">
+          <ion-item *ngFor="let activity of recentActivity">
+            <ion-icon 
+              [name]="activity.icon" 
+              [color]="activity.color" 
+              slot="start">
+            </ion-icon>
+            <ion-label>
+              <h3>{{ activity.title }}</h3>
+              <p>{{ activity.description }}</p>
+              <p class="activity-date">{{ formatDate(activity.date) }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="quick-actions">
+      <ion-card-header>
+        <ion-card-title>Quick Actions</ion-card-title>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <div class="action-buttons">
+          <ion-button expand="block" routerLink="/scan" color="primary">
+            <ion-icon name="qr-code-outline" slot="start"></ion-icon>
+            Scan QR Code
+          </ion-button>
+          
+          <ion-button expand="block" routerLink="/map" color="secondary">
+            <ion-icon name="map-outline" slot="start"></ion-icon>
+            Explore Map
+          </ion-button>
+          
+          <ion-button expand="block" routerLink="/stamp-gallery" color="success">
+            <ion-icon name="bookmark-outline" slot="start"></ion-icon>
+            View Stamps
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="debug-card" *ngIf="false"> 
+      <ion-card-header>
+        <ion-card-title>Development Tools</ion-card-title>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <ion-button 
+          expand="block" 
+          color="danger" 
+          fill="outline"
+          (click)="clearProgress()">
+          <ion-icon name="trash" slot="start"></ion-icon>
+          Clear All Progress
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+</ion-content>

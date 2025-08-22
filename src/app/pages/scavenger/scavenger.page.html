@@ -1,13 +1,269 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>scavenger</ion-title>
+<ion-header>
+  <ion-toolbar color="tertiary">
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <ion-icon name="search" slot="start"></ion-icon>
+      Scavenger Hunt
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">scavenger</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading scavenger hunt...</p>
+  </div>
+
+  <div *ngIf="!loading && !huntCompleted">
+    
+    <div class="hunt-header">
+      <h2>{{ landmarkName }} Hunt</h2>
+      <div class="progress-info">
+        <p>Clue {{ progress.currentClueIndex + 1 }} of {{ allClues.length }}</p>
+        <ion-progress-bar [value]="progressPercentage / 100" color="tertiary"></ion-progress-bar>
+      </div>
+      <div class="score-display">
+        <ion-chip color="warning">
+          <ion-icon name="star"></ion-icon>
+          <ion-label>{{ progress.totalScore }} points</ion-label>
+        </ion-chip>
+        <ion-chip color="success">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          <ion-label>{{ progress.completedClues.length }}/{{ allClues.length }} solved</ion-label>
+        </ion-chip>
+      </div>
+    </div>
+
+    <ion-card *ngIf="locationRequired && !locationVerified" color="warning">
+      <ion-card-content>
+        <div class="location-warning">
+          <ion-icon name="location" size="large"></ion-icon>
+          <div>
+            <h3>Location Required</h3>
+            <p>You need to be at the landmark to answer this clue!</p>
+            <ion-button size="small" (click)="checkUserLocation()">
+              <ion-icon name="refresh" slot="start"></ion-icon>
+              Check Location
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="currentClue" class="clue-card">
+      <ion-card-header>
+        <div class="clue-header">
+          <ion-chip color="tertiary">
+            <ion-label>Clue {{ progress.currentClueIndex + 1 }}</ion-label>
+          </ion-chip>
+          <ion-chip color="warning">
+            <ion-icon name="star"></ion-icon>
+            <ion-label>{{ currentClue.rewardPoints }} pts</ion-label>
+          </ion-chip>
+        </div>
+        <ion-card-title class="clue-title">
+          {{ currentClue.title }}
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        
+        <div class="clue-content">
+          <ion-icon name="search-circle" color="tertiary" size="large"></ion-icon>
+          <p class="clue-text">{{ currentClue.clue }}</p>
+        </div>
+
+        <div *ngIf="currentClue.hint" class="hint-section">
+          <ion-button 
+            *ngIf="!showHint && !progress.hints.includes(currentClue.id)"
+            fill="outline" 
+            size="small" 
+            color="medium"
+            (click)="useHint()">
+            <ion-icon name="bulb" slot="start"></ion-icon>
+            Need a Hint?
+          </ion-button>
+          
+          <div *ngIf="showHint || progress.hints.includes(currentClue.id)" class="hint-box">
+            <ion-icon name="bulb" color="warning"></ion-icon>
+            <p>{{ currentClue.hint }}</p>
+          </div>
+        </div>
+
+        <div class="question-section">
+          <h3 class="question-text">{{ currentClue.question }}</h3>
+          
+          <div class="options-container">
+            <ion-button
+              *ngFor="let option of currentClue.options; let i = index"
+              expand="block"
+              fill="outline"
+              [color]="getOptionColor(option)"
+              [class.selected]="selectedAnswer === option"
+              [disabled]="isAnswered || (locationRequired && !locationVerified)"
+              (click)="selectAnswer(option)"
+              class="option-button">
+              <span class="option-letter">{{ getOptionLetter(i) }}.</span>
+              {{ option }}
+              <ion-icon 
+                *ngIf="showResult && option === currentClue.correctAnswer" 
+                name="checkmark-circle" 
+                slot="end" 
+                color="success">
+              </ion-icon>
+              <ion-icon 
+                *ngIf="showResult && selectedAnswer === option && option !== currentClue.correctAnswer" 
+                name="close-circle" 
+                slot="end" 
+                color="danger">
+              </ion-icon>
+            </ion-button>
+          </div>
+
+          <ion-button 
+            expand="block" 
+            [disabled]="!selectedAnswer || isAnswered || (locationRequired && !locationVerified)"
+            (click)="submitAnswer()"
+            color="tertiary"
+            class="submit-button">
+            <ion-icon name="send" slot="start"></ion-icon>
+            Submit Answer
+          </ion-button>
+
+          <div *ngIf="showResult" class="result-message">
+            <ion-card [color]="selectedAnswer === currentClue.correctAnswer ? 'success' : 'danger'">
+              <ion-card-content>
+                <div class="result-content">
+                  <ion-icon 
+                    [name]="selectedAnswer === currentClue.correctAnswer ? 'checkmark-circle' : 'close-circle'" 
+                    size="large">
+                  </ion-icon>
+                  <div>
+                    <h3>{{ selectedAnswer === currentClue.correctAnswer ? 'Correct!' : 'Incorrect' }}</h3>
+                    <p *ngIf="selectedAnswer === currentClue.correctAnswer">
+                      Great detective work! +{{ currentClue.rewardPoints }} points
+                    </p>
+                    <p *ngIf="selectedAnswer !== currentClue.correctAnswer">
+                      The correct answer was: {{ currentClue.correctAnswer }}
+                    </p>
+                  </div>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </div>
+
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="progress-card">
+      <ion-card-content>
+        <h3>Hunt Progress</h3>
+        <div class="clue-progress">
+          <div 
+            *ngFor="let clue of allClues; let i = index" 
+            class="clue-indicator"
+            [class.completed]="progress.completedClues.includes(clue.id)"
+            [class.current]="i === progress.currentClueIndex"
+            [class.locked]="i > progress.currentClueIndex">
+            
+            <div class="clue-circle">
+              <ion-icon 
+                *ngIf="progress.completedClues.includes(clue.id)" 
+                name="checkmark" 
+                color="success">
+              </ion-icon>
+              <ion-icon 
+                *ngIf="i === progress.currentClueIndex && !progress.completedClues.includes(clue.id)" 
+                name="search" 
+                color="tertiary">
+              </ion-icon>
+              <span 
+                *ngIf="i > progress.currentClueIndex" 
+                class="clue-number">{{ i + 1 }}</span>
+            </div>
+            <p class="clue-name">{{ clue.title }}</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+
+  <div *ngIf="huntCompleted" class="completion-container">
+    <div class="completion-content">
+      <ion-icon name="trophy" size="large" color="warning"></ion-icon>
+      <h1>🎉 Hunt Complete!</h1>
+      <h2>{{ landmarkName }}</h2>
+      
+      <div class="final-score">
+        <ion-card>
+          <ion-card-content>
+            <div class="score-details">
+              <h3>Final Results</h3>
+              
+              <div class="score-grid">
+                <div class="score-item">
+                  <div class="score-number">{{ progress.totalScore }}</div>
+                  <div class="score-label">Total Points</div>
+                </div>
+                <div class="score-item">
+                  <div class="score-number">{{ progress.completedClues.length }}</div>
+                  <div class="score-label">Clues Solved</div>
+                </div>
+                <div class="score-item">
+                  <div class="score-number">{{ progress.hints.length }}</div>
+                  <div class="score-label">Hints Used</div>
+                </div>
+              </div>
+
+              <div class="achievement-message">
+                <p class="excellent">
+                  🏆 Outstanding detective work! You've mastered the {{ landmarkName }} scavenger hunt!
+                </p>
+              </div>
+
+              <ion-chip color="success" class="completion-badge">
+                <ion-icon name="ribbon"></ion-icon>
+                <ion-label>Landmark Stamp Earned!</ion-label>
+              </ion-chip>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <div class="action-buttons">
+        <ion-button 
+          expand="block" 
+          color="tertiary"
+          (click)="restartHunt()">
+          <ion-icon name="refresh" slot="start"></ion-icon>
+          Hunt Again
+        </ion-button>
+
+        <ion-button 
+          expand="block" 
+          fill="outline"
+          color="secondary"
+          routerLink="/progress">
+          <ion-icon name="stats-chart" slot="start"></ion-icon>
+          View Progress
+        </ion-button>
+
+        <ion-button 
+          expand="block" 
+          fill="clear"
+          [routerLink]="['/landmark-details']"
+          [queryParams]="{ id: landmarkId }">
+          <ion-icon name="arrow-back" slot="start"></ion-icon>
+          Back to Landmark
+        </ion-button>
+      </div>
+    </div>
+  </div>
+
 </ion-content>

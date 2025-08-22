@@ -73,7 +73,6 @@ export class LoginPage {
       if (hasSeen) {
         this.router.navigateByUrl('/home', { replaceUrl: true });
       } else {
-        // Show onboarding after login, and finish at Home
         localStorage.setItem('onboardingTarget', 'home');
         this.router.navigateByUrl('/onboarding', { replaceUrl: true });
       }

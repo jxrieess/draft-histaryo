@@ -1,49 +1,9 @@
-// // src/app/pages/onboarding/onboarding.page.ts
-// import { Component, ViewChild } from '@angular/core';
-// import { Router } from '@angular/router';
-// import SwiperCore, { SwiperOptions, Pagination } from 'swiper';
-// import { SwiperComponent } from 'swiper/angular';
-
-// SwiperCore.use([Pagination]);
-
-// @Component({
-//   selector: 'app-onboarding',
-//   templateUrl: './onboarding.page.html',
-//   styleUrls: ['./onboarding.page.scss'],
-//   standalone: false
-// })
-// export class OnboardingPage {
-//   @ViewChild('swiperRef', { static: false }) swiperRef!: SwiperComponent;
-
-//   slideOpts: SwiperOptions = {
-//     pagination: { clickable: true },
-//     spaceBetween: 50,
-//     loop: false,
-//   };
-
-//   constructor(private router: Router) {}
-
-//   onSlideChange(swiper: any) {
-//     // Optional: auto-go-home on last slide
-//     if (swiper.activeIndex === 2) {
-//       localStorage.setItem('hasSeenOnboarding', 'true');
-//       setTimeout(() => this.router.navigate(['/home']), 500);
-//     }
-//   }
-
-//   skip() {
-//     localStorage.setItem('hasSeenOnboarding', 'true');
-//     this.router.navigate(['/home']);
-//   }
-// }
-
-// src/app/pages/onboarding/onboarding.page.ts
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { Router } from '@angular/router';
-import SwiperCore, { SwiperOptions, Pagination } from 'swiper';
 import { SwiperComponent } from 'swiper/angular';
+import SwiperCore, { Pagination, Navigation } from 'swiper';
 
-SwiperCore.use([Pagination]);
+SwiperCore.use([Pagination, Navigation]);
 
 @Component({
   selector: 'app-onboarding',
@@ -51,34 +11,90 @@ SwiperCore.use([Pagination]);
   styleUrls: ['./onboarding.page.scss'],
   standalone: false
 })
-export class OnboardingPage {
+export class OnboardingPage implements AfterViewInit {
   @ViewChild('swiperRef', { static: false }) swiperRef!: SwiperComponent;
 
-  slideOpts: SwiperOptions = {
-    pagination: { clickable: true },
-    spaceBetween: 50,
-    loop: false,
-  };
+  currentSlideIndex = 0;
+  totalSlides = 3;
 
   constructor(private router: Router) {}
 
-  onSlideChange(swiper: any) {
-    // Auto-finish when reaching 3rd slide (index 2)
-    if (swiper.activeIndex === 2) this.finishOnboarding();
+  ngAfterViewInit(): void {
+    if (this.swiperRef && this.swiperRef.swiperRef) {
+      this.swiperRef.swiperRef.on('slideChange', () => {
+        this.currentSlideIndex = this.swiperRef.swiperRef.activeIndex;
+      });
+    }
   }
 
-  skip() {
+  onSlideChange(event: any): void {
+    if (event && event.activeIndex !== undefined) {
+      this.currentSlideIndex = event.activeIndex;
+      
+      if (this.currentSlideIndex === this.totalSlides - 1) {
+        setTimeout(() => {
+          this.finishOnboarding();
+        }, 2000);
+      }
+    }
+  }
+
+  skip(): void {
     this.finishOnboarding();
   }
 
-  private finishOnboarding() {
+  nextSlide(): void {
+    if (this.swiperRef && this.swiperRef.swiperRef) {
+      this.swiperRef.swiperRef.slideNext();
+    }
+  }
+
+  previousSlide(): void {
+    if (this.swiperRef && this.swiperRef.swiperRef) {
+      this.swiperRef.swiperRef.slidePrev();
+    }
+  }
+
+  goToSlide(index: number): void {
+    if (this.swiperRef && this.swiperRef.swiperRef) {
+      this.swiperRef.swiperRef.slideTo(index);
+    }
+  }
+
+  private finishOnboarding(): void {
     localStorage.setItem('hasSeenOnboarding', 'true');
 
-    const target = localStorage.getItem('onboardingTarget') || 'login';
+    const target = localStorage.getItem('onboardingTarget') || 'home';
     localStorage.removeItem('onboardingTarget');
 
-    const path = target === 'home' ? '/home' : '/login';
-    this.router.navigateByUrl(path, { replaceUrl: true });
+    if (target === 'home') {
+      this.router.navigateByUrl('/home', { replaceUrl: true });
+    } else if (target === 'login') {
+      this.router.navigateByUrl('/login', { replaceUrl: true });
+    } else {
+      this.router.navigateByUrl('/home', { replaceUrl: true });
+    }
+  }
+
+  goToLogin(): void {
+    localStorage.setItem('hasSeenOnboarding', 'true');
+    this.router.navigateByUrl('/login', { replaceUrl: true });
+  }
+
+  goToRegister(): void {
+    localStorage.setItem('hasSeenOnboarding', 'true');
+    this.router.navigateByUrl('/register', { replaceUrl: true });
+  }
+
+  continueToApp(): void {
+    this.finishOnboarding();
+  }
+
+  get isLastSlide(): boolean {
+    return this.currentSlideIndex === this.totalSlides - 1;
+  }
+
+  get isFirstSlide(): boolean {
+    return this.currentSlideIndex === 0;
   }
 }
-

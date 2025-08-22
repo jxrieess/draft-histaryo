@@ -1,49 +1,205 @@
-<!-- <ion-header>
+<ion-header>
   <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
     <ion-title>My Stamp Collection</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
 
-  <ion-item lines="none">
-    <ion-label>
-      <h2>Progress</h2>
-      <p>{{ collectedStamps.length }} of {{ allLandmarks.length }} stamps collected</p>
-    </ion-label>
-    <ion-badge color="tertiary">
-      {{ ((collectedStamps.length / allLandmarks.length) * 100) | number: '1.0-0' }}%
-    </ion-badge>
-  </ion-item>
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading your stamp collection...</p>
+  </div>
 
-  <ion-card *ngIf="showBadge" color="success">
-    <ion-card-header>
-      <ion-card-title>🏆 Congratulations!</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      You've collected all stamps and earned a digital badge!
-    </ion-card-content>
-  </ion-card>
+  <div *ngIf="!loading">
 
-  <ion-grid>
-    <ion-row>
-      <ion-col size="6" *ngFor="let landmark of allLandmarks">
-        <ion-card [class.locked]="!isCollected(landmark.id)">
-          <img [src]="landmark.image" />
-          <ion-card-header>
-            <ion-card-title>{{ landmark.name }}</ion-card-title>
-          </ion-card-header>
-          <ion-chip color="success" *ngIf="isCollected(landmark.id)">
-            <ion-icon name="checkmark-circle" color="success"></ion-icon>
-            <ion-label>Stamp Collected</ion-label>
-          </ion-chip>
-          <ion-chip color="medium" *ngIf="!isCollected(landmark.id)">
-            <ion-icon name="lock-closed" color="medium"></ion-icon>
-            <ion-label>Locked</ion-label>
-          </ion-chip>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-</ion-content> -->
+    <ion-card class="progress-card">
+      <ion-card-content>
+        <div class="progress-header">
+          <div class="progress-info">
+            <h2>Collection Progress</h2>
+            <p>{{ collectedCount }} of {{ total }} stamps collected</p>
+          </div>
+          <div class="progress-percentage">
+            <div class="percentage-circle">
+              <span>{{ percent }}%</span>
+            </div>
+          </div>
+        </div>
+        
+        <ion-progress-bar 
+          [value]="percent / 100" 
+          [color]="percent >= 80 ? 'success' : percent >= 50 ? 'warning' : 'primary'">
+        </ion-progress-bar>
 
+        <ion-chip *ngIf="showBadge" color="success" class="completion-badge">
+          <ion-icon name="trophy"></ion-icon>
+          <ion-label>Collection Complete! 🏆</ion-label>
+        </ion-chip>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="showBadge" color="success" class="completion-card">
+      <ion-card-header>
+        <ion-card-title>🎉 Congratulations!</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>You've collected all stamps and earned the Heritage Explorer digital badge!</p>
+        <ion-button expand="block" fill="outline" color="light" routerLink="/progress">
+          <ion-icon name="analytics" slot="start"></ion-icon>
+          View All Achievements
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="stamps-section">
+      <h3 class="section-title">
+        <ion-icon name="bookmark" color="primary"></ion-icon>
+        Landmark Stamps
+      </h3>
+
+      <ion-card *ngIf="total === 0" class="empty-state">
+        <ion-card-content>
+          <ion-icon name="bookmark-outline" size="large" color="medium"></ion-icon>
+          <h3>No Landmarks Available</h3>
+          <p>Check back later for landmarks to explore and collect stamps from.</p>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-grid *ngIf="total > 0">
+        <ion-row>
+          <ion-col size="6" size-md="4" size-lg="3" *ngFor="let landmark of allLandmarks">
+            
+            <ion-card 
+              class="stamp-card"
+              [class.locked]="!isCollected(landmark.id)"
+              [class.collected]="isCollected(landmark.id)">
+              
+              <div class="stamp-image-container">
+                <img [src]="landmark.imageUrl" [alt]="landmark.name" />
+                
+                <div *ngIf="!isCollected(landmark.id)" class="locked-overlay">
+                  <ion-icon name="lock-closed" color="medium"></ion-icon>
+                </div>
+                
+                <div *ngIf="isCollected(landmark.id)" class="collected-indicator">
+                  <ion-icon name="checkmark-circle" color="success"></ion-icon>
+                </div>
+              </div>
+
+              <ion-card-header>
+                <ion-card-title class="landmark-title">
+                  {{ landmark.name }}
+                </ion-card-title>
+              </ion-card-header>
+
+              <ion-card-content>
+                <ion-chip 
+                  [color]="isCollected(landmark.id) ? 'success' : 'medium'"
+                  class="status-chip">
+                  <ion-icon 
+                    [name]="isCollected(landmark.id) ? 'checkmark-circle' : 'lock-closed'" 
+                    [color]="isCollected(landmark.id) ? 'success' : 'medium'">
+                  </ion-icon>
+                  <ion-label>
+                    {{ isCollected(landmark.id) ? 'Collected' : 'Visit to Unlock' }}
+                  </ion-label>
+                </ion-chip>
+
+                <ion-button 
+                  *ngIf="!isCollected(landmark.id)"
+                  expand="block" 
+                  size="small" 
+                  fill="outline"
+                  [routerLink]="['/landmark-details']"
+                  [queryParams]="{ id: landmark.id }">
+                  <ion-icon name="location" slot="start"></ion-icon>
+                  Visit Landmark
+                </ion-button>
+
+                <ion-button 
+                  *ngIf="isCollected(landmark.id)"
+                  expand="block" 
+                  size="small" 
+                  color="success"
+                  [routerLink]="['/landmark-details']"
+                  [queryParams]="{ id: landmark.id }">
+                  <ion-icon name="eye" slot="start"></ion-icon>
+                  View Details
+                </ion-button>
+              </ion-card-content>
+            </ion-card>
+            
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <div class="quick-actions" *ngIf="collectedCount < total">
+      <h3 class="section-title">
+        <ion-icon name="rocket" color="primary"></ion-icon>
+        Continue Exploring
+      </h3>
+      
+      <ion-card>
+        <ion-card-content>
+          <p>Discover more landmarks and collect all stamps!</p>
+          
+          <div class="action-buttons">
+            <ion-button expand="block" routerLink="/scan" color="primary">
+              <ion-icon name="qr-code" slot="start"></ion-icon>
+              Scan QR Code
+            </ion-button>
+            
+            <ion-button expand="block" routerLink="/map" fill="outline" color="secondary">
+              <ion-icon name="map" slot="start"></ion-icon>
+              Explore Map
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="stats-section">
+      <h3 class="section-title">
+        <ion-icon name="analytics" color="primary"></ion-icon>
+        Collection Stats
+      </h3>
+      
+      <ion-card>
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="6">
+                <div class="stat-item">
+                  <div class="stat-number">{{ collectedCount }}</div>
+                  <div class="stat-label">Stamps</div>
+                </div>
+              </ion-col>
+              <ion-col size="6">
+                <div class="stat-item">
+                  <div class="stat-number">{{ percent }}%</div>
+                  <div class="stat-label">Complete</div>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+          
+          <ion-button 
+            expand="block" 
+            fill="clear" 
+            routerLink="/progress"
+            color="primary">
+            <ion-icon name="trophy" slot="start"></ion-icon>
+            View Full Progress
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+  </div>
+
+</ion-content>

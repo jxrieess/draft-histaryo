@@ -64,6 +64,18 @@ const routes: Routes = [
     path: 'stamp-gallery',
     loadChildren: () => import('./pages/stamp-gallery/stamp-gallery.module').then( m => m.StampGalleryPageModule)
   },
+  {
+    path: 'progress',
+    loadChildren: () => import('./pages/progress/progress.module').then( m => m.ProgressPageModule)
+  },
+  {
+    path: 'submit-tip',
+    loadChildren: () => import('./pages/submit-tip/submit-tip.module').then( m => m.SubmitTipPageModule)
+  },
+  {
+    path: 'ar-experience',
+    loadChildren: () => import('./pages/ar-experience/ar-experience.module').then( m => m.ArExperiencePageModule)
+  },
 
 ];
 

@@ -1,0 +1,331 @@
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  
+  p {
+    margin-top: 16px;
+    color: var(--ion-color-medium);
+  }
+}
+
+.hunt-header {
+  margin-bottom: 20px;
+  
+  h2 {
+    margin: 0 0 8px 0;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--ion-color-tertiary);
+  }
+  
+  .progress-info {
+    margin-bottom: 12px;
+    
+    p {
+      margin: 0 0 4px 0;
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+    }
+  }
+  
+  .score-display {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.location-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  ion-icon {
+    flex-shrink: 0;
+  }
+  
+  h3 {
+    margin: 0 0 4px 0;
+    color: white;
+  }
+  
+  p {
+    margin: 0 0 8px 0;
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+.clue-card {
+  margin-bottom: 20px;
+  
+  .clue-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .clue-title {
+    font-size: 1.2rem;
+    color: var(--ion-color-tertiary);
+    margin: 0;
+  }
+  
+  .clue-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--ion-color-light);
+    border-radius: 8px;
+    
+    .clue-text {
+      font-size: 1rem;
+      line-height: 1.5;
+      margin: 0;
+      color: var(--ion-color-dark);
+    }
+  }
+  
+  .hint-section {
+    margin-bottom: 20px;
+    
+    .hint-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(var(--ion-color-warning-rgb), 0.1);
+      border-radius: 8px;
+      border-left: 4px solid var(--ion-color-warning);
+      
+      p {
+        margin: 0;
+        font-style: italic;
+        color: var(--ion-color-warning-shade);
+      }
+    }
+  }
+  
+  .question-text {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin: 0 0 16px 0;
+    color: var(--ion-color-dark);
+  }
+  
+  .options-container {
+    margin-bottom: 16px;
+    
+    .option-button {
+      margin-bottom: 8px;
+      text-align: left;
+      --border-width: 2px;
+      
+      &.selected {
+        --color: var(--ion-color-tertiary);
+        --border-color: var(--ion-color-tertiary);
+      }
+      
+      .option-letter {
+        font-weight: bold;
+        margin-right: 8px;
+        min-width: 20px;
+        display: inline-block;
+      }
+    }
+  }
+  
+  .result-message {
+    margin-top: 16px;
+    
+    .result-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      h3 {
+        margin: 0 0 4px 0;
+        color: white;
+      }
+      
+      p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+  }
+}
+
+.progress-card {
+  margin-bottom: 20px;
+  
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.1rem;
+    color: var(--ion-color-dark);
+  }
+  
+  .clue-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    
+    .clue-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      min-width: 60px;
+      
+      .clue-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--ion-color-light);
+        border: 2px solid var(--ion-color-medium);
+        margin-bottom: 4px;
+        
+        .clue-number {
+          font-weight: bold;
+          color: var(--ion-color-medium);
+        }
+      }
+      
+      .clue-name {
+        font-size: 0.7rem;
+        text-align: center;
+        margin: 0;
+        color: var(--ion-color-medium);
+        line-height: 1.2;
+      }
+      
+      &.completed .clue-circle {
+        background: var(--ion-color-success);
+        border-color: var(--ion-color-success);
+      }
+      
+      &.current .clue-circle {
+        background: var(--ion-color-tertiary);
+        border-color: var(--ion-color-tertiary);
+        animation: pulse 2s infinite;
+      }
+      
+      &.current .clue-name {
+        color: var(--ion-color-tertiary);
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.completion-container {
+  text-align: center;
+  
+  .completion-content {
+    padding: 20px;
+    
+    h1 {
+      margin: 16px 0;
+      color: var(--ion-color-warning);
+    }
+    
+    h2 {
+      margin: 0 0 24px 0;
+      color: var(--ion-color-dark);
+    }
+    
+    .score-details {
+      text-align: center;
+      
+      h3 {
+        margin: 0 0 16px 0;
+        color: var(--ion-color-dark);
+      }
+      
+      .score-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 16px;
+        
+        .score-item {
+          .score-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--ion-color-tertiary);
+          }
+          
+          .score-label {
+            font-size: 0.9rem;
+            color: var(--ion-color-medium);
+            margin-top: 4px;
+          }
+        }
+      }
+      
+      .achievement-message {
+        margin: 16px 0;
+        
+        .excellent {
+          font-size: 1rem;
+          color: var(--ion-color-success);
+          font-weight: 500;
+        }
+      }
+      
+      .completion-badge {
+        margin-top: 12px;
+      }
+    }
+    
+    .action-buttons {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .clue-content {
+    background: var(--ion-color-dark);
+    
+    .clue-text {
+      color: var(--ion-color-light);
+    }
+  }
+  
+  .question-text {
+    color: var(--ion-color-light);
+  }
+  
+  .progress-card h3 {
+    color: var(--ion-color-light);
+  }
+  
+  .completion-content h2 {
+    color: var(--ion-color-light);
+  }
+}

@@ -1,57 +1,3 @@
-// import { Component, OnInit } from '@angular/core';
-// import { Storage } from '@ionic/storage-angular';
-// import { collection, getDocs, doc } from 'firebase/firestore';
-// import { db } from '../../firebase.config';
-
-// interface Landmark {
-//   id: string;
-//   name: string;
-//   image: string;
-// }
-
-// @Component({
-//   selector: 'app-stamp-gallery',
-//   templateUrl: './stamp-gallery.page.html',
-//   styleUrls: ['./stamp-gallery.page.scss'],
-//   standalone: false
-// })
-// export class StampGalleryPage implements OnInit {
-//   allLandmarks: Landmark[] = [];
-//   collectedStamps: string[] = [];
-//   showBadge: boolean = false;
-
-//   constructor(private storage: Storage) {}
-
-//   async ngOnInit() {
-//     await this.storage.create();
-
-//     // Load collected stamps from storage
-//     this.collectedStamps = (await this.storage.get('stamps')) || [];
-
-//     // Load all landmarks from Firestore
-//     const landmarkSnap = await getDocs(collection(db, 'landmarks'));
-//     this.allLandmarks = landmarkSnap.docs.map((doc) => {
-//       const data = doc.data() as Landmark;
-//       return {
-//         id: doc.id,
-//         name: data.name,
-//         image: data.image,
-//       } as Landmark;
-//     });
-
-//     // Check if user collected all
-//     this.showBadge = this.collectedStamps.length === this.allLandmarks.length;
-//   }
-
-//   isCollected(id: string): boolean {
-//     return this.collectedStamps.includes(id);
-//   }
-// }
-
-
-
-
-
 import { Component, OnInit } from '@angular/core';
 import { Storage } from '@ionic/storage-angular';
 import { collection, getDocs } from 'firebase/firestore';
@@ -60,14 +6,14 @@ import { db } from '../../firebase.config';
 
 interface LandmarkDoc {
   name: string;
-  image?: string;          // if you store direct URL
-  image_path?: string;     // if you store Storage path (recommended)
+  image?: string;          
+  image_path?: string;     
 }
 
 interface LandmarkVM {
   id: string;
   name: string;
-  imageUrl: string;        // always a resolvable URL in the VM
+  imageUrl: string;       
 }
 
 @Component({
@@ -79,14 +25,12 @@ interface LandmarkVM {
 export class StampGalleryPage implements OnInit {
   loading = true;
 
-  // we’ll render when this is non-empty OR finished loading
   allLandmarks: LandmarkVM[] = [];
   collectedIds: string[] = [];
 
-  // computed
   total = 0;
   collectedCount = 0;
-  percent = 0;        // 0..100
+  percent = 0;        
   showBadge = false;
 
   private storageReady = false;
@@ -106,12 +50,10 @@ export class StampGalleryPage implements OnInit {
     }
   }
 
-  // ---------- data loaders ----------
 
   private async loadCollected() {
     const saved: unknown = await this.local.get('stamps');
     if (Array.isArray(saved)) {
-      // ensure string array
       this.collectedIds = saved.filter((x) => typeof x === 'string');
     } else {
       this.collectedIds = [];
@@ -139,9 +81,6 @@ export class StampGalleryPage implements OnInit {
     this.allLandmarks = items;
   }
 
-  /** Accepts a Storage path like 'landmarks/foo.jpg'; returns URL or null.
-   *  If you already store full https URLs in Firestore, skip this.
-   */
   private async resolveImage(path?: string): Promise<string | null> {
     if (!path) return null;
     if (path.startsWith('http')) return path;
@@ -152,7 +91,6 @@ export class StampGalleryPage implements OnInit {
     }
   }
 
-  // ---------- computed helpers ----------
 
   isCollected(id: string): boolean {
     return this.collectedIds.includes(id);

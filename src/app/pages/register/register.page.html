@@ -1,17 +1,3 @@
-<!-- <ion-header><ion-toolbar><ion-title>Register</ion-title></ion-toolbar></ion-header>
-<ion-content class="ion-padding">
-  <ion-input type="email" placeholder="Email" [(ngModel)]="email"></ion-input>
-  <ion-input type="password" placeholder="Password" [(ngModel)]="password"></ion-input>
-
-  <ion-select [(ngModel)]="role" placeholder="Select Role">
-    <ion-select-option value="visitor">Visitor</ion-select-option>
-    <ion-select-option value="curator">Curator</ion-select-option>
-  </ion-select>
-
-  <ion-button expand="block" (click)="register()">Register</ion-button>
-  <ion-button fill="clear" [routerLink]="['/login']">Back to Login</ion-button>
-</ion-content> -->
-
 <ion-header>
   <ion-toolbar>
     <ion-title>Create Account</ion-title>
@@ -20,7 +6,6 @@
 
 <ion-content class="ion-padding">
   <form (ngSubmit)="register()">
-    <!-- Email -->
     <ion-item>
       <ion-label position="floating">Email</ion-label>
       <ion-input
@@ -32,7 +17,6 @@
       ></ion-input>
     </ion-item>
 
-    <!-- Password -->
     <ion-item>
       <ion-label position="floating">Password</ion-label>
       <ion-input
@@ -44,7 +28,6 @@
       ></ion-input>
     </ion-item>
 
-    <!-- Role Selector -->
     <ion-item>
       <ion-label>Role</ion-label>
       <ion-select [(ngModel)]="role" name="role">
@@ -53,7 +36,6 @@
       </ion-select>
     </ion-item>
 
-    <!-- Submit -->
     <ion-button
       expand="block"
       type="submit"
@@ -63,7 +45,6 @@
       {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
     </ion-button>
 
-    <!-- Already have an account -->
     <div class="ion-text-center" style="margin-top: 16px;">
       <ion-text>
         Already have an account?

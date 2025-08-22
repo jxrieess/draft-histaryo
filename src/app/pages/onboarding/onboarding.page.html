@@ -53,7 +53,7 @@
  -->
 
  <!-- src/app/pages/onboarding/onboarding.page.html -->
-<ion-content fullscreen>
+<!-- <ion-content fullscreen>
   <swiper
     #swiperRef
     [pagination]="{ clickable: true }"
@@ -62,7 +62,7 @@
     [autoHeight]="true"
     (swiper)="onSlideChange($event)"
     class="onboarding-swiper"
-  >
+  > -->
     <!-- Slide 1 -->
     <!-- <ng-template swiperSlide>
       <div class="slide">
@@ -107,8 +107,8 @@
       </div>
     </ng-template> -->
 
-    <!-- First slide -->
-<ng-template swiperSlide>
+
+<!-- <ng-template swiperSlide>
   <div class="slide">
     <img src="assets/img/onboarding.jpg" />
     <div class="centered-content">
@@ -123,7 +123,6 @@
   </div>
 </ng-template>
 
-<!-- Last slide -->
 <ng-template swiperSlide>
   <div class="slide final-slide">
     <img src="assets/img/onboarding.jpg" />
@@ -136,4 +135,174 @@
 </ng-template>
 
   </swiper>
+</ion-content> -->
+
+<!-- src/app/pages/onboarding/onboarding.page.html -->
+<ion-content fullscreen>
+  <swiper
+    #swiperRef
+    [pagination]="{ clickable: true, dynamicBullets: true }"
+    [spaceBetween]="0"
+    [loop]="false"
+    [allowTouchMove]="true"
+    (swiper)="onSlideChange($event)"
+    (slideChange)="onSlideChange($event)"
+    class="onboarding-swiper">
+    
+    <!-- Slide 1: Welcome -->
+    <ng-template swiperSlide>
+      <div class="slide slide-1">
+        <div class="slide-background">
+          <img src="assets/img/onboarding-1.jpg" alt="Heritage Background" class="bg-image" />
+          <div class="overlay"></div>
+        </div>
+        
+        <div class="slide-content">
+          <div class="content-wrapper">
+            <ion-icon name="location" class="hero-icon" color="primary"></ion-icon>
+            <h1>Welcome to HistARyo</h1>
+            <p>Discover Cebu's rich heritage through augmented reality and interactive exploration</p>
+            
+            <div class="features-list">
+              <div class="feature-item">
+                <ion-icon name="camera" color="primary"></ion-icon>
+                <span>AR Experiences</span>
+              </div>
+              <div class="feature-item">
+                <ion-icon name="search" color="primary"></ion-icon>
+                <span>Scavenger Hunts</span>
+              </div>
+              <div class="feature-item">
+                <ion-icon name="bookmark" color="primary"></ion-icon>
+                <span>Collect Stamps</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="slide-actions">
+            <ion-button expand="block" (click)="nextSlide()" color="primary">
+              Get Started
+              <ion-icon name="arrow-forward" slot="end"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" (click)="skip()" color="light">
+              Skip Tour
+            </ion-button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Slide 2: How it Works -->
+    <ng-template swiperSlide>
+      <div class="slide slide-2">
+        <div class="slide-background">
+          <img src="assets/img/onboarding-2.jpg" alt="QR Scanning" class="bg-image" />
+          <div class="overlay"></div>
+        </div>
+        
+        <div class="slide-content">
+          <div class="content-wrapper">
+            <ion-icon name="qr-code-outline" class="hero-icon" color="secondary"></ion-icon>
+            <h1>Scan & Explore</h1>
+            <p>Simply scan QR codes at landmarks to unlock interactive AR experiences and historical content</p>
+            
+            <div class="step-indicator">
+              <div class="step">
+                <div class="step-number">1</div>
+                <p>Scan QR Code</p>
+              </div>
+              <div class="step">
+                <div class="step-number">2</div>
+                <p>Launch AR</p>
+              </div>
+              <div class="step">
+                <div class="step-number">3</div>
+                <p>Explore & Learn</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="slide-actions">
+            <ion-button expand="block" (click)="nextSlide()" color="secondary">
+              Continue
+              <ion-icon name="arrow-forward" slot="end"></ion-icon>
+            </ion-button>
+            <div class="navigation-buttons">
+              <ion-button fill="clear" (click)="previousSlide()" color="light">
+                <ion-icon name="arrow-back" slot="start"></ion-icon>
+                Back
+              </ion-button>
+              <ion-button fill="clear" (click)="skip()" color="light">
+                Skip Tour
+              </ion-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Slide 3: Get Started -->
+    <ng-template swiperSlide>
+      <div class="slide slide-3">
+        <div class="slide-background">
+          <img src="assets/img/onboarding-3.jpg" alt="Heritage Sites" class="bg-image" />
+          <div class="overlay final-overlay"></div>
+        </div>
+        
+        <div class="slide-content">
+          <div class="content-wrapper">
+            <ion-icon name="trophy" class="hero-icon" color="warning"></ion-icon>
+            <h1>Start Your Heritage Journey</h1>
+            <p>Explore Cebu's historical landmarks, complete scavenger hunts, and collect digital stamps</p>
+            
+            <div class="achievements-preview">
+              <div class="achievement-item">
+                <ion-icon name="star" color="warning"></ion-icon>
+                <span>Earn Points</span>
+              </div>
+              <div class="achievement-item">
+                <ion-icon name="ribbon" color="success"></ion-icon>
+                <span>Unlock Badges</span>
+              </div>
+              <div class="achievement-item">
+                <ion-icon name="library" color="tertiary"></ion-icon>
+                <span>Learn History</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="slide-actions final-actions">
+            <ion-button expand="block" (click)="continueToApp()" color="success" size="large">
+              <ion-icon name="compass" slot="start"></ion-icon>
+              Start Exploring
+            </ion-button>
+            
+            <div class="auth-buttons">
+              <p>Already have an account?</p>
+              <div class="button-row">
+                <ion-button fill="outline" (click)="goToLogin()" color="light">
+                  Login
+                </ion-button>
+                <ion-button fill="solid" (click)="goToRegister()" color="primary">
+                  Sign Up
+                </ion-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+  </swiper>
+
+  <!-- Progress Indicator -->
+  <div class="progress-indicator" *ngIf="currentSlideIndex < totalSlides">
+    <div 
+      *ngFor="let slide of [0,1,2]; let i = index" 
+      class="progress-dot"
+      [class.active]="i === currentSlideIndex"
+      (click)="goToSlide(i)">
+    </div>
+  </div>
+
 </ion-content>
