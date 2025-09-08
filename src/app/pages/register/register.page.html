@@ -1,55 +1,135 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Create Account</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="auth-content">
+  <div class="auth-container">
+    <!-- Header Section -->
+    <div class="auth-header">
+      <div class="logo-container">
+        <ion-icon name="map-outline" class="logo-icon"></ion-icon>
+        <h1>HistARyo</h1>
+      </div>
+      <p class="welcome-text">Join our community and start discovering heritage sites through AR!</p>
+    </div>
 
-<ion-content class="ion-padding">
-  <form (ngSubmit)="register()">
-    <ion-item>
-      <ion-label position="floating">Email</ion-label>
-      <ion-input
-        type="email"
-        [(ngModel)]="email"
-        name="email"
-        required
-        autocomplete="email"
-      ></ion-input>
-    </ion-item>
+    <!-- Register Form -->
+    <form class="auth-form" (ngSubmit)="register()">
+      <div class="form-group">
+        <ion-item class="custom-input" lines="none">
+          <ion-icon name="person-outline" slot="start" class="input-icon"></ion-icon>
+          <ion-input 
+            type="text" 
+            placeholder="Enter your full name"
+            [(ngModel)]="fullName"
+            name="fullName"
+            required
+            autocomplete="name"
+            class="form-input">
+          </ion-input>
+        </ion-item>
+      </div>
 
-    <ion-item>
-      <ion-label position="floating">Password</ion-label>
-      <ion-input
-        type="password"
-        [(ngModel)]="password"
-        name="password"
-        required
-        autocomplete="new-password"
-      ></ion-input>
-    </ion-item>
+      <div class="form-group">
+        <ion-item class="custom-input" lines="none">
+          <ion-icon name="mail-outline" slot="start" class="input-icon"></ion-icon>
+          <ion-input 
+            type="email" 
+            placeholder="Enter your email"
+            [(ngModel)]="email"
+            name="email"
+            required
+            autocomplete="email"
+            class="form-input">
+          </ion-input>
+        </ion-item>
+      </div>
 
-    <ion-item>
-      <ion-label>Role</ion-label>
-      <ion-select [(ngModel)]="role" name="role">
-        <ion-select-option value="visitor">Visitor</ion-select-option>
-        <ion-select-option value="curator">Curator</ion-select-option>
-      </ion-select>
-    </ion-item>
+      <div class="form-group">
+        <ion-item class="custom-input" lines="none">
+          <ion-icon name="lock-closed-outline" slot="start" class="input-icon"></ion-icon>
+          <ion-input 
+            type="password" 
+            placeholder="Create a password"
+            [(ngModel)]="password"
+            name="password"
+            required
+            autocomplete="new-password"
+            class="form-input">
+          </ion-input>
+        </ion-item>
+      </div>
 
-    <ion-button
-      expand="block"
-      type="submit"
-      color="primary"
-      [disabled]="isSubmitting"
-    >
-      {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
-    </ion-button>
+      <div class="form-group">
+        <ion-item class="custom-input" lines="none">
+          <ion-icon name="lock-closed-outline" slot="start" class="input-icon"></ion-icon>
+          <ion-input 
+            type="password" 
+            placeholder="Confirm your password"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            required
+            autocomplete="new-password"
+            class="form-input">
+          </ion-input>
+        </ion-item>
+      </div>
 
-    <div class="ion-text-center" style="margin-top: 16px;">
-      <ion-text>
-        Already have an account?
-        <a routerLink="/login">Log in</a>
+      <div class="form-group">
+        <ion-item class="custom-input custom-select" lines="none">
+          <ion-icon name="people-outline" slot="start" class="input-icon"></ion-icon>
+          <ion-select 
+            [(ngModel)]="role" 
+            name="role"
+            placeholder="Select your role"
+            class="form-select">
+            <ion-select-option value="visitor">Heritage Explorer</ion-select-option>
+            <ion-select-option value="curator">Content Curator</ion-select-option>
+            <ion-select-option value="guide">Tour Guide</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+
+      <div class="terms-agreement">
+        <ion-checkbox [(ngModel)]="agreeToTerms" name="agreeToTerms"></ion-checkbox>
+        <ion-text class="terms-text">
+          I agree to the <a href="#" class="terms-link">Terms of Service</a> and 
+          <a href="#" class="terms-link">Privacy Policy</a>
+        </ion-text>
+      </div>
+
+      <ion-button 
+        expand="block" 
+        type="submit"
+        class="auth-button primary-btn"
+        [disabled]="isSubmitting || !agreeToTerms">
+        <ion-icon name="person-add-outline" slot="start" *ngIf="!isSubmitting"></ion-icon>
+        <ion-spinner name="crescent" *ngIf="isSubmitting"></ion-spinner>
+        {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
+      </ion-button>
+    </form>
+
+    <!-- Divider -->
+    <div class="divider">
+      <span>or</span>
+    </div>
+
+    <!-- Social Login -->
+    <div class="social-login">
+      <ion-button expand="block" fill="outline" class="social-btn google-btn">
+        <ion-icon name="logo-google" slot="start"></ion-icon>
+        Sign up with Google
+      </ion-button>
+      <ion-button expand="block" fill="outline" class="social-btn facebook-btn">
+        <ion-icon name="logo-facebook" slot="start"></ion-icon>
+        Sign up with Facebook
+      </ion-button>
+    </div>
+
+    <!-- Footer -->
+    <div class="auth-footer">
+      <ion-text class="footer-text">
+        Already have an account? 
+        <ion-button fill="clear" [routerLink]="['/login']" class="link-btn">
+          Sign In
+        </ion-button>
       </ion-text>
     </div>
-  </form>
+  </div>
 </ion-content>

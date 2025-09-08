@@ -6,10 +6,9 @@ import { RoleGuard } from './guards/role.guard';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'onboarding',
+    redirectTo: 'login',
     pathMatch: 'full'
   },
-    { path: '**', redirectTo: 'onboarding' },
   {
     path: 'home',
     loadChildren: () => import('./pages/home/home.module').then( m => m.HomePageModule)
@@ -76,12 +75,15 @@ const routes: Routes = [
     path: 'ar-experience',
     loadChildren: () => import('./pages/ar-experience/ar-experience.module').then( m => m.ArExperiencePageModule)
   },
+  { path: '**', redirectTo: 'home' }
 
 ];
 
 @NgModule({
   imports: [
-    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })
+    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules,
+      enableTracing: false
+     })
   ],
   exports: [RouterModule]
 })
