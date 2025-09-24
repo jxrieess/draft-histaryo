@@ -1,48 +1,73 @@
-<ion-content class="auth-content">
+<ion-content class="auth-content" [fullscreen]="true">
   <div class="auth-container">
-    <!-- Header Section -->
     <div class="auth-header">
-      <div class="logo-container">
+      <div class="logo-section">
         <ion-icon name="map-outline" class="logo-icon"></ion-icon>
-        <h1>HistARyo</h1>
+        <div class="brand-text">
+          <h1 class="app-title">HistARyo</h1>
+          <p class="app-subtitle">HERITAGE EXPLORATION PLATFORM</p>
+        </div>
       </div>
-      <p class="welcome-text">Welcome back! Sign in to continue your heritage exploration journey.</p>
+      
+      <div class="welcome-section">
+        <h2 class="welcome-title">Welcome Back</h2>
+        <p class="welcome-text">Continue your journey through history and discover the stories that shaped our heritage.</p>
+      </div>
     </div>
 
-    <!-- Login Form -->
-    <form class="auth-form" (ngSubmit)="login()">
+    <form class="auth-form" (ngSubmit)="login()" #loginForm="ngForm">
+      <div class="error-message" *ngIf="formErrors.general">
+        <ion-icon name="warning-outline"></ion-icon>
+        <span>{{ formErrors.general }}</span>
+      </div>
+
       <div class="form-group">
-        <ion-item class="custom-input" lines="none">
+        <label class="form-label">Email Address</label>
+        <ion-item class="custom-input" lines="none" [class.error]="formErrors.email">
           <ion-icon name="mail-outline" slot="start" class="input-icon"></ion-icon>
           <ion-input 
             type="email" 
-            placeholder="Enter your email"
+            placeholder="Enter your email address"
             [(ngModel)]="email"
             name="email"
             required
-            autocomplete="email"
-            class="form-input">
+            class="form-input"
+            (ionFocus)="onInputFocus('email')"
+            (ionBlur)="onInputBlur('email')"
+            (keyup.enter)="login()">
           </ion-input>
         </ion-item>
+        <div class="error-text" *ngIf="formErrors.email">{{ formErrors.email }}</div>
       </div>
 
       <div class="form-group">
-        <ion-item class="custom-input" lines="none">
+        <label class="form-label">Password</label>
+        <ion-item class="custom-input" lines="none" [class.error]="formErrors.password">
           <ion-icon name="lock-closed-outline" slot="start" class="input-icon"></ion-icon>
           <ion-input 
-            type="password" 
+            [type]="showPassword ? 'text' : 'password'"
             placeholder="Enter your password"
             [(ngModel)]="password"
             name="password"
             required
-            autocomplete="current-password"
-            class="form-input">
+            class="form-input"
+            (ionFocus)="onInputFocus('password')"
+            (ionBlur)="onInputBlur('password')"
+            (keyup.enter)="login()">
           </ion-input>
+          <ion-button fill="clear" slot="end" (click)="togglePasswordVisibility()" type="button" class="password-toggle">
+            <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </ion-button>
         </ion-item>
+        <div class="error-text" *ngIf="formErrors.password">{{ formErrors.password }}</div>
       </div>
 
-      <div class="forgot-password">
-        <ion-button fill="clear" size="small" class="forgot-btn">
+      <div class="form-options">
+        <label class="remember-me">
+          <ion-checkbox [(ngModel)]="rememberMe" name="rememberMe"></ion-checkbox>
+          <span>Remember me</span>
+        </label>
+        <ion-button fill="clear" size="small" (click)="forgotPassword()" type="button" class="forgot-link">
           Forgot Password?
         </ion-button>
       </div>
@@ -50,47 +75,34 @@
       <ion-button 
         expand="block" 
         type="submit"
-        class="auth-button primary-btn"
-        [disabled]="isSubmitting">
-        <ion-icon name="log-in-outline" slot="start" *ngIf="!isSubmitting"></ion-icon>
-        <ion-spinner name="crescent" *ngIf="isSubmitting"></ion-spinner>
+        class="signin-btn"
+        [disabled]="isSubmitting || !email || !password">
+        <ion-icon name="log-in-outline" *ngIf="!isSubmitting" slot="start"></ion-icon>
+        <ion-spinner name="crescent" *ngIf="isSubmitting" color="light"></ion-spinner>
         {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
       </ion-button>
     </form>
 
-    <!-- Divider -->
     <div class="divider">
-      <span>or</span>
+      <span>or continue with</span>
     </div>
 
-    <!-- Social Login -->
-    <div class="social-login">
-      <ion-button expand="block" fill="outline" class="social-btn google-btn">
+    <div class="social-buttons">
+      <ion-button expand="block" fill="outline" class="google-btn" (click)="signInWithGoogle()" [disabled]="isSubmitting">
         <ion-icon name="logo-google" slot="start"></ion-icon>
         Continue with Google
       </ion-button>
-      <ion-button expand="block" fill="outline" class="social-btn facebook-btn">
+      <ion-button expand="block" fill="outline" class="facebook-btn" (click)="signInWithFacebook()" [disabled]="isSubmitting">
         <ion-icon name="logo-facebook" slot="start"></ion-icon>
         Continue with Facebook
       </ion-button>
     </div>
 
-    <!-- Footer -->
     <div class="auth-footer">
-      <ion-text class="footer-text">
-        Don't have an account? 
-        <ion-button fill="clear" [routerLink]="['/register']" class="link-btn">
-          Create Account
-        </ion-button>
-      </ion-text>
-      
-      <!-- Add onboarding access -->
-      <div class="tutorial-link">
-        <ion-button fill="clear" [routerLink]="['/onboarding']" color="medium" size="small">
-          <ion-icon name="help-circle-outline" slot="start"></ion-icon>
-          View Tutorial
-        </ion-button>
-      </div>
+      <span class="footer-text">Don't have an account?</span>
+      <ion-button fill="clear" (click)="navigateToRegister()" class="create-account-btn">
+        Create Account
+      </ion-button>
     </div>
   </div>
 </ion-content>

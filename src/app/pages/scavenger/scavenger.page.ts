@@ -1,3 +1,447 @@
+// // src/app/pages/scavenger/scavenger.page.ts
+// import { Component, OnInit, OnDestroy } from '@angular/core';
+// import { ActivatedRoute, Router } from '@angular/router';
+// import { NavController, ToastController, AlertController, LoadingController } from '@ionic/angular';
+// import { ScavengerService, ScavengerQuestion, ScavengerSession } from '../../services/scavenger.service';
+// import { Storage } from '@ionic/storage-angular';
+
+// @Component({
+//   selector: 'app-scavenger',
+//   templateUrl: './scavenger.page.html',
+//   styleUrls: ['./scavenger.page.scss'],
+//   standalone: false
+// })
+// export class ScavengerPage implements OnInit, OnDestroy {
+  
+//   // Core data
+//   landmarkId: string = '';
+//   landmarkName: string = '';
+//   currentSession: ScavengerSession | null = null;
+//   currentQuestion: ScavengerQuestion | null = null;
+  
+//   // UI state
+//   isLoading = false;
+//   loadingMessage = '';
+//   huntStarted = false;
+//   huntCompleted = false;
+//   showHint = false;
+//   showResult = false;
+//   selectedAnswer: number | null = null;
+//   isAnswered = false;
+  
+//   // Progress tracking
+//   currentQuestionIndex = 0;
+//   totalQuestions = 0;
+//   correctAnswers = 0;
+//   totalScore = 0;
+//   hintsUsed: string[] = [];
+
+//   constructor(
+//     private route: ActivatedRoute,
+//     private router: Router,
+//     private navCtrl: NavController,
+//     private toastCtrl: ToastController,
+//     private alertCtrl: AlertController,
+//     private loadingCtrl: LoadingController,
+//     private scavengerService: ScavengerService,
+//     private storage: Storage
+//   ) {}
+
+//   async ngOnInit() {
+//     await this.storage.create();
+//     await this.loadScavengerFromRoute();
+//   }
+
+//   ngOnDestroy() {
+//     // Cleanup if needed
+//   }
+
+//   // Load scavenger hunt data from route parameters
+//   private async loadScavengerFromRoute() {
+//     this.route.queryParams.subscribe(async (params) => {
+//       this.landmarkId = params['landmarkId'] || '';
+//       this.landmarkName = params['landmarkName'] || 'Heritage Site';
+      
+//       if (this.landmarkId) {
+//         await this.initializeScavengerHunt();
+//       } else {
+//         await this.showToast('No landmark specified for scavenger hunt', 'danger');
+//         this.navCtrl.back();
+//       }
+//     });
+//   }
+
+//   // Initialize scavenger hunt - check for existing session or start new
+//   private async initializeScavengerHunt() {
+//     this.isLoading = true;
+//     this.loadingMessage = 'Loading scavenger hunt...';
+
+//     try {
+//       // Check for existing session
+//       const existingSession = await this.scavengerService.getCurrentSession(this.landmarkId);
+      
+//       if (existingSession) {
+//         const shouldResume = await this.askToResumeSession();
+//         if (shouldResume) {
+//           this.currentSession = existingSession;
+//           this.resumeSession();
+//         } else {
+//           // Start fresh session
+//           await this.startNewSession();
+//         }
+//       } else {
+//         // No existing session, ready to start
+//         this.huntStarted = false;
+//       }
+
+//     } catch (error) {
+//       console.error('Error initializing scavenger hunt:', error);
+//       await this.showToast('Failed to load scavenger hunt', 'danger');
+//       this.navCtrl.back();
+//     } finally {
+//       this.isLoading = false;
+//     }
+//   }
+
+//   // Ask user if they want to resume existing session
+//   private async askToResumeSession(): Promise<boolean> {
+//     return new Promise(async (resolve) => {
+//       const alert = await this.alertCtrl.create({
+//         header: 'Resume Hunt?',
+//         message: 'You have an unfinished scavenger hunt. Would you like to continue where you left off?',
+//         buttons: [
+//           {
+//             text: 'Start Over',
+//             handler: () => resolve(false)
+//           },
+//           {
+//             text: 'Resume',
+//             handler: () => resolve(true)
+//           }
+//         ]
+//       });
+//       await alert.present();
+//     });
+//   }
+
+//   // Start new scavenger session
+//   async startHunt() {
+//     await this.startNewSession();
+//   }
+
+//   private async startNewSession() {
+//     this.isLoading = true;
+//     this.loadingMessage = 'Starting scavenger hunt...';
+
+//     try {
+//       const session = await this.scavengerService.startScavengerSession(
+//         this.landmarkId, 
+//         this.landmarkName
+//       );
+
+//       if (session) {
+//         this.currentSession = session;
+//         this.initializeSessionData();
+//         this.huntStarted = true;
+//         await this.showToast('Scavenger hunt started! Good luck!', 'success');
+//       } else {
+//         throw new Error('Failed to start session');
+//       }
+
+//     } catch (error) {
+//       console.error('Error starting session:', error);
+//       await this.showToast('Failed to start scavenger hunt', 'danger');
+//     } finally {
+//       this.isLoading = false;
+//     }
+//   }
+
+//   // Resume existing session
+//   private resumeSession() {
+//     if (!this.currentSession) return;
+    
+//     this.initializeSessionData();
+//     this.huntStarted = true;
+//     this.showToast('Resuming your scavenger hunt...', 'primary');
+//   }
+
+//   // Initialize session data from current session
+//   private initializeSessionData() {
+//     if (!this.currentSession) return;
+
+//     this.currentQuestionIndex = this.currentSession.currentQuestionIndex;
+//     this.totalQuestions = this.currentSession.questions.length;
+//     this.correctAnswers = this.currentSession.correctAnswers;
+//     this.totalScore = this.currentSession.totalScore;
+//     this.hintsUsed = this.currentSession.hintsUsed || [];
+
+//     // Load current question
+//     this.loadCurrentQuestion();
+//   }
+
+//   // Load current question based on session progress
+//   private loadCurrentQuestion() {
+//     if (!this.currentSession) return;
+
+//     if (this.currentQuestionIndex >= this.totalQuestions) {
+//       this.completeHunt();
+//       return;
+//     }
+
+//     this.currentQuestion = this.currentSession.questions[this.currentQuestionIndex];
+//     this.resetQuestionState();
+//   }
+
+//   // Reset UI state for new question
+//   private resetQuestionState() {
+//     this.selectedAnswer = null;
+//     this.isAnswered = false;
+//     this.showResult = false;
+//     this.showHint = false;
+//   }
+
+//   // Handle answer selection
+//   selectAnswer(answerIndex: number) {
+//     if (this.isAnswered) return;
+//     this.selectedAnswer = answerIndex;
+//   }
+
+//   // Submit answer for current question
+//   async submitAnswer() {
+//     if (!this.currentSession || this.selectedAnswer === null || this.isAnswered) {
+//       return;
+//     }
+
+//     this.isLoading = true;
+
+//     try {
+//       const result = await this.scavengerService.submitAnswer(
+//         this.currentSession.id!,
+//         this.currentQuestionIndex,
+//         this.selectedAnswer
+//       );
+
+//       this.isAnswered = true;
+//       this.showResult = true;
+
+//       // Update local session data
+//       this.currentSession.correctAnswers = result.correct ? 
+//         this.currentSession.correctAnswers + 1 : 
+//         this.currentSession.correctAnswers;
+//       this.currentSession.totalScore += result.points;
+//       this.currentSession.currentQuestionIndex++;
+
+//       // Update UI counters
+//       this.correctAnswers = this.currentSession.correctAnswers;
+//       this.totalScore = this.currentSession.totalScore;
+
+//       // Show result feedback
+//       if (result.correct) {
+//         await this.showToast(`Correct! +${result.points} points`, 'success');
+//       } else {
+//         await this.showToast('Not quite right. Try the next question!', 'warning');
+//       }
+
+//       // Auto-advance to next question after delay
+//       setTimeout(() => {
+//         this.nextQuestion();
+//       }, 3000);
+
+//     } catch (error) {
+//       console.error('Error submitting answer:', error);
+//       await this.showToast('Failed to submit answer', 'danger');
+//     } finally {
+//       this.isLoading = false;
+//     }
+//   }
+
+//   // Move to next question
+//   private nextQuestion() {
+//     this.currentQuestionIndex++;
+//     this.loadCurrentQuestion();
+//   }
+
+//   // Use hint for current question
+//   async useHint() {
+//     if (!this.currentSession || !this.currentQuestion) return;
+
+//     try {
+//       const hint = await this.scavengerService.useHint(
+//         this.currentSession.id!,
+//         this.currentQuestion.id
+//       );
+
+//       if (hint) {
+//         this.showHint = true;
+//         this.hintsUsed.push(this.currentQuestion.id);
+//         await this.showToast('Hint revealed!', 'primary');
+//       } else {
+//         await this.showToast('No hint available for this question', 'warning');
+//       }
+
+//     } catch (error) {
+//       console.error('Error using hint:', error);
+//       await this.showToast('Failed to load hint', 'danger');
+//     }
+//   }
+
+//   // Complete scavenger hunt
+//   private async completeHunt() {
+//     if (!this.currentSession) return;
+
+//     this.huntCompleted = true;
+//     this.huntStarted = false;
+
+//     try {
+//       await this.scavengerService.completeSession(this.currentSession.id!);
+      
+//       // Check if user earned a stamp
+//       const scorePercentage = (this.correctAnswers / this.totalQuestions) * 100;
+//       if (scorePercentage >= 60) {
+//         await this.showCompletionAlert(true);
+//       } else {
+//         await this.showCompletionAlert(false);
+//       }
+
+//     } catch (error) {
+//       console.error('Error completing hunt:', error);
+//       await this.showToast('Hunt completed but failed to save results', 'warning');
+//     }
+//   }
+
+//   // Show completion alert with results
+//   private async showCompletionAlert(earnedStamp: boolean) {
+//     const alert = await this.alertCtrl.create({
+//       header: 'Hunt Completed!',
+//       message: `
+//         <p>Great job exploring ${this.landmarkName}!</p>
+//         <p><strong>Final Score:</strong> ${this.totalScore} points</p>
+//         <p><strong>Correct Answers:</strong> ${this.correctAnswers}/${this.totalQuestions}</p>
+//         ${earnedStamp ? '<p>🎉 <strong>You earned a stamp!</strong></p>' : ''}
+//       `,
+//       buttons: [
+//         {
+//           text: 'Try Again',
+//           handler: () => this.restartHunt()
+//         },
+//         {
+//           text: 'View Progress',
+//           handler: () => this.navigateToProgress()
+//         },
+//         {
+//           text: 'Back to Landmark',
+//           handler: () => this.navigateToLandmark()
+//         }
+//       ]
+//     });
+//     await alert.present();
+//   }
+
+//   // Restart hunt
+//   async restartHunt() {
+//     this.huntCompleted = false;
+//     this.huntStarted = false;
+//     this.currentSession = null;
+//     this.currentQuestion = null;
+//     this.resetCounters();
+//     await this.startNewSession();
+//   }
+
+//   // Reset all counters
+//   private resetCounters() {
+//     this.currentQuestionIndex = 0;
+//     this.correctAnswers = 0;
+//     this.totalScore = 0;
+//     this.hintsUsed = [];
+//   }
+
+//   // Navigation methods
+//   navigateToProgress() {
+//     this.navCtrl.navigateForward('/progress');
+//   }
+
+//   navigateToLandmark() {
+//     this.navCtrl.navigateForward(['/landmark-details'], {
+//       queryParams: { id: this.landmarkId }
+//     });
+//   }
+
+//   goBack() {
+//     this.navCtrl.back();
+//   }
+
+//   // Exit hunt with confirmation
+//   async exitHunt() {
+//     if (this.huntStarted && !this.huntCompleted) {
+//       const alert = await this.alertCtrl.create({
+//         header: 'Exit Hunt?',
+//         message: 'Your progress will be saved and you can resume later.',
+//         buttons: [
+//           {
+//             text: 'Continue Hunt',
+//             role: 'cancel'
+//           },
+//           {
+//             text: 'Exit',
+//             handler: () => this.navCtrl.back()
+//           }
+//         ]
+//       });
+//       await alert.present();
+//     } else {
+//       this.navCtrl.back();
+//     }
+//   }
+
+//   // Utility methods
+//   get progressPercentage(): number {
+//     return this.totalQuestions > 0 ? 
+//       (this.currentQuestionIndex / this.totalQuestions) * 100 : 0;
+//   }
+
+//   get currentQuestionNumber(): number {
+//     return this.currentQuestionIndex + 1;
+//   }
+
+//   getOptionLetter(index: number): string {
+//     return String.fromCharCode(65 + index); // A, B, C, D
+//   }
+
+//   getOptionColor(optionIndex: number): string {
+//     if (!this.showResult) return 'medium';
+    
+//     if (this.currentQuestion && optionIndex === this.currentQuestion.correctAnswer) {
+//       return 'success';
+//     }
+    
+//     if (optionIndex === this.selectedAnswer && 
+//         optionIndex !== this.currentQuestion?.correctAnswer) {
+//       return 'danger';
+//     }
+    
+//     return 'medium';
+//   }
+
+//   getDifficultyColor(difficulty?: string): string {
+//     switch (difficulty) {
+//       case 'easy': return 'success';
+//       case 'medium': return 'warning';
+//       case 'hard': return 'danger';
+//       default: return 'medium';
+//     }
+//   }
+
+//   private async showToast(message: string, color: string = 'primary') {
+//     const toast = await this.toastCtrl.create({
+//       message,
+//       duration: 3000,
+//       position: 'bottom',
+//       color
+//     });
+//     await toast.present();
+//   }
+// }
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NavController, ToastController, AlertController, ModalController } from '@ionic/angular';

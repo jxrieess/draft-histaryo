@@ -1,0 +1,424 @@
+// src/app/pages/tips/tips.page.scss
+
+:host {
+  --tip-primary: #3498db;
+  --tip-success: #27ae60;
+  --tip-warning: #f39c12;
+  --tip-danger: #e74c3c;
+  --tip-light: #ecf0f1;
+  --tip-dark: #2c3e50;
+  --tip-medium: #95a5a6;
+  --tip-border-radius: 12px;
+  --tip-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --tip-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+ion-content {
+  --background: #f8f9fa;
+}
+
+// Loading state
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  
+  ion-spinner {
+    margin-bottom: 16px;
+    --color: var(--tip-primary);
+  }
+  
+  p {
+    color: var(--tip-medium);
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+// Landmark header
+.landmark-header {
+  margin: 16px 0;
+  border-radius: var(--tip-border-radius);
+  box-shadow: var(--tip-shadow);
+  
+  .landmark-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    
+    ion-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--tip-dark);
+      margin: 0 0 4px 0;
+    }
+    
+    p {
+      color: var(--tip-medium);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Filter section
+.filter-card {
+  margin: 16px 0;
+  border-radius: var(--tip-border-radius);
+  box-shadow: var(--tip-shadow);
+  
+  ion-segment {
+    --background: var(--tip-light);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    
+    ion-segment-button {
+      --color: var(--tip-medium);
+      --color-checked: var(--tip-primary);
+      --background-checked: rgba(52, 152, 219, 0.1);
+      --indicator-color: var(--tip-primary);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+  }
+  
+  .sort-controls {
+    ion-select {
+      --placeholder-color: var(--tip-medium);
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Empty states
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  margin: 2rem 0;
+  border-radius: var(--tip-border-radius);
+  
+  ion-icon {
+    margin-bottom: 1rem;
+    opacity: 0.6;
+  }
+  
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--tip-dark);
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    color: var(--tip-medium);
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+  }
+}
+
+// Tip cards
+.tips-section {
+  .tip-card {
+    margin: 16px 0;
+    border-radius: var(--tip-border-radius);
+    box-shadow: var(--tip-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--tip-primary);
+    }
+    
+    &.tip-type-advice::before {
+      background: var(--tip-primary);
+    }
+    
+    &.tip-type-fact::before {
+      background: var(--tip-success);
+    }
+    
+    &.tip-type-experience::before {
+      background: var(--tip-warning);
+    }
+    
+    &.tip-type-photo::before {
+      background: var(--tip-danger);
+    }
+    
+    &:hover {
+      box-shadow: var(--tip-shadow-hover);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Tip header
+.tip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  
+  .tip-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    
+    .tip-type-chip {
+      align-self: flex-start;
+      font-size: 0.75rem;
+      height: 24px;
+      
+      ion-icon {
+        font-size: 0.9rem;
+      }
+    }
+    
+    .tip-date {
+      font-size: 0.75rem;
+      color: var(--tip-medium);
+      font-weight: 500;
+    }
+  }
+  
+  .tip-options {
+    --color: var(--tip-medium);
+    --padding-start: 8px;
+    --padding-end: 8px;
+    
+    ion-icon {
+      font-size: 1rem;
+    }
+  }
+}
+
+.tip-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--tip-dark);
+  line-height: 1.3;
+  margin: 0;
+}
+
+// Tip content
+.tip-content {
+  margin: 16px 0;
+  
+  .tip-text {
+    color: var(--tip-dark);
+    line-height: 1.5;
+    margin: 0;
+    
+    &:not(.expanded) {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+  }
+}
+
+// Tip photo
+.tip-photo {
+  margin: 16px 0;
+  
+  img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
+
+// Tip actions
+.tip-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--tip-light);
+  
+  .tip-stats {
+    display: flex;
+    gap: 8px;
+    
+    ion-button {
+      --padding-start: 8px;
+      --padding-end: 8px;
+      font-size: 0.8rem;
+      height: 32px;
+      
+      span {
+        margin-left: 4px;
+      }
+      
+      &[color="success"] {
+        --color: var(--tip-success);
+      }
+    }
+  }
+  
+  .tip-author {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--tip-medium);
+    
+    ion-icon {
+      font-size: 1rem;
+    }
+  }
+}
+
+// Load more section
+.load-more {
+  margin: 2rem 0;
+  padding: 0 1rem;
+  
+  ion-button {
+    --border-radius: var(--tip-border-radius);
+    font-weight: 500;
+    
+    ion-spinner {
+      margin-right: 8px;
+    }
+  }
+}
+
+// FAB styling
+ion-fab {
+  ion-fab-button {
+    --background: var(--tip-primary);
+    --color: white;
+    --box-shadow: var(--tip-shadow-hover);
+    
+    &:hover {
+      --box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .landmark-header .landmark-info {
+    gap: 12px;
+    
+    h2 {
+      font-size: 1.1rem;
+    }
+  }
+  
+  .tip-header {
+    .tip-meta {
+      gap: 6px;
+    }
+  }
+  
+  .tip-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    
+    .tip-stats {
+      width: 100%;
+      justify-content: space-around;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-card {
+    ion-segment {
+      ion-segment-button {
+        font-size: 0.75rem;
+        padding: 0 8px;
+      }
+    }
+  }
+  
+  .tip-card {
+    margin: 12px 0;
+  }
+  
+  .tip-title {
+    font-size: 1rem;
+  }
+  
+  .tip-photo img {
+    max-height: 150px;
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  :host {
+    --tip-light: #34495e;
+    --tip-dark: #ecf0f1;
+    --tip-medium: #bdc3c7;
+  }
+  
+  ion-content {
+    --background: #2c3e50;
+  }
+  
+  .tip-card {
+    --background: var(--ion-color-dark-tint);
+  }
+  
+  .filter-card {
+    --background: var(--ion-color-dark-tint);
+  }
+}
+
+// Accessibility improvements
+@media (prefers-reduced-motion: reduce) {
+  .tip-card {
+    transition: none;
+    
+    &:hover {
+      transform: none;
+    }
+  }
+  
+  .tip-photo img {
+    transition: none;
+  }
+}
+
+// High contrast mode
+@media (prefers-contrast: high) {
+  .tip-card {
+    border: 2px solid var(--tip-dark);
+    
+    &::before {
+      width: 6px;
+    }
+  }
+  
+  .tip-actions {
+    border-top: 2px solid var(--tip-medium);
+  }
+}

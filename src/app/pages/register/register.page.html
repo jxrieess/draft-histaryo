@@ -1,135 +1,273 @@
-<ion-content class="auth-content">
+<ion-content class="auth-content" [fullscreen]="true">
   <div class="auth-container">
-    <!-- Header Section -->
     <div class="auth-header">
       <div class="logo-container">
-        <ion-icon name="map-outline" class="logo-icon"></ion-icon>
+        <div class="logo-wrapper">
+          <ion-icon name="map" class="logo-icon"></ion-icon>
+          <div class="logo-glow"></div>
+        </div>
         <h1>HistARyo</h1>
+        <div class="tagline">Heritage Exploration Platform</div>
       </div>
-      <p class="welcome-text">Join our community and start discovering heritage sites through AR!</p>
+      <p class="welcome-text">
+        Join our community and start discovering heritage sites through augmented reality!
+      </p>
     </div>
 
-    <!-- Register Form -->
-    <form class="auth-form" (ngSubmit)="register()">
-      <div class="form-group">
-        <ion-item class="custom-input" lines="none">
-          <ion-icon name="person-outline" slot="start" class="input-icon"></ion-icon>
-          <ion-input 
-            type="text" 
-            placeholder="Enter your full name"
-            [(ngModel)]="fullName"
-            name="fullName"
-            required
-            autocomplete="name"
-            class="form-input">
-          </ion-input>
-        </ion-item>
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="progress-text">Step 1 of 2: Create Account</div>
+    </div>
+
+    <div class="message-container">
+      <ion-card class="error-card" *ngIf="formErrors.general">
+        <ion-card-content>
+          <ion-icon name="alert-circle" color="danger"></ion-icon>
+          <span>{{ formErrors.general }}</span>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <form class="auth-form" (ngSubmit)="register()" #registerForm="ngForm">
+      <div class="form-group" [class.has-error]="formErrors.fullName" [class.has-success]="fullName && !formErrors.fullName">
+        <div class="input-container">
+          <ion-item class="custom-input" lines="none">
+            <ion-icon name="person-outline" slot="start" class="input-icon"></ion-icon>
+            <ion-input 
+              type="text" 
+              placeholder="Enter your full name"
+              [(ngModel)]="fullName"
+              name="fullName"
+              required
+              autocomplete="name"
+              class="form-input"
+              (ionFocus)="onInputFocus('fullName')"
+              (ionBlur)="onInputBlur('fullName')">
+            </ion-input>
+            <ion-icon name="checkmark-circle" slot="end" class="success-icon" 
+                     *ngIf="fullName && !formErrors.fullName" color="success"></ion-icon>
+          </ion-item>
+          <div class="error-text" *ngIf="formErrors.fullName">
+            <ion-icon name="alert-circle" color="danger"></ion-icon>
+            {{ formErrors.fullName }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" [class.has-error]="formErrors.email" [class.has-success]="email && !formErrors.email">
+        <div class="input-container">
+          <ion-item class="custom-input" lines="none">
+            <ion-icon name="mail-outline" slot="start" class="input-icon"></ion-icon>
+            <ion-input 
+              type="email" 
+              placeholder="Enter your email address"
+              [(ngModel)]="email"
+              name="email"
+              required
+              autocomplete="email"
+              class="form-input"
+              (ionFocus)="onInputFocus('email')"
+              (ionBlur)="onInputBlur('email')">
+            </ion-input>
+            <ion-icon name="checkmark-circle" slot="end" class="success-icon" 
+                     *ngIf="email && !formErrors.email" color="success"></ion-icon>
+          </ion-item>
+          <div class="error-text" *ngIf="formErrors.email">
+            <ion-icon name="alert-circle" color="danger"></ion-icon>
+            {{ formErrors.email }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" [class.has-error]="formErrors.password" [class.has-success]="password && !formErrors.password">
+        <div class="input-container">
+          <ion-item class="custom-input" lines="none">
+            <ion-icon name="lock-closed-outline" slot="start" class="input-icon"></ion-icon>
+            <ion-input 
+              [type]="showPassword ? 'text' : 'password'" 
+              placeholder="Create a strong password"
+              [(ngModel)]="password"
+              name="password"
+              required
+              autocomplete="new-password"
+              class="form-input"
+              (ionFocus)="onInputFocus('password')"
+              (ionBlur)="onInputBlur('password')"
+              (ionInput)="onPasswordInput()">
+            </ion-input>
+            <ion-button fill="clear" slot="end" (click)="togglePasswordVisibility()" class="visibility-btn">
+              <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          </ion-item>
+          <div class="password-strength" *ngIf="password">
+            <div class="strength-bar">
+              <div class="strength-fill" [attr.data-strength]="getPasswordStrength()"></div>
+            </div>
+            <div class="strength-text" [attr.data-strength]="getPasswordStrength()">
+              Password strength: {{ getPasswordStrength() }}
+            </div>
+          </div>
+          <div class="error-text" *ngIf="formErrors.password">
+            <ion-icon name="alert-circle" color="danger"></ion-icon>
+            {{ formErrors.password }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" [class.has-error]="formErrors.confirmPassword" [class.has-success]="confirmPassword && !formErrors.confirmPassword">
+        <div class="input-container">
+          <ion-item class="custom-input" lines="none">
+            <ion-icon name="lock-closed-outline" slot="start" class="input-icon"></ion-icon>
+            <ion-input 
+              [type]="showConfirmPassword ? 'text' : 'password'" 
+              placeholder="Confirm your password"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              required
+              autocomplete="new-password"
+              class="form-input"
+              (ionFocus)="onInputFocus('confirmPassword')"
+              (ionBlur)="onInputBlur('confirmPassword')">
+            </ion-input>
+            <ion-button fill="clear" slot="end" (click)="toggleConfirmPasswordVisibility()" class="visibility-btn">
+              <ion-icon [name]="showConfirmPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+            <ion-icon name="checkmark-circle" slot="end" class="success-icon" 
+                     *ngIf="confirmPassword && !formErrors.confirmPassword && password === confirmPassword" color="success"></ion-icon>
+          </ion-item>
+          <div class="error-text" *ngIf="formErrors.confirmPassword">
+            <ion-icon name="alert-circle" color="danger"></ion-icon>
+            {{ formErrors.confirmPassword }}
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
-        <ion-item class="custom-input" lines="none">
-          <ion-icon name="mail-outline" slot="start" class="input-icon"></ion-icon>
-          <ion-input 
-            type="email" 
-            placeholder="Enter your email"
-            [(ngModel)]="email"
-            name="email"
-            required
-            autocomplete="email"
-            class="form-input">
-          </ion-input>
-        </ion-item>
-      </div>
-
-      <div class="form-group">
-        <ion-item class="custom-input" lines="none">
-          <ion-icon name="lock-closed-outline" slot="start" class="input-icon"></ion-icon>
-          <ion-input 
-            type="password" 
-            placeholder="Create a password"
-            [(ngModel)]="password"
-            name="password"
-            required
-            autocomplete="new-password"
-            class="form-input">
-          </ion-input>
-        </ion-item>
-      </div>
-
-      <div class="form-group">
-        <ion-item class="custom-input" lines="none">
-          <ion-icon name="lock-closed-outline" slot="start" class="input-icon"></ion-icon>
-          <ion-input 
-            type="password" 
-            placeholder="Confirm your password"
-            [(ngModel)]="confirmPassword"
-            name="confirmPassword"
-            required
-            autocomplete="new-password"
-            class="form-input">
-          </ion-input>
-        </ion-item>
-      </div>
-
-      <div class="form-group">
-        <ion-item class="custom-input custom-select" lines="none">
-          <ion-icon name="people-outline" slot="start" class="input-icon"></ion-icon>
-          <ion-select 
-            [(ngModel)]="role" 
-            name="role"
-            placeholder="Select your role"
-            class="form-select">
-            <ion-select-option value="visitor">Heritage Explorer</ion-select-option>
-            <ion-select-option value="curator">Content Curator</ion-select-option>
-            <ion-select-option value="guide">Tour Guide</ion-select-option>
-          </ion-select>
-        </ion-item>
+        <div class="input-container">
+          <ion-item class="custom-input custom-select" lines="none">
+            <ion-icon name="people-outline" slot="start" class="input-icon"></ion-icon>
+            <ion-select 
+              [(ngModel)]="role" 
+              name="role"
+              placeholder="Select your role"
+              class="form-select"
+              interface="popover">
+              <ion-select-option value="visitor">
+                <div class="select-option">
+                  <ion-icon name="walk-outline"></ion-icon>
+                  Heritage Explorer
+                </div>
+              </ion-select-option>
+              <ion-select-option value="curator">
+                <div class="select-option">
+                  <ion-icon name="library-outline"></ion-icon>
+                  Content Curator
+                </div>
+              </ion-select-option>
+              <ion-select-option value="guide">
+                <div class="select-option">
+                  <ion-icon name="compass-outline"></ion-icon>
+                  Tour Guide
+                </div>
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
       </div>
 
       <div class="terms-agreement">
-        <ion-checkbox [(ngModel)]="agreeToTerms" name="agreeToTerms"></ion-checkbox>
-        <ion-text class="terms-text">
-          I agree to the <a href="#" class="terms-link">Terms of Service</a> and 
-          <a href="#" class="terms-link">Privacy Policy</a>
-        </ion-text>
+        <ion-checkbox 
+          [(ngModel)]="agreeToTerms" 
+          name="agreeToTerms"
+          class="custom-checkbox"></ion-checkbox>
+        <div class="terms-text">
+          I agree to the 
+          <ion-button fill="clear" size="small" class="terms-link" (click)="openTerms()">
+            Terms of Service
+          </ion-button> 
+          and 
+          <ion-button fill="clear" size="small" class="terms-link" (click)="openPrivacyPolicy()">
+            Privacy Policy
+          </ion-button>
+        </div>
       </div>
 
       <ion-button 
         expand="block" 
         type="submit"
         class="auth-button primary-btn"
-        [disabled]="isSubmitting || !agreeToTerms">
-        <ion-icon name="person-add-outline" slot="start" *ngIf="!isSubmitting"></ion-icon>
-        <ion-spinner name="crescent" *ngIf="isSubmitting"></ion-spinner>
-        {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
+        [disabled]="isSubmitting || !agreeToTerms || !registerForm.valid">
+        <div class="button-content">
+          <ion-icon name="person-add-outline" *ngIf="!isSubmitting"></ion-icon>
+          <ion-spinner name="crescent" *ngIf="isSubmitting"></ion-spinner>
+          <span>{{ isSubmitting ? 'Creating Your Account...' : 'Create Account' }}</span>
+        </div>
       </ion-button>
     </form>
 
-    <!-- Divider -->
     <div class="divider">
-      <span>or</span>
+      <div class="divider-line"></div>
+      <span class="divider-text">or continue with</span>
+      <div class="divider-line"></div>
     </div>
 
-    <!-- Social Login -->
     <div class="social-login">
-      <ion-button expand="block" fill="outline" class="social-btn google-btn">
+      <ion-button 
+        expand="block" 
+        fill="outline" 
+        class="social-btn google-btn"
+        (click)="registerWithGoogle()"
+        [disabled]="isSubmitting">
         <ion-icon name="logo-google" slot="start"></ion-icon>
-        Sign up with Google
+        Continue with Google
       </ion-button>
-      <ion-button expand="block" fill="outline" class="social-btn facebook-btn">
+      
+      <ion-button 
+        expand="block" 
+        fill="outline" 
+        class="social-btn facebook-btn"
+        (click)="registerWithFacebook()"
+        [disabled]="isSubmitting">
         <ion-icon name="logo-facebook" slot="start"></ion-icon>
-        Sign up with Facebook
+        Continue with Facebook
       </ion-button>
     </div>
 
-    <!-- Footer -->
     <div class="auth-footer">
-      <ion-text class="footer-text">
-        Already have an account? 
-        <ion-button fill="clear" [routerLink]="['/login']" class="link-btn">
-          Sign In
+      <div class="footer-content">
+        <ion-text class="footer-text">
+          Already have an account?
+        </ion-text>
+        <ion-button 
+          fill="clear" 
+          class="link-btn"
+          (click)="navigateToLogin()">
+          <strong>Sign In</strong>
+          <ion-icon name="arrow-forward" slot="end"></ion-icon>
         </ion-button>
-      </ion-text>
+      </div>
+      
+      <div class="app-info">
+        <ion-text>
+          <p>HistARyo v1.0 - Capstone Project</p>
+          <p>Discover heritage sites through AR technology</p>
+        </ion-text>
+      </div>
     </div>
   </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button size="small" color="tertiary" (click)="showHelp()">
+      <ion-icon name="help-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
+
+<div class="loading-overlay" *ngIf="isSubmitting">
+  <div class="loading-content">
+    <ion-spinner name="crescent" color="light"></ion-spinner>
+    <p>Creating your account...</p>
+  </div>
+</div>

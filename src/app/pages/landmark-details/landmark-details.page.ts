@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+import { ToastController, LoadingController, AlertController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import {
   collection, doc, getDoc, getDocs, query, where,
@@ -20,6 +20,12 @@ interface LandmarkDoc {
   slug?: string;
   category?: string;
   city?: string;
+  historical_significance?: string;
+  construction_date?: string;
+  architect?: string;
+  architectural_style?: string;
+  fun_facts?: string[];
+  visiting_tips?: string[];
 }
 
 interface LandmarkVM {
@@ -34,6 +40,12 @@ interface LandmarkVM {
   longitude?: number | string;
   category?: string;
   city?: string;
+  historicalSignificance?: string;
+  constructionDate?: string;
+  architect?: string;
+  architecturalStyle?: string;
+  funFacts?: string[];
+  visitingTips?: string[];
 }
 
 @Component({
@@ -42,14 +54,22 @@ interface LandmarkVM {
   styleUrls: ['./landmark-details.page.scss'],
   standalone: false
 })
-export class LandmarkDetailsPage implements OnInit {
+export class LandmarkDetailsPage implements OnInit, OnDestroy {
   landmark: LandmarkVM | null = null;
   loading = true;
   activeTab = 'story';
   sliderValue = 50;
   isStamped = false;
+  isBookmarked = false;
   showArExperience = false;
   arContent: any = null;
+  
+  // Additional properties for enhanced functionality
+  triviaQuestions: any[] = [];
+  hasScavengerHunt = false;
+  userTips: any[] = [];
+  nearbyLandmarks: any[] = [];
+  currentImageIndex = 0;
 
   private storageSvc = getStorage();
 
@@ -57,12 +77,18 @@ export class LandmarkDetailsPage implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private local: Storage,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private loadingCtrl: LoadingController,
+    private alertCtrl: AlertController
   ) {}
 
   async ngOnInit(): Promise<void> {
     await this.local.create();
     await this.loadLandmarkFromRoute();
+  }
+
+  ngOnDestroy(): void {
+    // Clean up any subscriptions or listeners
   }
 
   private async loadLandmarkFromRoute(): Promise<void> {
@@ -71,7 +97,6 @@ export class LandmarkDetailsPage implements OnInit {
 
     try {
       const routeId = this.route.snapshot.paramMap.get('id');
-      
       const queryId = this.route.snapshot.queryParamMap.get('id');
       const slug = this.route.snapshot.queryParamMap.get('slug');
 
@@ -82,7 +107,7 @@ export class LandmarkDetailsPage implements OnInit {
       } else if (slug) {
         await this.loadBySlug(slug);
       } else {
-        await this.toast('Invalid landmark link.', 'danger');
+        await this.showToast('Invalid landmark link.', 'danger');
         this.router.navigate(['/home']);
         return;
       }
@@ -90,15 +115,21 @@ export class LandmarkDetailsPage implements OnInit {
       const currentLandmark = this.landmark as LandmarkVM | null;
       
       if (currentLandmark !== null && currentLandmark.id) {
-        await this.syncStamp(currentLandmark.id);
-        await this.loadArContent(currentLandmark.id);
+        await Promise.all([
+          this.syncStamp(currentLandmark.id),
+          this.syncBookmark(currentLandmark.id),
+          this.loadArContent(currentLandmark.id),
+          this.loadTriviaQuestions(currentLandmark.id),
+          this.checkScavengerHunt(currentLandmark.id),
+          this.loadUserTips(currentLandmark.id)
+        ]);
       } else {
-        await this.toast('Landmark not found.', 'danger');
+        await this.showToast('Landmark not found.', 'danger');
         this.router.navigate(['/home']);
       }
     } catch (error) {
       console.error('Error loading landmark:', error);
-      await this.toast('Failed to load landmark.', 'danger');
+      await this.showToast('Failed to load landmark.', 'danger');
       this.router.navigate(['/home']);
     } finally {
       this.loading = false;
@@ -109,7 +140,7 @@ export class LandmarkDetailsPage implements OnInit {
     try {
       const snap = await getDoc(doc(db, 'landmarks', id));
       if (!snap.exists()) {
-        await this.toast('Landmark not found.', 'danger');
+        await this.showToast('Landmark not found.', 'danger');
         this.landmark = null;
         return;
       }
@@ -126,7 +157,7 @@ export class LandmarkDetailsPage implements OnInit {
       const q = query(collection(db, 'landmarks'), where('slug', '==', slug));
       const snap = await getDocs(q);
       if (snap.empty) {
-        await this.toast('Landmark not found.', 'danger');
+        await this.showToast('Landmark not found.', 'danger');
         this.landmark = null;
         return;
       }
@@ -157,6 +188,12 @@ export class LandmarkDetailsPage implements OnInit {
       longitude: data.longitude,
       category: data.category,
       city: data.city,
+      historicalSignificance: data.historical_significance,
+      constructionDate: data.construction_date,
+      architect: data.architect,
+      architecturalStyle: data.architectural_style,
+      funFacts: data.fun_facts || [],
+      visitingTips: data.visiting_tips || []
     };
   }
 
@@ -181,50 +218,194 @@ export class LandmarkDetailsPage implements OnInit {
     }
   }
 
-  async launchArExperience(): Promise<void> {
-    const currentLandmark = this.landmark;
-    if (!currentLandmark) return;
-    
+  private async loadTriviaQuestions(landmarkId: string): Promise<void> {
     try {
-      this.showArExperience = true;
-      await this.toast('AR Experience launched! 🚀', 'success');
+      const triviaRef = collection(db, 'trivia');
+      const q = query(triviaRef, where('landmarkId', '==', landmarkId));
+      const querySnapshot = await getDocs(q);
       
-      this.router.navigate(['/ar-experience'], { 
-        queryParams: { id: currentLandmark.id } 
-      });
+      this.triviaQuestions = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
     } catch (error) {
-      await this.toast('Failed to launch AR experience', 'danger');
+      console.error('Error loading trivia questions:', error);
     }
   }
 
-  private async syncStamp(id: string): Promise<void> {
-    const stamps: string[] = (await this.local.get('stamps')) || [];
-    this.isStamped = stamps.includes(id);
+  private async checkScavengerHunt(landmarkId: string): Promise<void> {
+    try {
+      const huntRef = collection(db, 'scavenger_hunts');
+      const q = query(huntRef, where('landmarkId', '==', landmarkId));
+      const querySnapshot = await getDocs(q);
+      
+      this.hasScavengerHunt = !querySnapshot.empty;
+    } catch (error) {
+      console.error('Error checking scavenger hunt:', error);
+    }
+  }
+
+  private async loadUserTips(landmarkId: string): Promise<void> {
+    try {
+      const tipsRef = collection(db, 'user_tips');
+      const q = query(tipsRef, where('landmarkId', '==', landmarkId), where('approved', '==', true));
+      const querySnapshot = await getDocs(q);
+      
+      this.userTips = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error loading user tips:', error);
+    }
+  }
+
+  // Main Action Methods
+  async launchArExperience(): Promise<void> {
+    const currentLandmark = this.landmark;
+    if (!currentLandmark) {
+      await this.showToast('No landmark data available', 'danger');
+      return;
+    }
+
+    // Check if device supports AR
+    if (!this.isArSupported()) {
+      const alert = await this.alertCtrl.create({
+        header: 'AR Not Supported',
+        message: 'Your device does not support AR experiences. You can still view landmark information in regular mode.',
+        buttons: ['OK']
+      });
+      await alert.present();
+      return;
+    }
+
+    const loading = await this.loadingCtrl.create({
+      message: 'Starting AR Experience...',
+      duration: 2000
+    });
+    await loading.present();
+
+    try {
+      this.showArExperience = true;
+      await this.showToast('AR Experience launched! 🚀', 'success');
+      
+      // Navigate to AR experience page with landmark data
+      this.router.navigate(['/ar-experience'], { 
+        queryParams: { 
+          id: currentLandmark.id,
+          name: currentLandmark.name
+        } 
+      });
+    } catch (error) {
+      console.error('Error launching AR experience:', error);
+      await this.showToast('Failed to launch AR experience', 'danger');
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  private isArSupported(): boolean {
+    // Check for AR support in the browser/device
+    return 'xr' in navigator || 'mediaDevices' in navigator;
   }
 
   async collectStamp(): Promise<void> {
     const currentLandmark = this.landmark;
     if (!currentLandmark || this.isStamped) return;
 
-    const stamps: string[] = (await this.local.get('stamps')) || [];
-    stamps.push(currentLandmark.id);
-    await this.local.set('stamps', stamps);
-    
-    this.isStamped = true;
-    await this.toast('Stamp collected! 🎉', 'success');
+    const loading = await this.loadingCtrl.create({
+      message: 'Collecting stamp...'
+    });
+    await loading.present();
+
+    try {
+      const stamps: string[] = (await this.local.get('stamps')) || [];
+      stamps.push(currentLandmark.id);
+      await this.local.set('stamps', stamps);
+      
+      this.isStamped = true;
+      await this.showToast('Stamp collected! 🎉', 'success');
+      
+      // Record visit for analytics
+      await this.recordVisit(currentLandmark.id);
+    } catch (error) {
+      console.error('Error collecting stamp:', error);
+      await this.showToast('Failed to collect stamp', 'danger');
+    } finally {
+      await loading.dismiss();
+    }
   }
 
+  async toggleBookmark(): Promise<void> {
+    const currentLandmark = this.landmark;
+    if (!currentLandmark) return;
+
+    try {
+      const bookmarks: string[] = (await this.local.get('bookmarks')) || [];
+      
+      if (this.isBookmarked) {
+        const index = bookmarks.indexOf(currentLandmark.id);
+        if (index > -1) {
+          bookmarks.splice(index, 1);
+        }
+        this.isBookmarked = false;
+        await this.showToast('Bookmark removed', 'medium');
+      } else {
+        bookmarks.push(currentLandmark.id);
+        this.isBookmarked = true;
+        await this.showToast('Landmark bookmarked! 📌', 'success');
+      }
+      
+      await this.local.set('bookmarks', bookmarks);
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      await this.showToast('Failed to update bookmark', 'danger');
+    }
+  }
+
+  private async recordVisit(landmarkId: string): Promise<void> {
+    try {
+      const visits: any[] = (await this.local.get('visits')) || [];
+      const visitRecord = {
+        landmarkId,
+        timestamp: new Date().toISOString(),
+        date: new Date().toDateString()
+      };
+      visits.push(visitRecord);
+      await this.local.set('visits', visits);
+    } catch (error) {
+      console.error('Error recording visit:', error);
+    }
+  }
+
+  // Navigation Methods
   startScavengerHunt(): void {
     const currentLandmark = this.landmark;
     if (!currentLandmark) return;
+    
+    if (!this.hasScavengerHunt) {
+      this.showToast('No scavenger hunt available for this landmark', 'warning');
+      return;
+    }
+    
     this.router.navigate(['/scavenger'], { 
-      queryParams: { landmarkId: currentLandmark.id } 
+      queryParams: { 
+        landmarkId: currentLandmark.id,
+        huntId: `hunt-${currentLandmark.id}`
+      } 
     });
   }
 
   viewTips(): void {
     const currentLandmark = this.landmark;
     if (!currentLandmark) return;
+    
+    if (this.userTips.length === 0) {
+      this.showToast('No tips available yet. Be the first to share!', 'primary');
+      this.submitTip();
+      return;
+    }
+    
     this.router.navigate(['/tips'], { 
       queryParams: { landmarkId: currentLandmark.id } 
     });
@@ -234,24 +415,153 @@ export class LandmarkDetailsPage implements OnInit {
     const currentLandmark = this.landmark;
     if (!currentLandmark) return;
     this.router.navigate(['/submit-tip'], { 
-      queryParams: { landmarkId: currentLandmark.id } 
+      queryParams: { 
+        landmarkId: currentLandmark.id,
+        landmarkName: currentLandmark.name
+      } 
     });
   }
 
-  private async toast(
-    message: string,
-    color: 'success' | 'danger' | 'primary' = 'success'
-  ): Promise<void> {
-    const t = await this.toastCtrl.create({ 
-      message, 
-      duration: 2000, 
-      color,
-      position: 'bottom'
-    });
-    await t.present();
+  async shareLandmark(): Promise<void> {
+    const currentLandmark = this.landmark;
+    if (!currentLandmark) return;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: currentLandmark.name,
+          text: currentLandmark.description,
+          url: window.location.href
+        });
+      } else {
+        // Fallback for browsers that don't support native sharing
+        await navigator.clipboard.writeText(window.location.href);
+        await this.showToast('Link copied to clipboard! 📋', 'success');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        await this.showToast('Link copied to clipboard! 📋', 'success');
+      } catch (clipboardError) {
+        await this.showToast('Sharing not available', 'warning');
+      }
+    }
   }
 
+  async openInMaps(): Promise<void> {
+    const currentLandmark = this.landmark;
+    if (!currentLandmark || !currentLandmark.latitude || !currentLandmark.longitude) {
+      await this.showToast('Location coordinates not available', 'warning');
+      return;
+    }
+
+    const lat = currentLandmark.latitude;
+    const lng = currentLandmark.longitude;
+    const name = encodeURIComponent(currentLandmark.name);
+
+    // Try to open in Google Maps
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}&query_place_id=${name}`;
+    window.open(googleMapsUrl, '_blank');
+  }
+
+  async playTrivia(): Promise<void> {
+    const currentLandmark = this.landmark;
+    if (!currentLandmark) return;
+
+    if (this.triviaQuestions.length === 0) {
+      await this.showToast('No trivia questions available for this landmark', 'warning');
+      return;
+    }
+
+    // Navigate to trivia page or show inline trivia
+    this.router.navigate(['/trivia'], {
+      queryParams: { landmarkId: currentLandmark.id }
+    });
+  }
+
+  // UI Event Handlers
   onSliderChange(event: any): void {
     this.sliderValue = event.detail.value;
+  }
+
+  onTabChange(event: any): void {
+    this.activeTab = event.detail.value;
+  }
+
+  onImageError(event: any): void {
+    event.target.src = 'assets/img/placeholder.jpg';
+  }
+
+  // Data Sync Methods
+  private async syncStamp(id: string): Promise<void> {
+    try {
+      const stamps: string[] = (await this.local.get('stamps')) || [];
+      this.isStamped = stamps.includes(id);
+    } catch (error) {
+      console.error('Error syncing stamp status:', error);
+    }
+  }
+
+  private async syncBookmark(id: string): Promise<void> {
+    try {
+      const bookmarks: string[] = (await this.local.get('bookmarks')) || [];
+      this.isBookmarked = bookmarks.includes(id);
+    } catch (error) {
+      console.error('Error syncing bookmark status:', error);
+    }
+  }
+
+  // Utility Methods
+  private async showToast(
+    message: string,
+    color: 'success' | 'danger' | 'warning' | 'primary' | 'medium' = 'success'
+  ): Promise<void> {
+    const toast = await this.toastCtrl.create({ 
+      message, 
+      duration: 3000, 
+      color,
+      position: 'bottom',
+      buttons: [
+        {
+          text: 'Dismiss',
+          role: 'cancel'
+        }
+      ]
+    });
+    await toast.present();
+  }
+
+  // Getter methods for template
+  get hasAdditionalInfo(): boolean {
+    return !!(this.landmark?.historicalSignificance || 
+              this.landmark?.constructionDate || 
+              this.landmark?.architect ||
+              this.landmark?.funFacts?.length ||
+              this.landmark?.visitingTips?.length);
+  }
+
+  get hasMedia(): boolean {
+    return !!(this.landmark?.videoUrl || 
+              this.landmark?.thenUrl || 
+              this.landmark?.nowUrl);
+  }
+
+  get hasInteractiveContent(): boolean {
+    return this.hasScavengerHunt || 
+           this.triviaQuestions.length > 0 || 
+           !!this.arContent;
+  }
+
+  get locationString(): string {
+    if (!this.landmark?.latitude || !this.landmark?.longitude) {
+      return 'Location not available';
+    }
+    return `${this.landmark.latitude}, ${this.landmark.longitude}`;
+  }
+
+  get hasLocationData(): boolean {
+    return !!(this.landmark?.latitude && this.landmark?.longitude);
   }
 }

@@ -1,62 +1,155 @@
-<ion-header>
+<ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Explore Landmarks</ion-title>
+    <ion-title>Heritage Landmarks</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="recenterToUser()" fill="clear">
+        <ion-icon name="locate-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button (click)="clearFilters()" fill="clear">
+        <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content fullscreen>
-  <ion-searchbar
-    [(ngModel)]="searchQuery"
-    (ionInput)="updateMarkers()"
-    placeholder="Search landmarks"
-    debounce="300">
-  </ion-searchbar>
-
-  <ion-item>
-    <ion-label>Filter by City</ion-label>
-    <ion-select [(ngModel)]="cityFilter" (ionChange)="updateMarkers()">
-      <ion-select-option value="">All</ion-select-option>
-      <ion-select-option *ngFor="let city of availableCities" [value]="city">{{ city }}</ion-select-option>
-    </ion-select>
-  </ion-item>
-
-  <ion-item>
-    <ion-label>Show Only Nearby</ion-label>
-    <ion-toggle [(ngModel)]="showNearbyOnly" (ionChange)="updateMarkers()"></ion-toggle>
-  </ion-item>
-  <ion-item *ngIf="showNearbyOnly">
-    <ion-label>Radius (km)</ion-label>
-    <ion-range min="0.1" max="5" step="0.1" [(ngModel)]="radiusKm" (ionChange)="updateMarkers()">
-      <ion-label slot="end">{{ radiusKm }} km</ion-label>
-    </ion-range>
-  </ion-item>
-
-  <div class="category-chips">
-    <div
-      class="category-chip"
-      [ngClass]="{ active: categoryFilter === '' }"
-      (click)="setCategoryFilter('')"
-    >All</div>
-    <div
-      class="category-chip"
-      *ngFor="let cat of availableCategories"
-      [ngClass]="{ active: categoryFilter === cat }"
-      (click)="setCategoryFilter(cat)"
-    >{{ cat }}</div>
+<ion-content [fullscreen]="true">
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading curator-approved landmarks...</p>
   </div>
 
-  <div class="map-wrapper">
-    <div id="map"></div>
-    <button class="recenter-button" (click)="recenterToUser()">
-      <ion-icon name="locate-outline"></ion-icon>
-    </button>
-  </div>
+  <!-- Filter Controls -->
+  <ion-card class="filter-card" *ngIf="!loading">
+    <ion-card-content>
+      <div class="info-badge">
+        <ion-icon name="checkmark-circle" color="success"></ion-icon>
+        <span>Showing only curator-approved heritage landmarks</span>
+      </div>
 
-  <div class="nearby-list" *ngIf="showNearbyOnly">
-    <h4>Nearby Landmarks</h4>
-    <div class="item" *ngFor="let l of nearbyLandmarks">
-      <div>{{ l.name }}</div>
-      <div class="distance">{{ getDistanceFromLatLonInKm(userLat, userLng, l.coordinates[1], l.coordinates[0]).toFixed(1) }} km</div>
-    </div>
-  </div>
+      <!-- Search -->
+      <ion-item>
+        <ion-label position="stacked">Search Landmarks</ion-label>
+        <ion-input 
+          [(ngModel)]="searchQuery"
+          (ionInput)="updateMarkers()"
+          placeholder="Search by name, description, or location..."
+          clearInput="true">
+        </ion-input>
+      </ion-item>
+
+      <!-- Category Filter -->
+      <ion-item>
+        <ion-label position="stacked">Category</ion-label>
+        <ion-select 
+          [(ngModel)]="categoryFilter"
+          (ionChange)="updateMarkers()"
+          placeholder="All categories">
+          <ion-select-option value="">All Categories</ion-select-option>
+          <ion-select-option 
+            *ngFor="let category of availableCategories" 
+            [value]="category">
+            {{ category }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <!-- City Filter -->
+      <ion-item>
+        <ion-label position="stacked">City</ion-label>
+        <ion-select 
+          [(ngModel)]="cityFilter"
+          (ionChange)="updateMarkers()"
+          placeholder="All cities">
+          <ion-select-option value="">All Cities</ion-select-option>
+          <ion-select-option 
+            *ngFor="let city of availableCities" 
+            [value]="city">
+            {{ city }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <!-- Results Count -->
+      <div class="results-info">
+        <ion-chip color="primary" outline="true">
+          <ion-label>
+            {{ displayedLandmarksCount }} of {{ totalLandmarksCount }} landmarks
+          </ion-label>
+        </ion-chip>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Map Container -->
+  <div id="map" class="map-container" *ngIf="!loading"></div>
+
+  <!-- No Results Message -->
+  <ion-card *ngIf="!loading && filteredLandmarks.length === 0" class="no-results-card">
+    <ion-card-content class="ion-text-center">
+      <ion-icon name="location-outline" size="large" color="medium"></ion-icon>
+      <h2>No landmarks found</h2>
+      <p *ngIf="totalLandmarksCount === 0">
+        No curator-approved landmarks have been added yet.<br>
+        Curators can add landmarks through the web administration panel.
+      </p>
+      <p *ngIf="totalLandmarksCount > 0">
+        No landmarks match your current search criteria.
+      </p>
+      <ion-button 
+        *ngIf="totalLandmarksCount > 0"
+        (click)="clearFilters()" 
+        fill="outline">
+        Clear Filters
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Landmark List (for small screens) -->
+  <ion-list *ngIf="!loading && filteredLandmarks.length > 0" class="landmark-list">
+    <ion-list-header>
+      <ion-label>
+        <h2>Heritage Landmarks</h2>
+        <p>{{ filteredLandmarks.length }} curator-approved locations</p>
+      </ion-label>
+    </ion-list-header>
+
+    <ion-item 
+      *ngFor="let landmark of filteredLandmarks; trackBy: trackByLandmark"
+      button 
+      (click)="navigateToLandmark(landmark.id)">
+      
+      <ion-thumbnail slot="start" *ngIf="landmark.imageUrl">
+        <img [src]="landmark.imageUrl" [alt]="landmark.name">
+      </ion-thumbnail>
+      
+      <ion-label>
+        <h3>{{ landmark.name }}</h3>
+        <p>{{ landmark.description | slice:0:100 }}{{ landmark.description && landmark.description.length > 100 ? '...' : '' }}</p>
+        
+        <div class="landmark-meta">
+          <ion-chip size="small" color="primary" outline="true">
+            {{ landmark.category }}
+          </ion-chip>
+          <ion-chip size="small" color="secondary" outline="true" *ngIf="landmark.city">
+            {{ landmark.city }}
+          </ion-chip>
+          <ion-chip size="small" color="success" outline="true">
+            <ion-icon name="checkmark-circle-outline" size="small"></ion-icon>
+            <ion-label>Curator Approved</ion-label>
+          </ion-chip>
+          <ion-chip 
+            *ngIf="landmark.arContent" 
+            size="small" 
+            color="tertiary" 
+            outline="true">
+            <ion-icon name="camera-outline" size="small"></ion-icon>
+            <ion-label>AR</ion-label>
+          </ion-chip>
+        </div>
+      </ion-label>
+
+      <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+    </ion-item>
+  </ion-list>
 </ion-content>

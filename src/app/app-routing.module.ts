@@ -2,8 +2,7 @@ import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { RoleGuard } from './guards/role.guard';
 
-
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: '',
     redirectTo: 'login',
@@ -38,18 +37,6 @@ const routes: Routes = [
     loadChildren: () => import('./pages/onboarding/onboarding.module').then( m => m.OnboardingPageModule)
   },
   {
-    path: 'admin',
-    loadChildren: () => import('./pages/admin/admin.module').then( m => m.AdminPageModule),
-    canActivate: [RoleGuard],
-    data: { roles: ['admin'] }
-  },
-  {
-    path: 'curator',
-    loadChildren: () => import('./pages/curator/curator.module').then( m => m.CuratorPageModule),
-    canActivate: [RoleGuard],
-    data: { roles: ['curator'] }
-  },
-  {
     path: 'visitor',
     loadChildren: () => import('./pages/visitor/visitor.module').then( m => m.VisitorPageModule),
     canActivate: [RoleGuard],
@@ -59,31 +46,15 @@ const routes: Routes = [
     path: 'scavenger',
     loadChildren: () => import('./pages/scavenger/scavenger.module').then( m => m.ScavengerPageModule)
   },
-  {
-    path: 'stamp-gallery',
-    loadChildren: () => import('./pages/stamp-gallery/stamp-gallery.module').then( m => m.StampGalleryPageModule)
-  },
-  {
-    path: 'progress',
-    loadChildren: () => import('./pages/progress/progress.module').then( m => m.ProgressPageModule)
-  },
-  {
-    path: 'submit-tip',
-    loadChildren: () => import('./pages/submit-tip/submit-tip.module').then( m => m.SubmitTipPageModule)
-  },
-  {
-    path: 'ar-experience',
-    loadChildren: () => import('./pages/ar-experience/ar-experience.module').then( m => m.ArExperiencePageModule)
-  },
   { path: '**', redirectTo: 'home' }
-
 ];
 
 @NgModule({
   imports: [
-    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules,
+    RouterModule.forRoot(routes, { 
+      preloadingStrategy: PreloadAllModules,
       enableTracing: false
-     })
+    })
   ],
   exports: [RouterModule]
 })

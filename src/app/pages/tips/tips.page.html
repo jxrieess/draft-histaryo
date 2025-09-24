@@ -1,0 +1,368 @@
+<!-- <ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Visitor Tips</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="navigateToSubmitTip()">
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content
+      pullingIcon="chevron-down-circle-outline"
+      pullingText="Pull to refresh"
+      refreshingSpinner="crescent"
+      refreshingText="Loading tips...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <div class="landmark-header">
+    <ion-card>
+      <ion-card-content>
+        <div class="landmark-info">
+          <ion-icon name="location" color="primary"></ion-icon>
+          <div>
+            <h2>{{ landmarkName }}</h2>
+            <p>Tips and advice from fellow visitors</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div class="filters-section">
+    <ion-segment [(ngModel)]="selectedFilter" (ionChange)="onFilterChange()">
+      <ion-segment-button 
+        *ngFor="let filter of filterOptions" 
+        [value]="filter.value">
+        <ion-icon [name]="filter.icon"></ion-icon>
+        <ion-label>{{ filter.label }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <div class="sort-section">
+      <ion-item lines="none">
+        <ion-icon name="swap-vertical" slot="start" color="medium"></ion-icon>
+        <ion-label>Sort by:</ion-label>
+        <ion-select 
+          [(ngModel)]="sortBy" 
+          (ionChange)="onSortChange()"
+          interface="popover">
+          <ion-select-option 
+            *ngFor="let option of sortOptions" 
+            [value]="option.value">
+            {{ option.label }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+  </div>
+
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading tips...</p>
+  </div>
+
+  <div class="tips-container" *ngIf="!loading">
+    
+    <ion-card *ngIf="filteredTips.length === 0" class="empty-state">
+      <ion-card-content>
+        <ion-icon name="chatbubbles-outline" size="large" color="medium"></ion-icon>
+        <h3>No tips yet</h3>
+        <p *ngIf="selectedFilter === 'all'">
+          Be the first to share a tip about this landmark!
+        </p>
+        <p *ngIf="selectedFilter !== 'all'">
+          No {{ selectedFilter }} tips available. Try changing the filter.
+        </p>
+        <ion-button 
+          expand="block" 
+          color="primary"
+          (click)="navigateToSubmitTip()">
+          <ion-icon name="add" slot="start"></ion-icon>
+          Submit First Tip
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card 
+      *ngFor="let tip of filteredTips; trackBy: trackByTipId" 
+      class="tip-card">
+      
+      <ion-card-header>
+        <div class="tip-header">
+          <div class="tip-meta">
+            <ion-chip 
+              [color]="getTipTypeColor(tip.tipType)" 
+              size="small"
+              class="tip-type-chip">
+              <ion-icon [name]="getTipTypeIcon(tip.tipType)"></ion-icon>
+              <ion-label>{{ tip.tipType | titlecase }}</ion-label>
+            </ion-chip>
+            <span class="tip-date">{{ formatDate(tip.createdAt) }}</span>
+          </div>
+          
+          <ion-button 
+            fill="clear" 
+            size="small"
+            (click)="reportTip(tip)">
+            <ion-icon name="flag-outline" color="medium"></ion-icon>
+          </ion-button>
+        </div>
+        
+        <ion-card-title class="tip-title">{{ tip.title }}</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p class="tip-content">{{ tip.content }}</p>
+
+        <div *ngIf="tip.imageUrl" class="tip-image">
+          <img [src]="tip.imageUrl" [alt]="tip.title" />
+        </div>
+
+        <div class="tip-author">
+          <ion-icon name="person-circle-outline" color="medium"></ion-icon>
+          <span>Shared by {{ tip.authorEmail.split('@')[0] }}</span>
+        </div>
+
+        <div class="tip-actions">
+          <ion-button 
+            fill="clear" 
+            size="small"
+            (click)="markHelpful(tip)">
+            <ion-icon name="thumbs-up-outline" slot="start"></ion-icon>
+            <span>Helpful</span>
+            <span *ngIf="tip.helpfulCount" class="count">({{ tip.helpfulCount }})</span>
+          </ion-button>
+
+          <div *ngIf="tip.rating && tip.rating > 0" class="tip-rating">
+            <div class="stars">
+              <ion-icon 
+                *ngFor="let star of [1,2,3,4,5]" 
+                [name]="star <= tip.rating! ? 'star' : 'star-outline'"
+                [color]="star <= tip.rating! ? 'warning' : 'medium'">
+              </ion-icon>
+            </div>
+            <span class="rating-text">{{ tip.rating }}/5</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" (click)="navigateToSubmitTip()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>
+
+
+ -->
+
+ <!-- src/app/pages/tips/tips.page.html -->
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/landmark-details/' + landmarkId"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Visitor Tips</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="submitTip()">
+        <ion-icon name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading tips...</p>
+  </div>
+
+  <!-- Landmark Header -->
+  <ion-card class="landmark-header" *ngIf="!loading && landmarkName">
+    <ion-card-content>
+      <div class="landmark-info">
+        <ion-icon name="location" color="primary"></ion-icon>
+        <div>
+          <h2>{{ landmarkName }}</h2>
+          <p>Tips and advice from fellow visitors</p>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Filter Section -->
+  <ion-card class="filter-card" *ngIf="!loading">
+    <ion-card-content>
+      <ion-segment [(ngModel)]="selectedFilter" (ionChange)="filterTips()">
+        <ion-segment-button value="all">
+          <ion-label>All Tips</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="advice">
+          <ion-label>Advice</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="fact">
+          <ion-label>Facts</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="experience">
+          <ion-label>Experience</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="photo">
+          <ion-label>Photos</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <div class="sort-controls">
+        <ion-select [(ngModel)]="sortBy" (ionChange)="sortTips()" placeholder="Sort by">
+          <ion-select-option value="newest">Newest First</ion-select-option>
+          <ion-select-option value="oldest">Oldest First</ion-select-option>
+          <ion-select-option value="helpful">Most Helpful</ion-select-option>
+          <ion-select-option value="rating">Highest Rated</ion-select-option>
+        </ion-select>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Tips List -->
+  <div class="tips-section" *ngIf="!loading">
+    
+    <!-- No Tips State -->
+    <ion-card class="empty-state" *ngIf="filteredTips.length === 0 && allTips.length === 0">
+      <ion-card-content>
+        <ion-icon name="information-circle-outline" size="large" color="medium"></ion-icon>
+        <h3>No Tips Yet</h3>
+        <p>Be the first to share a tip about this landmark!</p>
+        <ion-button expand="block" (click)="submitTip()" color="primary">
+          <ion-icon name="add" slot="start"></ion-icon>
+          Submit First Tip
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- No Filtered Results -->
+    <ion-card class="empty-state" *ngIf="filteredTips.length === 0 && allTips.length > 0">
+      <ion-card-content>
+        <ion-icon name="filter-outline" size="large" color="medium"></ion-icon>
+        <h3>No {{ selectedFilter }} tips</h3>
+        <p>Try a different filter or submit a new tip!</p>
+        <ion-button fill="clear" (click)="resetFilters()">
+          <ion-icon name="refresh" slot="start"></ion-icon>
+          Clear Filters
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Tips Cards -->
+    <ion-card 
+      class="tip-card"
+      *ngFor="let tip of filteredTips; trackBy: trackByTipId"
+      [class]="'tip-type-' + tip.tipType">
+      
+      <ion-card-header>
+        <div class="tip-header">
+          <div class="tip-meta">
+            <ion-chip [color]="getTipTypeColor(tip.tipType)" class="tip-type-chip">
+              <ion-icon [name]="getTipTypeIcon(tip.tipType)"></ion-icon>
+              <ion-label>{{ getTipTypeLabel(tip.tipType) }}</ion-label>
+            </ion-chip>
+            <span class="tip-date">{{ formatDate(tip.createdAt) }}</span>
+          </div>
+          
+          <ion-button fill="clear" size="small" (click)="showTipOptions(tip)" class="tip-options">
+            <ion-icon name="ellipsis-vertical"></ion-icon>
+          </ion-button>
+        </div>
+        
+        <ion-card-title class="tip-title">{{ tip.title }}</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="tip-content">
+          <p class="tip-text" [class.expanded]="tip.expanded">{{ tip.content }}</p>
+          
+          <ion-button 
+            *ngIf="tip.content.length > 150 && !tip.expanded"
+            fill="clear" 
+            size="small" 
+            (click)="expandTip(tip)">
+            Read More
+          </ion-button>
+        </div>
+
+        <!-- Photo for photo tips -->
+        <div class="tip-photo" *ngIf="tip.imageUrl && tip.tipType === 'photo'">
+          <img [src]="tip.imageUrl" [alt]="tip.title" (click)="viewImage(tip.imageUrl)" />
+        </div>
+
+        <!-- Tip Actions -->
+        <div class="tip-actions">
+          <div class="tip-stats">
+            <ion-button 
+              fill="clear" 
+              size="small"
+              [color]="tip.userHelpful ? 'success' : 'medium'"
+              (click)="toggleHelpful(tip)">
+              <ion-icon name="thumbs-up"></ion-icon>
+              <span>{{ tip.helpfulCount || 0 }}</span>
+            </ion-button>
+
+            <ion-button 
+              fill="clear" 
+              size="small"
+              color="medium"
+              (click)="rateTip(tip)">
+              <ion-icon name="star"></ion-icon>
+              <span>{{ tip.rating ? tip.rating.toFixed(1) : '0.0' }}</span>
+            </ion-button>
+
+            <ion-button 
+              fill="clear" 
+              size="small"
+              color="medium"
+              (click)="shareTip(tip)">
+              <ion-icon name="share"></ion-icon>
+              <span>Share</span>
+            </ion-button>
+          </div>
+
+          <div class="tip-author">
+            <ion-icon name="person-circle" color="medium"></ion-icon>
+            <span>{{ getAuthorName(tip.authorEmail) }}</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Load More Button -->
+  <div class="load-more" *ngIf="hasMoreTips && !loading">
+    <ion-button 
+      expand="block" 
+      fill="outline" 
+      (click)="loadMoreTips()"
+      [disabled]="loadingMore">
+      <ion-spinner *ngIf="loadingMore" name="crescent" size="small"></ion-spinner>
+      <span *ngIf="!loadingMore">Load More Tips</span>
+    </ion-button>
+  </div>
+
+  <!-- Add Tip FAB -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="submitTip()" color="primary">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>
