@@ -1,307 +1,8 @@
-// // src/app/pages/tips/tips.page.ts
-// import { Component, OnInit } from '@angular/core';
-// import { ActivatedRoute, Router } from '@angular/router';
-// import { ToastController, AlertController, ModalController } from '@ionic/angular';
-// import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
-// import { db, auth } from '../../firebase.config';
-
-// interface CrowdsourcedTip {
-//   id: string;
-//   landmarkId: string;
-//   landmarkName: string;
-//   authorId: string;
-//   authorEmail: string;
-//   title: string;
-//   content: string;
-//   tipType: 'advice' | 'fact' | 'experience' | 'photo';
-//   imageUrl?: string;
-//   status: 'pending' | 'approved' | 'rejected';
-//   createdAt: any;
-//   rating?: number;
-//   helpfulCount?: number;
-//   reportCount?: number;
-// }
-
-// @Component({
-//   selector: 'app-tips',
-//   templateUrl: './tips.page.html',
-//   styleUrls: ['./tips.page.scss'],
-//   standalone: false
-// })
-// export class TipsPage implements OnInit {
-//   landmarkId: string = '';
-//   landmarkName: string = '';
-//   tips: CrowdsourcedTip[] = [];
-//   filteredTips: CrowdsourcedTip[] = [];
-  
-//   // UI State
-//   loading = false;
-//   refreshing = false;
-//   selectedFilter = 'all';
-//   sortBy = 'newest';
-  
-//   // Filter options
-//   filterOptions = [
-//     { value: 'all', label: 'All Tips', icon: 'list' },
-//     { value: 'advice', label: 'Advice', icon: 'bulb' },
-//     { value: 'fact', label: 'Facts', icon: 'library' },
-//     { value: 'experience', label: 'Experiences', icon: 'heart' },
-//     { value: 'photo', label: 'Photos', icon: 'camera' }
-//   ];
-  
-//   sortOptions = [
-//     { value: 'newest', label: 'Newest First' },
-//     { value: 'oldest', label: 'Oldest First' },
-//     { value: 'helpful', label: 'Most Helpful' },
-//     { value: 'rating', label: 'Highest Rated' }
-//   ];
-
-//   constructor(
-//     private route: ActivatedRoute,
-//     private router: Router,
-//     private toastCtrl: ToastController,
-//     private alertCtrl: AlertController,
-//     private modalCtrl: ModalController
-//   ) {}
-
-//   async ngOnInit() {
-//     this.route.queryParams.subscribe(async (params) => {
-//       this.landmarkId = params['landmarkId'] || '';
-//       if (this.landmarkId) {
-//         await this.loadLandmarkInfo();
-//         await this.loadTips();
-//       } else {
-//         await this.showError('No landmark specified');
-//       }
-//     });
-//   }
-
-//   async loadLandmarkInfo() {
-//     try {
-//       const landmarkDoc = await getDoc(doc(db, 'landmarks', this.landmarkId));
-//       if (landmarkDoc.exists()) {
-//         this.landmarkName = landmarkDoc.data()['name'] || 'Unknown Landmark';
-//       }
-//     } catch (error) {
-//       console.error('Error loading landmark info:', error);
-//     }
-//   }
-
-//   async loadTips() {
-//     this.loading = true;
-//     try {
-//       const tipsQuery = query(
-//         collection(db, 'crowdsourced_tips'),
-//         where('landmarkId', '==', this.landmarkId),
-//         where('status', '==', 'approved'),
-//         orderBy('createdAt', 'desc')
-//       );
-      
-//       const querySnapshot = await getDocs(tipsQuery);
-//       this.tips = querySnapshot.docs.map(doc => ({
-//         id: doc.id,
-//         ...doc.data()
-//       })) as CrowdsourcedTip[];
-      
-//       this.applyFilters();
-      
-//     } catch (error) {
-//       console.error('Error loading tips:', error);
-//       await this.showToast('Failed to load tips', 'danger');
-//     } finally {
-//       this.loading = false;
-//     }
-//   }
-
-//   async handleRefresh(event: any) {
-//     this.refreshing = true;
-//     await this.loadTips();
-//     this.refreshing = false;
-//     event.target.complete();
-//   }
-
-//   applyFilters() {
-//     let filtered = [...this.tips];
-    
-//     // Apply type filter
-//     if (this.selectedFilter !== 'all') {
-//       filtered = filtered.filter(tip => tip.tipType === this.selectedFilter);
-//     }
-    
-//     // Apply sorting
-//     switch (this.sortBy) {
-//       case 'newest':
-//         filtered.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
-//         break;
-//       case 'oldest':
-//         filtered.sort((a, b) => a.createdAt?.toMillis() - b.createdAt?.toMillis());
-//         break;
-//       case 'helpful':
-//         filtered.sort((a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0));
-//         break;
-//       case 'rating':
-//         filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-//         break;
-//     }
-    
-//     this.filteredTips = filtered;
-//   }
-
-//   onFilterChange() {
-//     this.applyFilters();
-//   }
-
-//   onSortChange() {
-//     this.applyFilters();
-//   }
-
-//   async markHelpful(tip: CrowdsourcedTip) {
-//     try {
-//       // Implementation would update Firestore document
-//       await this.showToast('Thank you for your feedback!');
-//       // Refresh tips to show updated count
-//       await this.loadTips();
-//     } catch (error) {
-//       await this.showToast('Failed to mark as helpful', 'danger');
-//     }
-//   }
-
-//   async reportTip(tip: CrowdsourcedTip) {
-//     const alert = await this.alertCtrl.create({
-//       header: 'Report Tip',
-//       message: 'Why are you reporting this tip?',
-//       inputs: [
-//         {
-//           name: 'reason',
-//           type: 'radio',
-//           label: 'Inappropriate content',
-//           value: 'inappropriate'
-//         },
-//         {
-//           name: 'reason',
-//           type: 'radio',
-//           label: 'Spam or misleading',
-//           value: 'spam'
-//         },
-//         {
-//           name: 'reason',
-//           type: 'radio',
-//           label: 'Incorrect information',
-//           value: 'incorrect'
-//         },
-//         {
-//           name: 'reason',
-//           type: 'radio',
-//           label: 'Other',
-//           value: 'other'
-//         }
-//       ],
-//       buttons: [
-//         {
-//           text: 'Cancel',
-//           role: 'cancel'
-//         },
-//         {
-//           text: 'Report',
-//           handler: async (data) => {
-//             if (data) {
-//               // Implementation would submit report to Firestore
-//               await this.showToast('Tip has been reported. Thank you!');
-//             }
-//           }
-//         }
-//       ]
-//     });
-//     await alert.present();
-//   }
-
-//   navigateToSubmitTip() {
-//     this.router.navigate(['/submit-tip'], {
-//       queryParams: { landmarkId: this.landmarkId }
-//     });
-//   }
-
-//   goBack() {
-//     this.router.navigate(['/landmark-details'], {
-//       queryParams: { id: this.landmarkId }
-//     });
-//   }
-
-//   getTipTypeIcon(type: string): string {
-//     switch (type) {
-//       case 'advice': return 'bulb';
-//       case 'fact': return 'library';
-//       case 'experience': return 'heart';
-//       case 'photo': return 'camera';
-//       default: return 'information-circle';
-//     }
-//   }
-
-//   getTipTypeColor(type: string): string {
-//     switch (type) {
-//       case 'advice': return 'warning';
-//       case 'fact': return 'secondary';
-//       case 'experience': return 'success';
-//       case 'photo': return 'primary';
-//       default: return 'medium';
-//     }
-//   }
-
-//   formatDate(timestamp: any): string {
-//     if (!timestamp) return '';
-    
-//     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-//     const now = new Date();
-//     const diffTime = Math.abs(now.getTime() - date.getTime());
-//     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-//     if (diffDays === 1) return 'Today';
-//     if (diffDays === 2) return 'Yesterday';
-//     if (diffDays <= 7) return `${diffDays} days ago`;
-    
-//     return date.toLocaleDateString();
-//   }
-
-//   async showError(message: string) {
-//     await this.showToast(message, 'danger');
-//     this.router.navigate(['/home']);
-//   }
-
-//   async showToast(message: string, color: string = 'primary') {
-//     const toast = await this.toastCtrl.create({
-//       message,
-//       duration: 3000,
-//       color,
-//       position: 'bottom'
-//     });
-//     await toast.present();
-//   }
-// }
-
-// src/app/pages/tips/tips.page.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { 
-  ToastController, 
-  AlertController, 
-  ActionSheetController,
-  ModalController,
-  LoadingController 
-} from '@ionic/angular';
+import { ToastController, AlertController, ActionSheetController, ModalController, LoadingController } from '@ionic/angular';
 import { Share } from '@capacitor/share';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  getDocs, 
-  doc, 
-  getDoc,
-  updateDoc,
-  increment,
-  startAfter
-} from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, getDoc,updateDoc,increment,startAfter} from 'firebase/firestore';
 import { auth, db } from '../../firebase.config';
 import { Subscription } from 'rxjs';
 
@@ -465,23 +166,18 @@ export class TipsPage implements OnInit, OnDestroy {
     const user = auth.currentUser;
     if (!user) return;
 
-    // Load user's helpful votes and ratings
-    // This would typically be stored in a separate collection
-    // For now, we'll simulate this data
     this.allTips.forEach(tip => {
-      tip.userHelpful = Math.random() > 0.8; // Simulate user helpful votes
+      tip.userHelpful = Math.random() > 0.8; 
     });
   }
 
   filterTips() {
     let filtered = [...this.allTips];
 
-    // Apply type filter
     if (this.selectedFilter !== 'all') {
       filtered = filtered.filter(tip => tip.tipType === this.selectedFilter);
     }
 
-    // Apply sorting
     switch (this.sortBy) {
       case 'newest':
         filtered.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
@@ -531,7 +227,6 @@ export class TipsPage implements OnInit, OnDestroy {
         tip.helpfulCount = Math.max((tip.helpfulCount || 1) - 1, 0);
       }
 
-      // Update in Firestore
       const tipRef = doc(db, 'crowdsourced_tips', tip.id);
       await updateDoc(tipRef, {
         helpfulCount: increment(tip.userHelpful ? 1 : -1)
@@ -546,7 +241,6 @@ export class TipsPage implements OnInit, OnDestroy {
       console.error('Error updating helpful vote:', error);
       await this.showToast('Failed to update vote', 'danger');
       
-      // Revert on error
       tip.userHelpful = !tip.userHelpful;
       if (!tip.userHelpful) {
         tip.helpfulCount = (tip.helpfulCount || 0) + 1;
@@ -600,7 +294,7 @@ export class TipsPage implements OnInit, OnDestroy {
       buttons: [
         {
           text: 'Cancel',
-          role: 'cancel'
+          handler: async () => {}
         },
         {
           text: 'Submit Rating',
@@ -624,10 +318,8 @@ export class TipsPage implements OnInit, OnDestroy {
     }
 
     try {
-      // In a real app, you'd want to track individual user ratings
-      // and calculate averages. For now, we'll simulate this.
       
-      const newRating = ((tip.rating || 0) + rating) / 2; // Simplified average
+      const newRating = ((tip.rating || 0) + rating) / 2; 
       tip.rating = newRating;
 
       await this.showToast('Rating submitted!', 'success');
@@ -673,7 +365,6 @@ export class TipsPage implements OnInit, OnDestroy {
       buttons.push({
         text: 'Delete',
         icon: 'trash',
-        role: 'destructive',
         handler: () => this.deleteTip(tip)
       });
     } else {
@@ -687,7 +378,7 @@ export class TipsPage implements OnInit, OnDestroy {
     buttons.push({
       text: 'Cancel',
       icon: 'close',
-      role: 'cancel'
+      handler: async () => {}
     });
 
     const actionSheet = await this.actionSheetCtrl.create({
@@ -714,15 +405,13 @@ export class TipsPage implements OnInit, OnDestroy {
       buttons: [
         {
           text: 'Cancel',
-          role: 'cancel'
+          handler: async () => {}
         },
         {
           text: 'Delete',
-          role: 'destructive',
           handler: async () => {
-            // Implement delete functionality
             await this.showToast('Tip deleted', 'success');
-            this.loadTips(); // Reload tips
+            this.loadTips(); 
           }
         }
       ]
@@ -765,7 +454,7 @@ export class TipsPage implements OnInit, OnDestroy {
       buttons: [
         {
           text: 'Cancel',
-          role: 'cancel'
+          handler: async () => {}
         },
         {
           text: 'Report',
@@ -782,9 +471,8 @@ export class TipsPage implements OnInit, OnDestroy {
   }
 
   async viewImage(imageUrl: string) {
-    // Implement image viewer modal
     const modal = await this.modalCtrl.create({
-      component: 'ImageViewerComponent', // You'd need to create this component
+      component: 'ImageViewerComponent', 
       componentProps: {
         imageUrl: imageUrl
       }
@@ -804,7 +492,6 @@ export class TipsPage implements OnInit, OnDestroy {
     });
   }
 
-  // Utility methods
   trackByTipId(index: number, tip: CrowdsourcedTip): string {
     return tip.id;
   }
@@ -857,7 +544,6 @@ export class TipsPage implements OnInit, OnDestroy {
   getAuthorName(email: string): string {
     if (!email) return 'Anonymous';
     
-    // Extract name from email or show first part
     const atIndex = email.indexOf('@');
     if (atIndex > 0) {
       return email.substring(0, atIndex);

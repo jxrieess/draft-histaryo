@@ -17,13 +17,11 @@
 
 <ion-content class="hunt-content">
   
-  <!-- Loading State -->
   <div class="loading-container" *ngIf="isLoading">
     <ion-spinner name="crescent"></ion-spinner>
     <p>{{ loadingMessage }}</p>
   </div>
 
-  <!-- Hunt Progress Header -->
   <div class="progress-header" *ngIf="huntStarted && progress">
     <div class="progress-info">
       <p>Clue {{ (progress.currentClueIndex || 0) + 1 }} of {{ allClues.length }}</p>
@@ -41,7 +39,6 @@
     </div>
   </div>
 
-  <!-- Location Warning Card -->
   <ion-card *ngIf="locationRequired && !locationVerified" color="warning">
     <ion-card-content>
       <div class="location-warning">
@@ -56,7 +53,6 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Current Clue Card -->
   <ion-card *ngIf="currentClue" class="clue-card">
     <ion-card-header>
       <div class="clue-header">
@@ -79,7 +75,6 @@
         <p class="clue-text">{{ currentClue.clue || currentClue.description }}</p>
       </div>
 
-      <!-- Hint Button and Display -->
       <div class="hint-section">
         <ion-button 
           *ngIf="!showHint && currentClue.hint && !(progress?.hints?.includes(currentClue.id))"
@@ -97,7 +92,6 @@
         </div>
       </div>
 
-      <!-- Question Section -->
       <div class="question-section" *ngIf="currentClue.type === 'question'">
         <h3 class="question-text">{{ currentClue.question }}</h3>
         
@@ -139,7 +133,6 @@
           Submit Answer
         </ion-button>
 
-        <!-- Answer Result -->
         <div class="answer-result" *ngIf="showResult && isAnswered">
           <ion-card [color]="selectedAnswer === currentClue.correctAnswer ? 'success' : 'danger'">
             <ion-card-content>
@@ -163,7 +156,6 @@
         </div>
       </div>
 
-      <!-- Location Challenge -->
       <div class="location-challenge" *ngIf="currentClue.type === 'location'">
         <div class="location-status" [class.found]="locationVerified">
           <ion-icon [name]="locationVerified ? 'checkmark-circle' : 'navigate'" 
@@ -185,7 +177,6 @@
         </ion-button>
       </div>
 
-      <!-- Photo Challenge -->
       <div class="photo-challenge" *ngIf="currentClue.type === 'photo'">
         <div class="photo-instructions">
           <ion-icon name="camera-outline" size="large" color="tertiary"></ion-icon>
@@ -229,7 +220,6 @@
         </ion-button>
       </div>
 
-      <!-- AR Scan Challenge -->
       <div class="ar-challenge" *ngIf="currentClue.type === 'ar_scan'">
         <div class="ar-instructions">
           <ion-icon name="camera" size="large" color="tertiary"></ion-icon>
@@ -252,7 +242,6 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Progress Overview -->
   <ion-card class="progress-card" *ngIf="huntStarted && allClues.length > 0">
     <ion-card-content>
       <h3>Hunt Progress</h3>
@@ -288,7 +277,6 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Hunt Completion -->
   <div class="hunt-completion" *ngIf="huntCompleted">
     <div class="completion-celebration">
       <ion-icon name="trophy" size="large" color="warning"></ion-icon>
@@ -316,7 +304,6 @@
         </ion-card>
       </div>
 
-      <!-- Completion Rewards -->
       <div class="completion-rewards" *ngIf="earnedRewards.length > 0">
         <h3>Rewards Earned</h3>
         <div class="rewards-grid">
@@ -330,7 +317,6 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
       <div class="completion-actions">
         <ion-button
           expand="block"
@@ -368,7 +354,6 @@
     </div>
   </div>
 
-  <!-- Hunt Start Screen -->
   <div class="hunt-start" *ngIf="!huntStarted && !huntCompleted && !isLoading && currentHunt">
     <div class="start-container">
       <div class="hunt-image" *ngIf="currentHunt.imageUrl">
@@ -408,7 +393,7 @@
 
 </ion-content>
 
-<!-- Floating Action Button for Hunt Controls -->
+
 <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="huntStarted && !huntCompleted">
   <ion-fab-button size="small" color="tertiary">
     <ion-icon name="ellipsis-horizontal"></ion-icon>

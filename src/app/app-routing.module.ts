@@ -46,6 +46,14 @@ export const routes: Routes = [
     path: 'scavenger',
     loadChildren: () => import('./pages/scavenger/scavenger.module').then( m => m.ScavengerPageModule)
   },
+  {
+    path: 'tips',
+    loadChildren: () => import('./pages/tips/tips.module').then( m => m.TipsPageModule)
+  },
+  {
+    path: 'profile',
+    loadChildren: () => import('./pages/profile/profile.module').then( m => m.ProfilePageModule)
+  },
   { path: '**', redirectTo: 'home' }
 ];
 

@@ -1,23 +1,12 @@
 import { Injectable } from '@angular/core';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  sendPasswordResetEmail,
-  GoogleAuthProvider,
-  FacebookAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged,
-  User,
-  UserCredential as FirebaseUserCredential,
-  sendEmailVerification
+import {createUserWithEmailAndPassword, signInWithEmailAndPassword,  signOut,  sendPasswordResetEmail,  GoogleAuthProvider,
+  FacebookAuthProvider, signInWithPopup, onAuthStateChanged, User, UserCredential as FirebaseUserCredential, sendEmailVerification
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase.config';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-// Custom interfaces to avoid conflicts with Firebase types
 export interface AuthUserCredential {
   success: boolean;
   user?: any;
@@ -59,19 +48,14 @@ export class AuthService {
   public userProfile$ = this.userProfileSubject.asObservable();
 
   constructor(private router: Router) {
-    // Initialize auth state listener
     this.initAuthListener();
   }
 
-  /**
-   * Initialize authentication state listener
-   */
   private initAuthListener(): void {
     onAuthStateChanged(auth, async (user) => {
       this.currentUserSubject.next(user);
       
       if (user) {
-        // Load user profile when authenticated
         await this.loadUserProfile(user.uid);
       } else {
         this.userProfileSubject.next(null);
@@ -79,9 +63,6 @@ export class AuthService {
     });
   }
 
-  /**
-   * Load user profile from Firestore
-   */
   private async loadUserProfile(uid: string): Promise<void> {
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
@@ -93,9 +74,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Register new user with email and password
-   */
   async register(userData: UserData): Promise<AuthUserCredential> {
     try {
       const userCred = await createUserWithEmailAndPassword(
@@ -105,7 +83,6 @@ export class AuthService {
       );
       const uid = userCred.user.uid;
 
-      // Create user profile in Firestore
       const userProfile: UserProfile = {
         uid,
         email: userData.email,
@@ -135,9 +112,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Sign in with email and password
-   */
   async signIn(email: string, password: string): Promise<AuthUserCredential> {
     try {
       const userCred = await signInWithEmailAndPassword(auth, email, password);
@@ -155,16 +129,10 @@ export class AuthService {
     }
   }
 
-  /**
-   * Legacy login method (for backward compatibility)
-   */
   async login(email: string, password: string): Promise<FirebaseUserCredential> {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
-  /**
-   * Sign out user
-   */
   async signOut(): Promise<void> {
     try {
       await signOut(auth);
@@ -175,16 +143,10 @@ export class AuthService {
     }
   }
 
-  /**
-   * Legacy logout method (for backward compatibility)
-   */
   async logout(): Promise<void> {
     return this.signOut();
   }
 
-  /**
-   * Reset password
-   */
   async resetPassword(email: string): Promise<AuthResult> {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -200,19 +162,14 @@ export class AuthService {
     }
   }
 
-  /**
-   * Sign in with Google
-   */
   async signInWithGoogle(): Promise<AuthUserCredential> {
     try {
       const provider = new GoogleAuthProvider();
-      // Add additional scopes if needed
       provider.addScope('profile');
       provider.addScope('email');
       
       const result = await signInWithPopup(auth, provider);
       
-      // Create or update user profile
       await this.createOrUpdateUserProfile(result.user, 'visitor');
       
       return {
@@ -228,18 +185,13 @@ export class AuthService {
     }
   }
 
-  /**
-   * Sign in with Facebook
-   */
   async signInWithFacebook(): Promise<AuthUserCredential> {
     try {
       const provider = new FacebookAuthProvider();
-      // Add additional scopes if needed
       provider.addScope('email');
       
       const result = await signInWithPopup(auth, provider);
       
-      // Create or update user profile
       await this.createOrUpdateUserProfile(result.user, 'visitor');
       
       return {
@@ -255,19 +207,14 @@ export class AuthService {
     }
   }
 
-  /**
-   * Create or update user profile for social login
-   */
   private async createOrUpdateUserProfile(user: User, defaultRole: string = 'visitor'): Promise<void> {
     try {
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
-      
-      // Safely extract photoURL
+
       const photoURL = (user as any).photoURL || '';
       
       if (!userDoc.exists()) {
-        // Create new user profile
         const userProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
@@ -284,7 +231,6 @@ export class AuthService {
         
         await setDoc(userDocRef, userProfile);
       } else {
-        // Update existing profile with latest info
         await setDoc(userDocRef, {
           updatedAt: serverTimestamp(),
           photoURL: photoURL
@@ -295,9 +241,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Check if user is authenticated
-   */
   async isAuthenticated(): Promise<boolean> {
     return new Promise((resolve) => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -307,23 +250,14 @@ export class AuthService {
     });
   }
 
-  /**
-   * Get current user
-   */
   getCurrentUser(): User | null {
     return auth.currentUser;
   }
 
-  /**
-   * Get current user profile
-   */
   getCurrentUserProfile(): UserProfile | null {
     return this.userProfileSubject.value;
   }
 
-  /**
-   * Update user profile
-   */
   async updateUserProfile(profileData: Partial<UserProfile>): Promise<AuthResult> {
     try {
       const currentUser = this.getCurrentUser();
@@ -337,7 +271,6 @@ export class AuthService {
         updatedAt: serverTimestamp()
       }, { merge: true });
 
-      // Reload user profile
       await this.loadUserProfile(currentUser.uid);
 
       return {
@@ -352,38 +285,23 @@ export class AuthService {
     }
   }
 
-  /**
-   * Check if user has specific role
-   */
   hasRole(role: string): boolean {
     const userProfile = this.getCurrentUserProfile();
     return userProfile?.role === role;
   }
 
-  /**
-   * Check if user is admin
-   */
   isAdmin(): boolean {
     return this.hasRole('admin');
   }
 
-  /**
-   * Check if user is curator
-   */
   isCurator(): boolean {
     return this.hasRole('curator') || this.hasRole('admin');
   }
 
-  /**
-   * Check if user is visitor
-   */
   isVisitor(): boolean {
     return this.hasRole('visitor');
   }
 
-  /**
-   * Get user's authentication token
-   */
   async getAuthToken(): Promise<string | null> {
     try {
       const currentUser = this.getCurrentUser();
@@ -397,9 +315,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Refresh authentication token
-   */
   async refreshToken(): Promise<string | null> {
     try {
       const currentUser = this.getCurrentUser();
@@ -413,9 +328,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Delete user account
-   */
   async deleteAccount(): Promise<AuthResult> {
     try {
       const currentUser = this.getCurrentUser();
@@ -423,11 +335,9 @@ export class AuthService {
         throw new Error('No authenticated user');
       }
 
-      // Delete user profile from Firestore
       const userDocRef = doc(db, 'users', currentUser.uid);
       await deleteDoc(userDocRef);
 
-      // Delete Firebase Auth account
       await currentUser.delete();
 
       return {
@@ -442,9 +352,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Send email verification
-   */
   async sendEmailVerification(): Promise<AuthResult> {
     try {
       const currentUser = this.getCurrentUser();
@@ -466,17 +373,11 @@ export class AuthService {
     }
   }
 
-  /**
-   * Check if user's email is verified
-   */
   isEmailVerified(): boolean {
     const currentUser = this.getCurrentUser();
     return currentUser?.emailVerified || false;
   }
 
-  /**
-   * Get authentication error message in user-friendly format
-   */
   getErrorMessage(errorCode: string): string {
     switch (errorCode) {
       case 'auth/user-not-found':

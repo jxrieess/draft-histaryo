@@ -1,143 +1,3 @@
-<!-- src/app/pages/onboarding/onboarding.page.html
-<ion-content fullscreen>
-  <swiper
-    #swiperRef
-    [pagination]="{ clickable: true }"
-    [spaceBetween]="50"
-    [loop]="false"
-    (swiper)="onSlideChange($event)"
-    class="onboarding-swiper"
-  >
-    <ng-template swiperSlide>
-      <div class="slide">
-        <img src="assets/img/onboarding.jpg" />
-        <h2>HistARyo</h2>
-        <p>Bring the Past to Life</p>
-
-        <div class="row">
-          <ion-button fill="outline" routerLink="/login" (click)="skip()">Login</ion-button>
-          <ion-button routerLink="/register" (click)="skip()">Create Account</ion-button>
-        </div>
-
-        <button class="skip-btn" (click)="skip()">Skip</button>
-      </div>
-    </ng-template>
-
-    <ng-template swiperSlide>
-      <div class="slide">
-        <img src="assets/img/marker-icon.png" />
-        <h2>CebuAR</h2>
-        <p>Explore Cebu’s historical and tourist landmarks with AR</p>
-        <button class="skip-btn" (click)="skip()">Skip</button>
-      </div>
-    </ng-template>
-
-    <ng-template swiperSlide>
-      <div class="slide final-slide">
-        <img src="assets/img/onboarding.jpg" class="bg" />
-        <div class="overlay">
-          <h2>DISTRITO CEBU</h2>
-          <p>Historical and Tourist Spots</p>
-
-          <div class="row">
-            <ion-button fill="outline" routerLink="/login" (click)="skip()">Login</ion-button>
-            <ion-button routerLink="/register" (click)="skip()">Create Account</ion-button>
-          </div>
-
-          <ion-button class="get-started-btn" (click)="skip()">Continue</ion-button>
-        </div>
-      </div>
-    </ng-template>
-  </swiper>
-</ion-content>
- -->
-
- <!-- src/app/pages/onboarding/onboarding.page.html -->
-<!-- <ion-content fullscreen>
-  <swiper
-    #swiperRef
-    [pagination]="{ clickable: true }"
-    [spaceBetween]="50"
-    [loop]="false"
-    [autoHeight]="true"
-    (swiper)="onSlideChange($event)"
-    class="onboarding-swiper"
-  > -->
-    <!-- Slide 1 -->
-    <!-- <ng-template swiperSlide>
-      <div class="slide">
-        <img class="hero" src="assets/img/onboarding.jpg" alt="HistARyo logo" />
-        <h2>HistARyo</h2>
-        <p>Bring the Past to Life</p>
-
-        <div class="row">
-          <ion-button fill="outline" routerLink="/login" (click)="skip()">Login</ion-button>
-          <ion-button routerLink="/register" (click)="skip()">Create Account</ion-button>
-        </div>
-
-        <button class="skip-btn" (click)="skip()">Skip</button>
-      </div>
-    </ng-template> -->
-
-    <!-- Slide 2 -->
-    <!-- <ng-template swiperSlide>
-      <div class="slide">
-        <img class="hero" src="assets/img/marker-icon.png" alt="Map marker" />
-        <h2>CebuAR</h2>
-        <p>Explore Cebu’s historical and tourist landmarks with AR</p>
-        <button class="skip-btn" (click)="skip()">Skip</button>
-      </div>
-    </ng-template> -->
-
-    <!-- Slide 3 -->
-    <!-- <ng-template swiperSlide>
-      <div class="slide final-slide">
-        <img class="bg" src="assets/img/onboarding.jpg" alt="Background" />
-        <div class="overlay">
-          <h2>DISTRITO CEBU</h2>
-          <p>Historical and Tourist Spots</p>
-
-          <div class="row">
-            <ion-button fill="outline" routerLink="/login" (click)="skip()">Login</ion-button>
-            <ion-button routerLink="/register" (click)="skip()">Create Account</ion-button>
-          </div>
-
-          <ion-button class="get-started-btn" (click)="skip()">Continue</ion-button>
-        </div>
-      </div>
-    </ng-template> -->
-
-
-<!-- <ng-template swiperSlide>
-  <div class="slide">
-    <img src="assets/img/onboarding.jpg" />
-    <div class="centered-content">
-      <h2>HistARyo</h2>
-      <p>Bring the Past to Life</p>
-      <div class="row">
-        <ion-button fill="outline" routerLink="/login">Login</ion-button>
-        <ion-button routerLink="/register">Create Account</ion-button>
-      </div>
-      <button class="skip-btn" (click)="skip()">Skip</button>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template swiperSlide>
-  <div class="slide final-slide">
-    <img src="assets/img/onboarding.jpg" />
-    <div class="overlay">
-      <h2>DISTRITO CEBU</h2>
-      <p>Historical and Tourist Spots</p>
-      <ion-button class="get-started-btn" (click)="skip()">Continue</ion-button>
-    </div>
-  </div>
-</ng-template>
-
-  </swiper>
-</ion-content> -->
-
-<!-- src/app/pages/onboarding/onboarding.page.html -->
 <ion-content fullscreen>
   <swiper
     #swiperRef
@@ -149,7 +9,6 @@
     (slideChange)="onSlideChange($event)"
     class="onboarding-swiper">
     
-    <!-- Slide 1: Welcome -->
     <ng-template swiperSlide>
       <div class="slide slide-1">
         <div class="slide-background">
@@ -192,7 +51,6 @@
       </div>
     </ng-template>
 
-    <!-- Slide 2: How it Works -->
     <ng-template swiperSlide>
       <div class="slide slide-2">
         <div class="slide-background">
@@ -241,7 +99,6 @@
       </div>
     </ng-template>
 
-    <!-- Slide 3: Get Started -->
     <ng-template swiperSlide>
       <div class="slide slide-3">
         <div class="slide-background">
@@ -295,7 +152,6 @@
 
   </swiper>
 
-  <!-- Progress Indicator -->
   <div class="progress-indicator" *ngIf="currentSlideIndex < totalSlides">
     <div 
       *ngFor="let slide of [0,1,2]; let i = index" 

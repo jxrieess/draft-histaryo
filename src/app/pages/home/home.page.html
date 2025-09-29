@@ -1,7 +1,15 @@
-<!-- <ion-header [translucent]="true" class="custom-header">
+<ion-header [translucent]="true" class="custom-header">
   <ion-toolbar>
-    <ion-title>HistARyo</ion-title>
+    <ion-title>
+      <div class="header-brand">
+        <span class="brand-name">HistARyo</span>
+
+      </div>
+    </ion-title>
     <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="goToProfile()">
+        <ion-icon name="person-outline"></ion-icon>
+      </ion-button>
       <ion-button fill="clear" (click)="openNotifications()">
         <ion-icon name="notifications-outline"></ion-icon>
         <ion-badge color="danger" *ngIf="unreadNotifications > 0">{{unreadNotifications}}</ion-badge>
@@ -13,7 +21,12 @@
 <ion-content [fullscreen]="true" class="home-content">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">HistARyo</ion-title>
+      <ion-title size="large">
+        <div class="header-brand">
+          <span class="brand-name">HistARyo</span>
+          <span class="capstone-badge">Capstone Project</span>
+        </div>
+      </ion-title>
     </ion-toolbar>
   </ion-header>
 
@@ -26,725 +39,320 @@
     </ion-refresher-content>
   </ion-refresher>
 
-  <div class="hero-section">
-    <div class="hero-background">
-      <img 
-        src="assets/img/fort-bg.jpg" 
-        alt="Cebu Heritage Site - Fort San Pedro" 
-        class="hero-image"
-        loading="eager" />
-      <div class="hero-overlay"></div>
-    </div>
-    
-    <div class="hero-content">
-      <div class="hero-text fade-in">
-        <div class="welcome-badge">
-          <ion-icon name="location"></ion-icon>
-          <span>Discover Cebu's Heritage</span>
+  <div class="main-content">
+    <div class="hero-section">
+      <div class="hero-background">
+        <img 
+          src="assets/img/onboarding.jpg" 
+          alt="Cebu Heritage Site" 
+          class="hero-image"
+          loading="eager" />
+        <div class="hero-overlay"></div>
+      </div>
+      
+      <div class="hero-content">
+        <div class="hero-text">
+          <div class="welcome-badge">
+            <ion-icon name="school"></ion-icon>
+            <span>Cebu Heritage AR</span>
+          </div>
+          
+          <h1 class="hero-title">
+            {{ getGreeting() }}!<br />
+            <span class="gradient-text">Explore Cebu's Heritage</span>
+          </h1>
+          
+          <p class="hero-description">
+            Showcasing Cebu's rich cultural heritage through immersive AR technology. 
+            Experience history like never before with interactive landmarks, educational content, and gamified exploration.
+          </p>
         </div>
-        
-        <h1 class="hero-title">
-          Ready to Explore<br />
-          <span class="gradient-text">Cebu's Legacy?</span>
-        </h1>
-        
-        <p class="hero-description">
-          Immerse yourself in centuries of history through cutting-edge AR technology. 
-          Collect stamps, solve mysteries, and unlock the stories that shaped our heritage.
-        </p>
-        
-        <div class="hero-stats" *ngIf="totalLandmarks > 0">
+
+        <div class="hero-stats" *ngIf="hasUserData">
           <div class="stat-item">
-            <span class="stat-number">{{ totalLandmarks || 4 }}</span>
-            <span class="stat-label">Landmarks</span>
+            <span class="stat-number">{{ totalLandmarksCount }}</span>
+            <span class="stat-label">Heritage Sites</span>
           </div>
           <div class="stat-item">
-            <span class="stat-number">{{ featuredLandmarks.length || 0 }}</span>
-            <span class="stat-label">Featured</span>
+            <span class="stat-number">{{ userStats.stampsCollected }}</span>
+            <span class="stat-label">Stamps Collected</span>
           </div>
           <div class="stat-item">
-            <span class="stat-number">{{ nearbyLandmarks.length || 3 }}</span>
-            <span class="stat-label">Nearby</span>
+            <span class="stat-number">{{ userStats.streakDays }}</span>
+            <span class="stat-label">Day Streak</span>
           </div>
         </div>
       </div>
-      
-      <div class="action-buttons slide-up">
-        <ion-button 
-          expand="block" 
-          size="large"
-          class="primary-action-btn" 
-          (click)="navigateToScan()"
-          [disabled]="loading">
-          <ion-icon name="qr-code-outline" slot="start"></ion-icon>
-          Scan QR Code
-        </ion-button>
+    </div>
+
+    <div class="quick-actions">
+      <div class="action-cards">
+        <ion-card 
+          class="action-card scan-card" 
+          button="true"
+          (click)="navigateToScan()">
+          <ion-card-content>
+            <div class="card-icon gradient-primary">
+              <ion-icon name="qr-code"></ion-icon>
+            </div>
+            <div class="card-content">
+              <h3>AR Experience</h3>
+              <p>Scan QR codes to unlock immersive augmented reality content</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
         
-        <div class="secondary-actions">
-          <ion-button 
-            fill="outline" 
-            size="large"
-            class="secondary-action-btn" 
-            (click)="navigateToMap()"
-            [disabled]="loading">
-            <ion-icon name="map-outline" slot="start"></ion-icon>
-            Explore Map
-          </ion-button>
-          
-          <ion-button 
-            fill="clear" 
-            size="large"
-            class="tertiary-action-btn" 
-            (click)="navigateToStampGallery()"
-            [disabled]="loading">
-            <ion-icon name="trophy-outline" slot="start"></ion-icon>
-            My Stamps
-          </ion-button>
-        </div>
+        <ion-card 
+          class="action-card map-card" 
+          button="true"
+          (click)="navigateToMap()">
+          <ion-card-content>
+            <div class="card-icon gradient-accent">
+              <ion-icon name="map"></ion-icon>
+            </div>
+            <div class="card-content">
+              <h3>Interactive Map</h3>
+              <p>Explore Cebu's heritage sites with detailed location information</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+        
+        <ion-card 
+          class="action-card progress-card" 
+          button="true"
+          (click)="navigateToProgress()">
+          <ion-card-content>
+            <div class="card-icon gradient-success">
+              <ion-icon name="trophy"></ion-icon>
+            </div>
+            <div class="card-content">
+              <h3>Project Analytics</h3>
+              <p>View user engagement metrics and exploration statistics</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
       </div>
     </div>
-  </div>
 
-  <div class="discovery-section" *ngIf="!loading">
-    <div class="section-header">
-      <h2 class="section-title">
-        <ion-icon name="compass-outline" class="section-icon"></ion-icon>
-        Quick Discovery
-      </h2>
-      <ion-button 
-        fill="clear" 
-        size="small" 
-        class="surprise-button"
-        (click)="exploreRandomLandmark()">
-        <ion-icon name="shuffle-outline" slot="start"></ion-icon>
-        Surprise Me
-      </ion-button>
+    <div class="loading-container" *ngIf="loading">
+      <div class="shimmer-cards">
+        <div class="shimmer-card" *ngFor="let item of [1,2,3,4]"></div>
+      </div>
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Loading data...</p>
     </div>
-    
-    <div class="discovery-cards">
-      <ion-card 
-        class="discovery-card scan-card" 
-        button="true"
-        (click)="navigateToScan()">
-        <div class="card-icon gradient-primary">
-          <ion-icon name="qr-code"></ion-icon>
-        </div>
-        <div class="card-content">
-          <h3>Scan & Discover</h3>
-          <p>Find QR codes at landmarks to unlock AR experiences</p>
-        </div>
-        <div class="card-arrow">
-          <ion-icon name="chevron-forward"></ion-icon>
-        </div>
-      </ion-card>
-      
-      <ion-card 
-        class="discovery-card map-card" 
-        button="true"
-        (click)="navigateToMap()">
-        <div class="card-icon gradient-accent">
-          <ion-icon name="map"></ion-icon>
-        </div>
-        <div class="card-content">
-          <h3>Explore Map</h3>
-          <p>Navigate to nearby heritage sites and plan your journey</p>
-        </div>
-        <div class="card-arrow">
-          <ion-icon name="chevron-forward"></ion-icon>
-        </div>
-      </ion-card>
-      
-      <ion-card 
-        class="discovery-card progress-card" 
-        button="true"
-        (click)="navigateToProgress()">
-        <div class="card-icon gradient-success">
-          <ion-icon name="trophy"></ion-icon>
-        </div>
-        <div class="card-content">
-          <h3>My Progress</h3>
-          <p>Track achievements and view your exploration history</p>
-        </div>
-        <div class="card-arrow">
-          <ion-icon name="chevron-forward"></ion-icon>
-        </div>
-      </ion-card>
-    </div>
-  </div>
->
-  <div class="featured-section" *ngIf="featuredLandmarks && featuredLandmarks.length > 0">
-    <div class="section-header">
-      <h2 class="section-title">
-        <ion-icon name="star-outline" class="section-icon"></ion-icon>
-        Featured Landmarks
-      </h2>
-      <ion-button 
-        fill="clear" 
-        size="small" 
-        (click)="navigateToAllLandmarks()">
-        View All
-        <ion-icon name="chevron-forward" slot="end"></ion-icon>
-      </ion-button>
-    </div>
-    
-    <div class="landmarks-scroll">
-      <ion-card 
-        class="landmark-card featured-card"
-        *ngFor="let landmark of featuredLandmarks; trackBy: trackByLandmarkId"
-        button="true"
-        (click)="navigateToLandmark(landmark)">
-        
-        <div class="card-image-container">
-          <img 
-            [src]="landmark.imageUrl || 'assets/img/default-landmark.jpg'" 
-            [alt]="landmark.name"
-            class="card-image"
-            loading="lazy" 
-            (error)="onImageError($event)" />
-          
-          <div class="card-badges" *ngIf="landmark.difficulty">
-            <ion-chip 
-              [color]="getDifficultyColor(landmark.difficulty)"
-              class="difficulty-badge"
-              size="small">
-              <ion-icon [name]="getDifficultyIcon(landmark.difficulty)"></ion-icon>
-              <ion-label>{{ landmark.difficulty | titlecase }}</ion-label>
-            </ion-chip>
-          </div>
-          
-          <div class="card-overlay" *ngIf="landmark.arContent">
-            <div class="card-features">
-              <ion-icon 
-                name="camera" 
-                class="feature-icon ar-icon"
-                title="AR Experience Available"></ion-icon>
-            </div>
-          </div>
-        </div>
-        
-        <ion-card-content class="landmark-card-content">
-          <div class="card-header">
-            <h3 class="card-title">{{ landmark.name }}</h3>
-            <div class="card-meta">
-              <span class="card-location" *ngIf="landmark.city">
-                <ion-icon name="location-outline"></ion-icon>
-                {{ landmark.city }}
-              </span>
-              <span class="card-time" *ngIf="landmark.estimatedTime">
-                <ion-icon name="time-outline"></ion-icon>
-                {{ getEstimatedTime(landmark) }}
-              </span>
-            </div>
-          </div>
-          
-          <p class="card-description">
-            {{ getShortDescription(landmark.description) }}
-          </p>
-          
-          <div class="card-footer">
-            <div class="card-tags" *ngIf="landmark.tags && landmark.tags.length > 0">
-              <ion-chip 
-                *ngFor="let tag of landmark.tags.slice(0, 2)" 
-                class="tag-chip"
-                fill="outline"
-                size="small">
-                {{ tag }}
-              </ion-chip>
-            </div>
-            
-            <div class="card-distance" *ngIf="getLandmarkDistance(landmark) as distance">
-              <ion-icon name="navigate-outline"></ion-icon>
-              <span>{{ distance }}</span>
-            </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
-    </div>
-  </div>
 
-  <div class="nearby-section" *ngIf="nearbyLandmarks && nearbyLandmarks.length > 0 && userLocation">
-    <div class="section-header">
-      <h2 class="section-title">
-        <ion-icon name="navigate" class="section-icon"></ion-icon>
-        Near You
-      </h2>
-      <ion-button 
-        fill="clear" 
-        size="small" 
-        (click)="navigateToMap()">
-        View on Map
-        <ion-icon name="chevron-forward" slot="end"></ion-icon>
-      </ion-button>
-    </div>
-    
-    <div class="nearby-list">
-      <ion-item 
-        *ngFor="let landmark of nearbyLandmarks; trackBy: trackByLandmarkId"
-        class="nearby-item"
-        button="true"
-        lines="none"
-        (click)="navigateToLandmark(landmark)">
-        
-        <div class="nearby-image" slot="start">
-          <img 
-            [src]="landmark.imageUrl || 'assets/img/default-landmark.jpg'" 
-            [alt]="landmark.name"
-            loading="lazy"
-            (error)="onImageError($event)" />
-          <div class="image-overlay" *ngIf="landmark.arContent">
-            <ion-icon name="camera" class="overlay-icon"></ion-icon>
-          </div>
-        </div>
-        
-        <ion-label>
-          <h3 class="nearby-title">{{ landmark.name }}</h3>
-          <p class="nearby-description">
-            {{ getShortDescription(landmark.description, 80) }}
-          </p>
-          <div class="nearby-meta">
-            <span class="nearby-distance" *ngIf="getLandmarkDistance(landmark) as distance">
-              <ion-icon name="navigate-outline"></ion-icon>
-              {{ distance }}
-            </span>
-            <span class="nearby-category" *ngIf="landmark.category">
-              <ion-icon name="bookmark-outline"></ion-icon>
-              {{ landmark.category }}
-            </span>
-          </div>
-        </ion-label>
-        
-        <div class="nearby-actions" slot="end">
-          <ion-chip 
-            [color]="getDifficultyColor(landmark.difficulty || 'medium')"
-            size="small"
-            class="difficulty-chip">
-            {{ landmark.difficulty || 'Medium' }}
-          </ion-chip>
-          <ion-icon name="chevron-forward" class="chevron-icon"></ion-icon>
-        </div>
-      </ion-item>
-    </div>
-  </div>
-
-  <div class="loading-section" *ngIf="loading">
-    <div class="loading-content">
-      <ion-spinner name="crescent" class="loading-spinner"></ion-spinner>
-      <h3>Discovering landmarks...</h3>
-      <p>Finding the best heritage sites for you</p>
-    </div>
-  </div>
-
-  <div class="error-section" *ngIf="error && !loading">
-    <div class="error-content">
-      <ion-icon name="alert-circle-outline" class="error-icon"></ion-icon>
+    <div class="error-container" *ngIf="error && !loading">
+      <ion-icon name="warning-outline" color="danger" size="large"></ion-icon>
       <h3>Oops! Something went wrong</h3>
       <p>{{ error }}</p>
-      <ion-button 
-        (click)="refreshContent()" 
-        color="primary"
-        fill="outline">
+      <ion-button (click)="loadContent()" fill="outline" color="primary">
         <ion-icon name="refresh-outline" slot="start"></ion-icon>
         Try Again
       </ion-button>
     </div>
-  </div>
 
-  <div class="empty-section" *ngIf="!loading && !error && (!featuredLandmarks || featuredLandmarks.length === 0) && totalLandmarks === 0">
-    <div class="empty-content">
-      <ion-icon name="telescope-outline" class="empty-icon"></ion-icon>
-      <h3>No landmarks yet</h3>
-      <p>Check back soon for amazing heritage sites to explore!</p>
-      <ion-button 
-        (click)="refreshContent()" 
-        fill="outline"
-        color="primary">
-        <ion-icon name="refresh-outline" slot="start"></ion-icon>
-        Refresh
-      </ion-button>
-    </div>
-  </div>
-
-  <ion-fab 
-    vertical="bottom" 
-    horizontal="end" 
-    slot="fixed" 
-    class="main-fab"
-    *ngIf="!loading">
-    <ion-fab-button 
-      color="primary" 
-      class="fab-main"
-      [activated]="fabActivated"
-      (click)="toggleFab()">
-      <ion-icon [name]="fabActivated ? 'close' : 'add'"></ion-icon>
-    </ion-fab-button>
-    
-    <ion-fab-list side="top">
-      <ion-fab-button 
-        color="success" 
-        size="small"
-        (click)="navigateToScan()">
-        <ion-icon name="qr-code"></ion-icon>
-      </ion-fab-button>
-      
-      <ion-fab-button 
-        color="secondary" 
-        size="small"
-        (click)="navigateToMap()">
-        <ion-icon name="map"></ion-icon>
-      </ion-fab-button>
-      
-      <ion-fab-button 
-        color="tertiary" 
-        size="small"
-        (click)="exploreRandomLandmark()">
-        <ion-icon name="shuffle"></ion-icon>
-      </ion-fab-button>
-    </ion-fab-list>
-  </ion-fab>
-
-</ion-content> -->
-
-
-
-
-<ion-header [translucent]="true">
-  <ion-toolbar color="primary">
-    <ion-title>
-      <div class="header-content">
-        <img src="assets/icon/histaryo-logo.png" alt="HistARyo" class="logo">
-        <span>HistARyo</span>
-      </div>
-    </ion-title>
-    
-    <ion-buttons slot="end">
-      <!-- Notifications -->
-      <ion-button (click)="openNotifications()" fill="clear">
-        <ion-icon name="notifications-outline"></ion-icon>
-        <ion-badge *ngIf="unreadNotifications > 0" color="danger" class="notification-badge">
-          {{ unreadNotifications }}
-        </ion-badge>
-      </ion-button>
-      
-      <!-- Profile/Menu -->
-      <ion-button fill="clear">
-        <ion-icon name="person-circle-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true" class="home-content">
-  
-  <!-- Refresher -->
-  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-    <ion-refresher-content
-      pullingIcon="chevron-down-circle-outline"
-      pullingText="Pull to refresh"
-      refreshingSpinner="circles"
-      refreshingText="Refreshing...">
-    </ion-refresher-content>
-  </ion-refresher>
-
-  <!-- Loading State -->
-  <div *ngIf="loading && !isRefreshing" class="loading-container">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Loading your heritage journey...</p>
-  </div>
-
-  <!-- Error State -->
-  <div *ngIf="error && !loading" class="error-container">
-    <ion-icon name="warning-outline" color="danger"></ion-icon>
-    <h3>Oops! Something went wrong</h3>
-    <p>{{ error }}</p>
-    <ion-button (click)="loadContent()" fill="outline" color="primary">
-      <ion-icon name="refresh-outline" slot="start"></ion-icon>
-      Try Again
-    </ion-button>
-  </div>
-
-  <!-- Main Content -->
-  <div *ngIf="!loading && !error" class="main-content">
-    
-    <!-- Welcome Section -->
-    <div class="welcome-section" *ngIf="hasUserData">
-      <div class="welcome-header">
-        <div class="greeting-container">
-          <h1>{{ getGreeting() }}, {{ userSession?.name || 'Explorer' }}!</h1>
-          <p class="achievement-level">{{ getAchievementLevel() }}</p>
-        </div>
-        
-        <div class="user-avatar">
-          <ion-avatar>
-            <img [src]="userSession?.photoURL || 'assets/img/default-avatar.png'" 
-                 alt="User Avatar">
-          </ion-avatar>
-        </div>
-      </div>
-      
-      <!-- Quick Stats -->
-      <div class="stats-row">
-        <div class="stat-item">
-          <ion-icon name="location-outline" color="primary"></ion-icon>
-          <div class="stat-content">
-            <span class="stat-number">{{ userStats.totalVisits }}</span>
-            <span class="stat-label">Visits</span>
-          </div>
-        </div>
-        
-        <div class="stat-item">
-          <ion-icon name="bookmark-outline" color="secondary"></ion-icon>
-          <div class="stat-content">
-            <span class="stat-number">{{ userStats.stampsCollected }}</span>
-            <span class="stat-label">Stamps</span>
-          </div>
-        </div>
-        
-        <div class="stat-item">
-          <ion-icon name="trophy-outline" color="tertiary"></ion-icon>
-          <div class="stat-content">
-            <span class="stat-number">{{ userStats.badgesEarned }}</span>
-            <span class="stat-label">Badges</span>
-          </div>
-        </div>
-        
-        <div class="stat-item">
-          <ion-icon name="flame-outline" color="warning"></ion-icon>
-          <div class="stat-content">
-            <span class="stat-number">{{ userStats.streakDays }}</span>
-            <span class="stat-label">Streak</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Progress Bar -->
-      <div class="progress-section">
-        <div class="progress-header">
-          <span>Heritage Progress</span>
-          <span class="progress-percentage">{{ progressPercentage }}%</span>
-        </div>
-        <ion-progress-bar [value]="progressPercentage / 100" color="primary"></ion-progress-bar>
-      </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-      <ion-button (click)="navigateToScan()" expand="block" size="large" class="action-button scan-button">
-        <ion-icon name="qr-code-outline" slot="start"></ion-icon>
-        Scan QR Code
-      </ion-button>
-      
-      <div class="secondary-actions">
-        <ion-button (click)="navigateToMap()" fill="outline" class="secondary-action">
-          <ion-icon name="map-outline" slot="start"></ion-icon>
-          Map View
-        </ion-button>
-        
-        <ion-button (click)="exploreRandomLandmark()" fill="outline" class="secondary-action">
-          <ion-icon name="shuffle-outline" slot="start"></ion-icon>
-          Surprise Me
-        </ion-button>
-      </div>
-    </div>
-
-    <!-- Category Filter -->
-    <div class="category-section">
-      <h2>Explore Heritage</h2>
-      <ion-segment [(ngModel)]="selectedCategory" (ionChange)="filterByCategory(($event.detail.value || 'all').toString())">
-        <ion-segment-button *ngFor="let category of categories" [value]="category.value">
-          <ion-icon [name]="category.icon"></ion-icon>
-          <ion-label>{{ category.label }}</ion-label>
-        </ion-segment-button>
-      </ion-segment>
-    </div>
-
-    <!-- Featured Landmarks -->
-    <div class="landmarks-section" *ngIf="featuredLandmarks.length > 0">
+    <div class="featured-section" *ngIf="featuredLandmarks && featuredLandmarks.length > 0">
       <div class="section-header">
-        <h2>Featured Landmarks</h2>
-        <ion-button (click)="navigateToAllLandmarks()" fill="clear" size="small">
-          <span>View All</span>
+        <h2 class="section-title">
+          <ion-icon name="star-outline" class="section-icon"></ion-icon>
+          Featured Heritage Sites
+        </h2>
+        <ion-button 
+          fill="clear" 
+          size="small" 
+          (click)="navigateToAllLandmarks()">
+          View All ({{ totalLandmarksCount }})
           <ion-icon name="chevron-forward" slot="end"></ion-icon>
         </ion-button>
       </div>
       
-      <div class="horizontal-scroll-container">
-        <div class="landmark-card featured-card" 
-             *ngFor="let landmark of featuredLandmarks; trackBy: trackByLandmarkId"
-             (click)="navigateToLandmark(landmark)">
-          <div class="card-image-container">
-            <img [src]="landmark.imageUrl" 
-                 [alt]="landmark.name"
-                 (error)="onImageError($event)"
-                 class="card-image">
-            
-            <!-- Special Features Badge -->
-            <div class="features-badge" *ngIf="hasSpecialFeatures(landmark)">
-              <ion-icon name="star" color="warning"></ion-icon>
-            </div>
-            
-            <!-- Distance Badge -->
-            <div class="distance-badge" *ngIf="landmark.distance">
-              <ion-icon name="location" color="primary"></ion-icon>
-              <span>{{ getLandmarkDistance(landmark) }}</span>
-            </div>
-            
-            <!-- Difficulty Badge -->
-            <ion-chip class="difficulty-chip" [color]="getDifficultyColor(landmark.difficulty || 'medium')">
-              <ion-icon [name]="getDifficultyIcon(landmark.difficulty || 'medium')"></ion-icon>
-              <ion-label>{{ landmark.difficulty || 'Medium' }}</ion-label>
-            </ion-chip>
-          </div>
+      <div class="landmarks-scroll">
+        <ion-card 
+          class="landmark-card featured-card"
+          *ngFor="let landmark of featuredLandmarks; trackBy: trackByLandmarkId"
+          button="true"
+          (click)="navigateToLandmark(landmark)">
           
-          <div class="card-content">
-            <h3>{{ landmark.name }}</h3>
-            <p class="card-description">{{ getShortDescription(landmark.description) }}</p>
+          <div class="card-image-container">
+            <img 
+              [src]="getDefaultImageUrl(landmark.imageUrl, landmark.category)" 
+              [alt]="landmark.name"
+              class="card-image"
+              loading="lazy" 
+              (error)="onImageError($event)" />
             
-            <div class="card-details">
-              <div class="detail-item" *ngIf="landmark.city">
-                <ion-icon name="location-outline" color="medium"></ion-icon>
-                <span>{{ landmark.city }}</span>
-              </div>
-              
-              <div class="detail-item" *ngIf="landmark.estimatedTime">
-                <ion-icon name="time-outline" color="medium"></ion-icon>
-                <span>{{ getEstimatedTime(landmark) }}</span>
-              </div>
-              
-              <div class="detail-item" *ngIf="landmark.rating">
-                <ion-icon name="star" color="warning"></ion-icon>
-                <span>{{ landmark.rating.toFixed(1) }}</span>
-              </div>
+            <div class="card-badges" *ngIf="landmark.difficulty">
+              <ion-chip 
+                [color]="getDifficultyColor(landmark.difficulty)"
+                class="difficulty-chip">
+                <ion-icon [name]="getDifficultyIcon(landmark.difficulty)"></ion-icon>
+                <ion-label>{{ landmark.difficulty }}</ion-label>
+              </ion-chip>
             </div>
-            
-            <!-- Special Features -->
+
             <div class="special-features" *ngIf="hasSpecialFeatures(landmark)">
-              <ion-chip *ngFor="let feature of getSpecialFeatures(landmark)" 
-                       outline color="primary" size="small">
+              <ion-chip 
+                *ngFor="let feature of getSpecialFeatures(landmark)"
+                color="primary" 
+                class="feature-chip">
                 {{ feature }}
               </ion-chip>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Nearby Landmarks -->
-    <div class="landmarks-section" *ngIf="nearbyLandmarks.length > 0">
-      <div class="section-header">
-        <h2>
-          <ion-icon name="location" color="primary"></ion-icon>
-          Near You
-        </h2>
-      </div>
-      
-      <div class="landmarks-grid">
-        <div class="landmark-card compact-card" 
-             *ngFor="let landmark of nearbyLandmarks; trackBy: trackByLandmarkId"
-             (click)="navigateToLandmark(landmark)">
           
-          <div class="compact-image-container">
-            <img [src]="landmark.imageUrl" 
-                 [alt]="landmark.name"
-                 (error)="onImageError($event)"
-                 class="compact-image">
-            
-            <div class="compact-overlay">
-              <ion-icon name="location" color="light"></ion-icon>
-              <span *ngIf="landmark.distance">{{ getLandmarkDistance(landmark) }}</span>
+          <ion-card-content>
+            <div class="landmark-info">
+              <h3 class="landmark-title">{{ landmark.name }}</h3>
+              <p class="landmark-description">
+                {{ getShortDescription(landmark.description, 100) }}
+              </p>
+              
+              <div class="landmark-meta">
+                <div class="meta-item" *ngIf="landmark.distance">
+                  <ion-icon name="location-outline"></ion-icon>
+                  <span>{{ getLandmarkDistance(landmark) }}</span>
+                </div>
+                
+                <div class="meta-item" *ngIf="landmark.estimatedTime">
+                  <ion-icon name="time-outline"></ion-icon>
+                  <span>{{ getEstimatedTime(landmark) }}</span>
+                </div>
+                
+                <div class="meta-item" *ngIf="landmark.rating">
+                  <ion-icon name="star" color="warning"></ion-icon>
+                  <span>{{ landmark.rating.toFixed(1) }}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div class="compact-content">
-            <h4>{{ landmark.name }}</h4>
-            <p>{{ getShortDescription(landmark.description, 60) }}</p>
-            
-            <div class="compact-features" *ngIf="hasSpecialFeatures(landmark)">
-              <ion-icon *ngIf="landmark.arContent" name="camera" color="primary" size="small"></ion-icon>
-              <ion-icon *ngIf="landmark.scavengerHunt" name="search" color="secondary" size="small"></ion-icon>
-              <ion-icon *ngIf="landmark.videoUrl" name="play-circle" color="tertiary" size="small"></ion-icon>
-            </div>
-          </div>
-        </div>
+          </ion-card-content>
+        </ion-card>
       </div>
     </div>
 
-    <!-- Recently Visited -->
-    <div class="landmarks-section" *ngIf="recentlyVisited.length > 0">
+    <div class="nearby-section" *ngIf="nearbyLandmarks && nearbyLandmarks.length > 0">
       <div class="section-header">
-        <h2>
-          <ion-icon name="time" color="medium"></ion-icon>
-          Recently Visited
+        <h2 class="section-title">
+          <ion-icon name="navigate-outline" class="section-icon"></ion-icon>
+          {{ userLocation ? 'Nearby Heritage Sites' : 'Available Heritage Sites' }}
         </h2>
+        <ion-button 
+          fill="clear" 
+          size="small" 
+          (click)="navigateToMap()">
+          View on Map
+          <ion-icon name="map-outline" slot="end"></ion-icon>
+        </ion-button>
       </div>
       
-      <div class="recent-landmarks">
-        <div class="recent-item" 
-             *ngFor="let landmark of recentlyVisited; trackBy: trackByLandmarkId"
-             (click)="navigateToLandmark(landmark)">
+      <div class="landmarks-list">
+        <ion-item 
+          *ngFor="let landmark of nearbyLandmarks; trackBy: trackByLandmarkId"
+          button="true"
+          (click)="navigateToLandmark(landmark)"
+          class="landmark-item">
           
-          <img [src]="landmark.imageUrl" 
-               [alt]="landmark.name"
-               (error)="onImageError($event)"
-               class="recent-image">
+          <ion-thumbnail slot="start">
+            <img 
+              [src]="getDefaultImageUrl(landmark.imageUrl, landmark.category)" 
+              [alt]="landmark.name"
+              loading="lazy"
+              (error)="onImageError($event)" />
+          </ion-thumbnail>
           
-          <div class="recent-content">
-            <h4>{{ landmark.name }}</h4>
-            <p>{{ landmark.city }}</p>
-          </div>
-          
-          <ion-icon name="checkmark-circle" color="success" class="visited-icon"></ion-icon>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recommended -->
-    <div class="landmarks-section" *ngIf="recommendedLandmarks.length > 0">
-      <div class="section-header">
-        <h2>
-          <ion-icon name="bulb" color="warning"></ion-icon>
-          Recommended for You
-        </h2>
-      </div>
-      
-      <div class="recommendations">
-        <div class="recommendation-card" 
-             *ngFor="let landmark of recommendedLandmarks; trackBy: trackByLandmarkId"
-             (click)="navigateToLandmark(landmark)">
-          
-          <img [src]="landmark.imageUrl" 
-               [alt]="landmark.name"
-               (error)="onImageError($event)"
-               class="recommendation-image">
-          
-          <div class="recommendation-content">
-            <h4>{{ landmark.name }}</h4>
+          <ion-label>
+            <h3>{{ landmark.name }}</h3>
             <p>{{ getShortDescription(landmark.description, 80) }}</p>
             
-            <div class="recommendation-reason">
-              <ion-chip color="primary" size="small">
-                <ion-icon name="bulb-outline"></ion-icon>
-                <ion-label>Similar to your favorites</ion-label>
-              </ion-chip>
+            <div class="item-meta">
+              <span *ngIf="landmark.distance" class="distance-badge">
+                <ion-icon name="location"></ion-icon>
+                {{ getLandmarkDistance(landmark) }}
+              </span>
+              
+              <span *ngIf="landmark.category" class="category-badge">
+                {{ landmark.category }}
+              </span>
+              
+              <span *ngIf="landmark.estimatedTime" class="time-badge">
+                <ion-icon name="time"></ion-icon>
+                {{ getEstimatedTime(landmark) }}
+              </span>
             </div>
-          </div>
-        </div>
+          </ion-label>
+          
+          <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
+        </ion-item>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="!hasLandmarks && !loading">
-      <ion-icon name="location-outline" color="medium" size="large"></ion-icon>
-      <h3>No Landmarks Found</h3>
-      <p>We couldn't find any landmarks in your area. Try expanding your search or check back later.</p>
+    <div class="empty-state" *ngIf="!loading && !error && (!hasLandmarks)">
+      <ion-icon name="compass-outline" size="large" color="medium"></ion-icon>
+      <h3>No Heritage Sites Available</h3>
+      <p>Check back soon for new discoveries!</p>
       <ion-button (click)="loadContent()" fill="outline" color="primary">
         <ion-icon name="refresh-outline" slot="start"></ion-icon>
         Refresh
       </ion-button>
     </div>
 
+    <div class="capstone-info" *ngIf="totalLandmarksCount > 0">
+      <ion-card>
+        <ion-card-content>
+          <div class="info-content">
+            <ion-icon name="school" color="primary" size="large"></ion-icon>
+            <div class="info-text">
+              <h3>Cebu Heritage AR</h3>
+              <p>This showcases {{ totalLandmarksCount }} carefully researched heritage sites in Cebu, Philippines. Built using AR capabilities to create an immersive educational experience.</p>
+            </div>
+          </div>
+          
+          <ion-button expand="block" fill="outline" (click)="navigateToAllLandmarks()" class="view-all-btn">
+            <ion-icon name="library" slot="start"></ion-icon>
+            Explore All Heritage Sites
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="cta-section" *ngIf="hasLandmarks">
+      <ion-card class="cta-card">
+        <ion-card-content>
+          <div class="cta-content">
+            <h3>Experience the Exploration</h3>
+            <p>Explore {{ totalLandmarksCount }} heritage sites and discover the rich cultural history of Cebu through this innovative AR-powered application.</p>
+            
+            <div class="cta-buttons">
+              <ion-button expand="block" (click)="exploreRandomLandmark()">
+                <ion-icon name="shuffle" slot="start"></ion-icon>
+                Random Heritage Site
+              </ion-button>
+              
+              <ion-button expand="block" fill="outline" (click)="navigateToMap()">
+                <ion-icon name="map" slot="start"></ion-icon>
+                View Interactive Map
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
   </div>
 
-  <!-- Floating Action Button -->
+  <div class="capstone-footer">
+    <ion-card>
+      <ion-card-content>
+        <div class="footer-content">
+          <div class="project-info">
+            <h4>HistARyo</h4>
+            <p>An innovative AR-powered mobile application showcasing Cebu's cultural heritage</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button color="primary" (click)="navigateToScan()">
       <ion-icon name="qr-code"></ion-icon>

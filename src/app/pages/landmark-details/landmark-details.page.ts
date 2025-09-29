@@ -1,10 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ToastController, LoadingController, AlertController } from '@ionic/angular';
+import { ToastController, LoadingController, AlertController, ModalController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
-import {
-  collection, doc, getDoc, getDocs, query, where,
-} from 'firebase/firestore';
+import {collection, doc, getDoc, getDocs, query, where, addDoc, serverTimestamp} from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { db } from '../../firebase.config';
 
@@ -48,6 +46,21 @@ interface LandmarkVM {
   visitingTips?: string[];
 }
 
+interface UserTip {
+  id?: string;
+  landmarkId: string;
+  landmarkName: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  tipText: string;
+  tipType: 'general' | 'visiting' | 'historical' | 'photo' | 'other';
+  rating: number;
+  isApproved: boolean;
+  createdAt: any;
+  updatedAt: any;
+}
+
 @Component({
   selector: 'app-landmark-details',
   templateUrl: './landmark-details.page.html',
@@ -63,8 +76,7 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
   isBookmarked = false;
   showArExperience = false;
   arContent: any = null;
-  
-  // Additional properties for enhanced functionality
+
   triviaQuestions: any[] = [];
   hasScavengerHunt = false;
   userTips: any[] = [];
@@ -79,16 +91,37 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     private local: Storage,
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private modalCtrl: ModalController
   ) {}
+
+  getDefaultImageUrl(imageUrl?: string, category?: string): string {
+    if (imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('placeholder')) {
+      return imageUrl;
+    }
+
+    switch (category?.toLowerCase()) {
+      case 'religious':
+        return 'assets/img/basilica.jpg';
+      case 'historical':
+        return 'assets/img/fort-san-pedro.jpg';
+      case 'cultural':
+        return 'assets/img/magellans-cross.jpg';
+      default:
+        return 'assets/img/default-landmark.jpg';
+    }
+  }
 
   async ngOnInit(): Promise<void> {
     await this.local.create();
     await this.loadLandmarkFromRoute();
+    // Load tips after landmark is loaded
+    if (this.landmark) {
+      await this.loadUserTips();
+    }
   }
 
   ngOnDestroy(): void {
-    // Clean up any subscriptions or listeners
   }
 
   private async loadLandmarkFromRoute(): Promise<void> {
@@ -100,7 +133,12 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       const queryId = this.route.snapshot.queryParamMap.get('id');
       const slug = this.route.snapshot.queryParamMap.get('slug');
 
+      console.log('🔍 Landmark Details - Route ID:', routeId);
+      console.log('🔍 Landmark Details - Query ID:', queryId);
+      console.log('🔍 Landmark Details - Slug:', slug);
+
       const landmarkId = routeId || queryId;
+      console.log('🔍 Landmark Details - Final ID:', landmarkId);
 
       if (landmarkId) {
         await this.loadById(landmarkId);
@@ -121,7 +159,7 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
           this.loadArContent(currentLandmark.id),
           this.loadTriviaQuestions(currentLandmark.id),
           this.checkScavengerHunt(currentLandmark.id),
-          this.loadUserTips(currentLandmark.id)
+          this.loadUserTips()
         ]);
       } else {
         await this.showToast('Landmark not found.', 'danger');
@@ -201,8 +239,16 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     if (!pathOrUrl) return null;
     if (pathOrUrl.startsWith('http')) return pathOrUrl;
     try {
-      return await getDownloadURL(ref(this.storageSvc, pathOrUrl));
-    } catch {
+      // Add timeout to prevent hanging on CORS errors
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Image load timeout')), 5000)
+      );
+      
+      const imagePromise = getDownloadURL(ref(this.storageSvc, pathOrUrl));
+      
+      return await Promise.race([imagePromise, timeoutPromise]);
+    } catch (error) {
+      console.warn('Failed to load image:', pathOrUrl, error);
       return null;
     }
   }
@@ -245,22 +291,7 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     }
   }
 
-  private async loadUserTips(landmarkId: string): Promise<void> {
-    try {
-      const tipsRef = collection(db, 'user_tips');
-      const q = query(tipsRef, where('landmarkId', '==', landmarkId), where('approved', '==', true));
-      const querySnapshot = await getDocs(q);
-      
-      this.userTips = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    } catch (error) {
-      console.error('Error loading user tips:', error);
-    }
-  }
 
-  // Main Action Methods
   async launchArExperience(): Promise<void> {
     const currentLandmark = this.landmark;
     if (!currentLandmark) {
@@ -268,7 +299,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       return;
     }
 
-    // Check if device supports AR
     if (!this.isArSupported()) {
       const alert = await this.alertCtrl.create({
         header: 'AR Not Supported',
@@ -289,7 +319,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       this.showArExperience = true;
       await this.showToast('AR Experience launched! 🚀', 'success');
       
-      // Navigate to AR experience page with landmark data
       this.router.navigate(['/ar-experience'], { 
         queryParams: { 
           id: currentLandmark.id,
@@ -305,7 +334,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
   }
 
   private isArSupported(): boolean {
-    // Check for AR support in the browser/device
     return 'xr' in navigator || 'mediaDevices' in navigator;
   }
 
@@ -326,7 +354,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       this.isStamped = true;
       await this.showToast('Stamp collected! 🎉', 'success');
       
-      // Record visit for analytics
       await this.recordVisit(currentLandmark.id);
     } catch (error) {
       console.error('Error collecting stamp:', error);
@@ -378,7 +405,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     }
   }
 
-  // Navigation Methods
   startScavengerHunt(): void {
     const currentLandmark = this.landmark;
     if (!currentLandmark) return;
@@ -396,30 +422,160 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     });
   }
 
-  viewTips(): void {
+  async viewTips(): Promise<void> {
     const currentLandmark = this.landmark;
     if (!currentLandmark) return;
+
+    await this.loadUserTips();
     
     if (this.userTips.length === 0) {
-      this.showToast('No tips available yet. Be the first to share!', 'primary');
-      this.submitTip();
+      this.showToast('No tips available yet. Be the first to share one!', 'medium');
       return;
     }
-    
-    this.router.navigate(['/tips'], { 
-      queryParams: { landmarkId: currentLandmark.id } 
+
+    // Show tips in an alert
+    const tipsText = this.userTips.map((tip, index) => 
+      `${index + 1}. ${tip.tipText}\n   - ${tip.userName} (${tip.tipType})\n   Rating: ${tip.rating}/5\n`
+    ).join('\n');
+
+    const alert = await this.alertCtrl.create({
+      header: `Tips for ${currentLandmark.name}`,
+      message: tipsText,
+      buttons: [
+        {
+          text: 'Close',
+          role: 'cancel'
+        },
+        {
+          text: 'Submit a Tip',
+          handler: () => {
+            this.submitTip();
+          }
+        }
+      ]
     });
+
+    await alert.present();
   }
 
-  submitTip(): void {
+  private async loadUserTips(): Promise<void> {
     const currentLandmark = this.landmark;
     if (!currentLandmark) return;
-    this.router.navigate(['/submit-tip'], { 
-      queryParams: { 
-        landmarkId: currentLandmark.id,
-        landmarkName: currentLandmark.name
-      } 
+
+    try {
+      const tipsRef = collection(db, 'user_tips');
+      const q = query(tipsRef, 
+        where('landmarkId', '==', currentLandmark.id),
+        where('isApproved', '==', true)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      this.userTips = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error loading tips:', error);
+      this.userTips = [];
+    }
+  }
+
+  async submitTip(): Promise<void> {
+    const currentLandmark = this.landmark;
+    if (!currentLandmark) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Submit a Tip',
+      subHeader: `Share your experience about ${currentLandmark.name}`,
+      inputs: [
+        {
+          name: 'tipText',
+          type: 'textarea',
+          placeholder: 'Share your tip, experience, or advice about this landmark...',
+          attributes: {
+            maxlength: 500,
+            rows: 4
+          }
+        },
+        {
+          name: 'tipType',
+          type: 'text',
+          placeholder: 'Tip type (general, visiting, historical, photo, other)',
+          value: 'general'
+        },
+        {
+          name: 'rating',
+          type: 'number',
+          placeholder: 'Rating (1-5)',
+          min: 1,
+          max: 5,
+          value: 5
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Submit Tip',
+          handler: async (data) => {
+            if (data.tipText && data.tipText.trim().length > 0) {
+              await this.saveTip(data, currentLandmark);
+            } else {
+              this.showToast('Please enter a tip before submitting', 'warning');
+            }
+          }
+        }
+      ]
     });
+
+    await alert.present();
+  }
+
+  private async saveTip(tipData: any, landmark: LandmarkVM): Promise<void> {
+    const loading = await this.loadingCtrl.create({
+      message: 'Submitting your tip...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    try {
+      // Get user info from storage
+      const user = await this.local.get('user');
+      const userId = user?.uid || 'anonymous';
+      const userName = user?.displayName || 'Anonymous User';
+      const userEmail = user?.email || 'anonymous@example.com';
+
+      const tip: UserTip = {
+        landmarkId: landmark.id,
+        landmarkName: landmark.name,
+        userId: userId,
+        userName: userName,
+        userEmail: userEmail,
+        tipText: tipData.tipText.trim(),
+        tipType: tipData.tipType || 'general',
+        rating: parseInt(tipData.rating) || 5,
+        isApproved: false, // Tips need approval
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      // Save to Firebase
+      const tipsRef = collection(db, 'user_tips');
+      await addDoc(tipsRef, tip);
+
+      await loading.dismiss();
+      this.showToast('Thank you! Your tip has been submitted for review.', 'success');
+      
+      // Refresh tips
+      await this.loadUserTips();
+      
+    } catch (error) {
+      console.error('Error saving tip:', error);
+      await loading.dismiss();
+      this.showToast('Failed to submit tip. Please try again.', 'danger');
+    }
   }
 
   async shareLandmark(): Promise<void> {
@@ -434,13 +590,11 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
           url: window.location.href
         });
       } else {
-        // Fallback for browsers that don't support native sharing
         await navigator.clipboard.writeText(window.location.href);
         await this.showToast('Link copied to clipboard! 📋', 'success');
       }
     } catch (error) {
       console.error('Error sharing:', error);
-      // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(window.location.href);
         await this.showToast('Link copied to clipboard! 📋', 'success');
@@ -452,18 +606,31 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
 
   async openInMaps(): Promise<void> {
     const currentLandmark = this.landmark;
-    if (!currentLandmark || !currentLandmark.latitude || !currentLandmark.longitude) {
-      await this.showToast('Location coordinates not available', 'warning');
+    if (!currentLandmark || !currentLandmark.id) {
+      await this.showToast('Landmark information not available', 'warning');
       return;
     }
 
-    const lat = currentLandmark.latitude;
-    const lng = currentLandmark.longitude;
-    const name = encodeURIComponent(currentLandmark.name);
-
-    // Try to open in Google Maps
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}&query_place_id=${name}`;
-    window.open(googleMapsUrl, '_blank');
+    console.log('🗺️ Opening landmark in app map:', currentLandmark.name, 'ID:', currentLandmark.id);
+    
+    // Navigate to the map page with the landmark ID as a query parameter
+    this.router.navigate(['/map'], {
+      queryParams: { 
+        landmarkId: currentLandmark.id,
+        landmarkName: currentLandmark.name
+      }
+    }).then(success => {
+      if (success) {
+        console.log('✅ Successfully navigated to map with landmark');
+        this.showToast(`Opening ${currentLandmark.name} on map`, 'success');
+      } else {
+        console.error('❌ Failed to navigate to map');
+        this.showToast('Failed to open map', 'danger');
+      }
+    }).catch(error => {
+      console.error('❌ Navigation error:', error);
+      this.showToast('Navigation error occurred', 'danger');
+    });
   }
 
   async playTrivia(): Promise<void> {
@@ -475,13 +642,11 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       return;
     }
 
-    // Navigate to trivia page or show inline trivia
     this.router.navigate(['/trivia'], {
       queryParams: { landmarkId: currentLandmark.id }
     });
   }
 
-  // UI Event Handlers
   onSliderChange(event: any): void {
     this.sliderValue = event.detail.value;
   }
@@ -494,7 +659,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     event.target.src = 'assets/img/placeholder.jpg';
   }
 
-  // Data Sync Methods
   private async syncStamp(id: string): Promise<void> {
     try {
       const stamps: string[] = (await this.local.get('stamps')) || [];
@@ -513,7 +677,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     }
   }
 
-  // Utility Methods
   private async showToast(
     message: string,
     color: 'success' | 'danger' | 'warning' | 'primary' | 'medium' = 'success'
@@ -533,7 +696,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     await toast.present();
   }
 
-  // Getter methods for template
   get hasAdditionalInfo(): boolean {
     return !!(this.landmark?.historicalSignificance || 
               this.landmark?.constructionDate || 

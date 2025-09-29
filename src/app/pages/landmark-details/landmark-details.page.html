@@ -1,20 +1,22 @@
-<!-- src/app/pages/landmark-details/landmark-details.page.html -->
-<ion-header>
-  <ion-toolbar color="light">
+<ion-header class="modern-header">
+  <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home"></ion-back-button>
+      <ion-back-button defaultHref="/home" class="back-button"></ion-back-button>
     </ion-buttons>
     <ion-title class="title-header">
-      {{ landmark?.name || 'Loading…' }}
+      <div class="title-content">
+        <h1 class="landmark-title">{{ landmark?.name || 'Loading…' }}</h1>
+        <p class="landmark-subtitle" *ngIf="landmark?.city">{{ landmark?.city }}</p>
+      </div>
     </ion-title>
-    <ion-buttons slot="end">
-      <ion-button fill="clear" (click)="toggleBookmark()" *ngIf="landmark">
+    <ion-buttons slot="end" class="header-actions">
+      <ion-button fill="clear" (click)="toggleBookmark()" *ngIf="landmark" class="action-btn">
         <ion-icon 
           [name]="isBookmarked ? 'bookmark' : 'bookmark-outline'" 
           [color]="isBookmarked ? 'warning' : 'medium'">
         </ion-icon>
       </ion-button>
-      <ion-button fill="clear" (click)="shareLandmark()" *ngIf="landmark">
+      <ion-button fill="clear" (click)="shareLandmark()" *ngIf="landmark" class="action-btn">
         <ion-icon name="share-outline" color="primary"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -23,162 +25,204 @@
 
 <ion-content class="ion-padding" [fullscreen]="true">
 
-  <!-- Loading State -->
-  <div class="ion-text-center ion-padding" *ngIf="loading">
-    <ion-spinner name="crescent"></ion-spinner>
-    <p>Loading landmark details...</p>
+  <div class="loading-container" *ngIf="loading">
+    <div class="loading-content">
+      <div class="loading-spinner">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+      <h3>Loading Landmark</h3>
+      <p>Fetching details and media...</p>
+      
+      <div class="skeleton-content">
+        <div class="skeleton-hero"></div>
+        <div class="skeleton-tabs">
+          <div class="skeleton-tab"></div>
+          <div class="skeleton-tab"></div>
+          <div class="skeleton-tab"></div>
+        </div>
+        <div class="skeleton-cards">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Main Content -->
   <ng-container *ngIf="!loading && landmark">
 
-    <!-- AR Launch Button -->
-    <ion-button 
-      expand="block" 
-      color="primary" 
-      size="large"
-      class="ar-launch-btn"
-      (click)="launchArExperience()"
-      [disabled]="!arContent">
-      <ion-icon name="camera" slot="start"></ion-icon>
-      {{ arContent ? 'Launch AR Experience' : 'AR Not Available' }}
-    </ion-button>
-
-    <!-- Main Image -->
-    <div class="landmark-image-container" *ngIf="activeTab === 'story'">
-      <img 
-        [src]="landmark.imageUrl" 
-        [alt]="landmark.name" 
-        class="landmark-img"
-        (error)="onImageError($event)" />
-      
-      <!-- Image overlay with quick info -->
-      <div class="image-overlay">
-        <ion-chip color="primary" *ngIf="landmark.category">
-          <ion-label>{{ landmark.category }}</ion-label>
-        </ion-chip>
-        <ion-chip color="success" *ngIf="isStamped">
-          <ion-icon name="checkmark-circle"></ion-icon>
-          <ion-label>Visited</ion-label>
-        </ion-chip>
+    <div class="hero-section">
+      <div class="hero-image-container">
+        <img 
+          [src]="getDefaultImageUrl(landmark.imageUrl, landmark.category)" 
+          [alt]="landmark.name" 
+          class="hero-image"
+          (error)="onImageError($event)" />
+        
+        <div class="hero-overlay">
+          <div class="hero-content">
+            <div class="hero-badges">
+              <ion-chip color="primary" *ngIf="landmark.category" class="category-chip">
+                <ion-icon name="location" slot="start"></ion-icon>
+                <ion-label>{{ landmark.category }}</ion-label>
+              </ion-chip>
+              <ion-chip color="success" *ngIf="isStamped" class="visited-chip">
+                <ion-icon name="checkmark-circle"></ion-icon>
+                <ion-label>Visited</ion-label>
+              </ion-chip>
+            </div>
+            
+            <div class="hero-actions">
+              <ion-button 
+                expand="block" 
+                color="primary" 
+                size="large"
+                class="ar-launch-btn"
+                (click)="launchArExperience()"
+                [disabled]="!arContent">
+                <ion-icon name="camera" slot="start"></ion-icon>
+                {{ arContent ? 'Launch AR Experience' : 'AR Not Available' }}
+              </ion-button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Tab Segment -->
-    <ion-segment 
-      [(ngModel)]="activeTab" 
-      value="story" 
-      class="custom-segment"
-      (ionChange)="onTabChange($event)">
-      <ion-segment-button value="story">
-        <ion-label>Story / History</ion-label>
-      </ion-segment-button>
-      <ion-segment-button 
-        value="then" 
-        *ngIf="landmark.thenUrl || landmark.nowUrl">
-        <ion-label>Then & Now</ion-label>
-      </ion-segment-button>
-      <ion-segment-button 
-        value="media" 
-        *ngIf="hasMedia">
-        <ion-label>Media</ion-label>
-      </ion-segment-button>
-      <ion-segment-button 
-        value="info" 
-        *ngIf="hasAdditionalInfo">
-        <ion-label>Details</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-
-    <!-- Story/History Tab -->
-    <div *ngIf="activeTab === 'story'" class="story-content">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>{{ landmark.name }}</ion-card-title>
-          <ion-card-subtitle *ngIf="landmark.city">
-            <ion-icon name="location" color="primary"></ion-icon>
-            {{ landmark.city }}
-          </ion-card-subtitle>
-        </ion-card-header>
-        
-        <ion-card-content>
-          <p class="description-text">{{ landmark.description }}</p>
-          
-          <!-- Location Info -->
-          <ion-item *ngIf="hasLocationData" lines="none" class="location-item">
-            <ion-icon name="navigate" slot="start" color="primary"></ion-icon>
-            <ion-label>
-              <h3>Location</h3>
-              <p>{{ locationString }}</p>
-            </ion-label>
-            <ion-button 
-              fill="clear" 
-              slot="end" 
-              (click)="openInMaps()">
-              <ion-icon name="map"></ion-icon>
-            </ion-button>
-          </ion-item>
-
-          <!-- Historical Significance -->
-          <div *ngIf="landmark.historicalSignificance" class="info-section">
-            <h3 class="section-heading">
-              <ion-icon name="library" color="primary"></ion-icon>
-              Historical Significance
-            </h3>
-            <p>{{ landmark.historicalSignificance }}</p>
-          </div>
-
-          <!-- Construction Info -->
-          <div *ngIf="landmark.constructionDate || landmark.architect" class="info-section">
-            <h3 class="section-heading">
-              <ion-icon name="hammer" color="primary"></ion-icon>
-              Construction Details
-            </h3>
-            <ion-list lines="none">
-              <ion-item *ngIf="landmark.constructionDate">
-                <ion-label>
-                  <strong>Built:</strong> {{ landmark.constructionDate }}
-                </ion-label>
-              </ion-item>
-              <ion-item *ngIf="landmark.architect">
-                <ion-label>
-                  <strong>Architect:</strong> {{ landmark.architect }}
-                </ion-label>
-              </ion-item>
-              <ion-item *ngIf="landmark.architecturalStyle">
-                <ion-label>
-                  <strong>Style:</strong> {{ landmark.architecturalStyle }}
-                </ion-label>
-              </ion-item>
-            </ion-list>
-          </div>
-
-          <!-- Fun Facts -->
-          <div *ngIf="landmark.funFacts && landmark.funFacts.length > 0" class="info-section">
-            <h3 class="section-heading">
-              <ion-icon name="bulb" color="warning"></ion-icon>
-              Fun Facts
-            </h3>
-            <ul class="facts-list">
-              <li *ngFor="let fact of landmark.funFacts">{{ fact }}</li>
-            </ul>
-          </div>
-
-          <!-- Visiting Tips -->
-          <div *ngIf="landmark.visitingTips && landmark.visitingTips.length > 0" class="info-section">
-            <h3 class="section-heading">
-              <ion-icon name="information-circle" color="success"></ion-icon>
-              Visiting Tips
-            </h3>
-            <ul class="tips-list">
-              <li *ngFor="let tip of landmark.visitingTips">{{ tip }}</li>
-            </ul>
-          </div>
-        </ion-card-content>
-      </ion-card>
+    <div class="tab-navigation">
+      <ion-segment 
+        [(ngModel)]="activeTab" 
+        value="story" 
+        class="modern-segment"
+        (ionChange)="onTabChange($event)">
+        <ion-segment-button value="story" class="segment-button">
+          <ion-icon name="book" slot="start"></ion-icon>
+          <ion-label>Story</ion-label>
+        </ion-segment-button>
+        <ion-segment-button 
+          value="then" 
+          *ngIf="landmark.thenUrl || landmark.nowUrl"
+          class="segment-button">
+          <ion-icon name="swap-horizontal" slot="start"></ion-icon>
+          <ion-label>Then & Now</ion-label>
+        </ion-segment-button>
+        <ion-segment-button 
+          value="media" 
+          *ngIf="hasMedia"
+          class="segment-button">
+          <ion-icon name="images" slot="start"></ion-icon>
+          <ion-label>Media</ion-label>
+        </ion-segment-button>
+        <ion-segment-button 
+          value="info" 
+          *ngIf="hasAdditionalInfo"
+          class="segment-button">
+          <ion-icon name="information-circle" slot="start"></ion-icon>
+          <ion-label>Details</ion-label>
+        </ion-segment-button>
+      </ion-segment>
     </div>
 
-    <!-- Then & Now Tab -->
+    <div *ngIf="activeTab === 'story'" class="story-content">
+      <div class="content-container">
+        <ion-card class="main-card">
+          <ion-card-content>
+            <div class="card-header">
+              <h2 class="card-title">{{ landmark.name }}</h2>
+              <div class="card-meta" *ngIf="landmark.city">
+                <ion-icon name="location" color="primary"></ion-icon>
+                <span>{{ landmark.city }}</span>
+              </div>
+            </div>
+            
+            <p class="description-text">{{ landmark.description }}</p>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card *ngIf="hasLocationData" class="info-card">
+          <ion-card-content>
+            <div class="card-header">
+              <ion-icon name="navigate" color="primary" class="card-icon"></ion-icon>
+              <h3 class="card-title">Location</h3>
+            </div>
+            <p class="location-text">{{ locationString }}</p>
+            <ion-button 
+              size="small"
+              fill="outline" 
+              color="primary"
+              (click)="openInMaps()"
+              class="location-btn">
+              <ion-icon name="map" slot="start"></ion-icon>
+              Open in Maps
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card *ngIf="landmark.historicalSignificance" class="info-card">
+          <ion-card-content>
+            <div class="card-header">
+              <ion-icon name="library" color="primary" class="card-icon"></ion-icon>
+              <h3 class="card-title">Historical Significance</h3>
+            </div>
+            <p class="info-text">{{ landmark.historicalSignificance }}</p>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card *ngIf="landmark.constructionDate || landmark.architect" class="info-card">
+          <ion-card-content>
+            <div class="card-header">
+              <ion-icon name="hammer" color="primary" class="card-icon"></ion-icon>
+              <h3 class="card-title">Construction Details</h3>
+            </div>
+            <div class="details-grid">
+              <div class="detail-item" *ngIf="landmark.constructionDate">
+                <span class="detail-label">Built</span>
+                <span class="detail-value">{{ landmark.constructionDate }}</span>
+              </div>
+              <div class="detail-item" *ngIf="landmark.architect">
+                <span class="detail-label">Architect</span>
+                <span class="detail-value">{{ landmark.architect }}</span>
+              </div>
+              <div class="detail-item" *ngIf="landmark.architecturalStyle">
+                <span class="detail-label">Style</span>
+                <span class="detail-value">{{ landmark.architecturalStyle }}</span>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card *ngIf="landmark.funFacts && landmark.funFacts.length > 0" class="info-card">
+          <ion-card-content>
+            <div class="card-header">
+              <ion-icon name="bulb" color="warning" class="card-icon"></ion-icon>
+              <h3 class="card-title">Fun Facts</h3>
+            </div>
+            <div class="facts-container">
+              <div class="fact-item" *ngFor="let fact of landmark.funFacts; let i = index">
+                <ion-icon name="star" color="warning" class="fact-icon"></ion-icon>
+                <span class="fact-text">{{ fact }}</span>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card *ngIf="landmark.visitingTips && landmark.visitingTips.length > 0" class="info-card">
+          <ion-card-content>
+            <div class="card-header">
+              <ion-icon name="information-circle" color="success" class="card-icon"></ion-icon>
+              <h3 class="card-title">Visiting Tips</h3>
+            </div>
+            <div class="tips-container">
+              <div class="tip-item" *ngFor="let tip of landmark.visitingTips; let i = index">
+                <ion-icon name="checkmark-circle" color="success" class="tip-icon"></ion-icon>
+                <span class="tip-text">{{ tip }}</span>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+
     <div *ngIf="activeTab === 'then'" class="then-now-container">
       <div class="comparison-header">
         <h3>Then & Now Comparison</h3>
@@ -188,11 +232,11 @@
       <div class="twentytwenty-wrapper">
         <div class="twentytwenty-container">
           <img 
-            [src]="landmark.thenUrl || landmark.imageUrl" 
+            [src]="landmark.thenUrl || getDefaultImageUrl(landmark.imageUrl, landmark.category)" 
             alt="Historical view" 
             class="comparison-image then-image" />
           <img
-            [src]="landmark.nowUrl || landmark.imageUrl"
+            [src]="landmark.nowUrl || getDefaultImageUrl(landmark.imageUrl, landmark.category)"
             [style.clipPath]="'inset(0 0 0 ' + (100 - sliderValue) + '%)'"
             alt="Current view"
             class="comparison-image now-image" />
@@ -211,7 +255,6 @@
       </ion-range>
     </div>
 
-    <!-- Media Tab -->
     <div *ngIf="activeTab === 'media'" class="media-content">
       <ion-card *ngIf="landmark.videoUrl">
         <ion-card-header>
@@ -233,7 +276,6 @@
         </ion-card-content>
       </ion-card>
 
-      <!-- Image Gallery -->
       <ion-card *ngIf="landmark.thenUrl || landmark.nowUrl">
         <ion-card-header>
           <ion-card-title>
@@ -256,123 +298,155 @@
       </ion-card>
     </div>
 
-    <!-- Interactive Actions -->
-    <div class="action-buttons">
-      <!-- Scavenger Hunt -->
-      <ion-item 
-        button 
-        lines="none" 
-        class="action-link" 
-        (click)="startScavengerHunt()"
-        [disabled]="!hasScavengerHunt">
-        <ion-icon 
-          slot="start" 
-          name="search" 
-          [color]="hasScavengerHunt ? 'tertiary' : 'medium'">
-        </ion-icon>
-        <ion-label>
-          <h2>Scavenger Hunt</h2>
-          <p>{{ hasScavengerHunt ? 'Solve clues and explore interactively' : 'Coming soon!' }}</p>
-        </ion-label>
-        <ion-icon name="chevron-forward" slot="end"></ion-icon>
-      </ion-item>
+    <div class="actions-section">
+      <h3 class="section-title">Interactive Features</h3>
+      <div class="actions-grid">
+        <ion-card 
+          class="action-card"
+          [class.disabled]="!hasScavengerHunt"
+          (click)="startScavengerHunt()">
+          <ion-card-content>
+            <div class="action-content">
+              <div class="action-icon">
+                <ion-icon 
+                  name="search" 
+                  [color]="hasScavengerHunt ? 'tertiary' : 'medium'">
+                </ion-icon>
+              </div>
+              <div class="action-text">
+                <h4>Scavenger Hunt</h4>
+                <p>{{ hasScavengerHunt ? 'Solve clues and explore interactively' : 'Coming soon!' }}</p>
+              </div>
+              <ion-icon 
+                name="chevron-forward" 
+                class="action-arrow"
+                [color]="hasScavengerHunt ? 'primary' : 'medium'">
+              </ion-icon>
+            </div>
+          </ion-card-content>
+        </ion-card>
 
-      <!-- Trivia -->
-      <ion-item 
-        button 
-        lines="none" 
-        class="action-link" 
-        (click)="playTrivia()"
-        [disabled]="triviaQuestions.length === 0">
-        <ion-icon 
-          slot="start" 
-          name="school" 
-          [color]="triviaQuestions.length > 0 ? 'secondary' : 'medium'">
-        </ion-icon>
-        <ion-label>
-          <h2>Play Trivia</h2>
-          <p>{{ triviaQuestions.length > 0 ? 'Test your knowledge with ' + triviaQuestions.length + ' questions' : 'No trivia available yet' }}</p>
-        </ion-label>
-        <ion-icon name="chevron-forward" slot="end"></ion-icon>
-      </ion-item>
+        <ion-card 
+          class="action-card"
+          [class.disabled]="triviaQuestions.length === 0"
+          (click)="playTrivia()">
+          <ion-card-content>
+            <div class="action-content">
+              <div class="action-icon">
+                <ion-icon 
+                  name="school" 
+                  [color]="triviaQuestions.length > 0 ? 'secondary' : 'medium'">
+                </ion-icon>
+              </div>
+              <div class="action-text">
+                <h4>Play Trivia</h4>
+                <p>{{ triviaQuestions.length > 0 ? 'Test your knowledge with ' + triviaQuestions.length + ' questions' : 'No trivia available yet' }}</p>
+              </div>
+              <ion-icon 
+                name="chevron-forward" 
+                class="action-arrow"
+                [color]="triviaQuestions.length > 0 ? 'primary' : 'medium'">
+              </ion-icon>
+            </div>
+          </ion-card-content>
+        </ion-card>
 
-      <!-- View Tips -->
-      <ion-item 
-        button 
-        lines="none" 
-        class="action-link" 
-        (click)="viewTips()">
-        <ion-icon slot="start" name="information-circle-outline" color="primary"></ion-icon>
-        <ion-label>
-          <h2>Visitor Tips</h2>
-          <p>{{ userTips.length > 0 ? 'View ' + userTips.length + ' helpful tips' : 'Be the first to share a tip!' }}</p>
-        </ion-label>
-        <ion-icon name="chevron-forward" slot="end"></ion-icon>
-      </ion-item>
+        <ion-card 
+          class="action-card"
+          (click)="viewTips()">
+          <ion-card-content>
+            <div class="action-content">
+              <div class="action-icon">
+                <ion-icon name="information-circle-outline" color="primary"></ion-icon>
+              </div>
+              <div class="action-text">
+                <h4>Visitor Tips</h4>
+                <p>{{ userTips.length > 0 ? 'View ' + userTips.length + ' helpful tips' : 'Be the first to share a tip!' }}</p>
+              </div>
+              <ion-icon 
+                name="chevron-forward" 
+                class="action-arrow"
+                color="primary">
+              </ion-icon>
+            </div>
+          </ion-card-content>
+        </ion-card>
 
-      <!-- Submit Tip -->
-      <ion-item 
-        button 
-        lines="none" 
-        class="action-link" 
-        (click)="submitTip()">
-        <ion-icon slot="start" name="add-circle-outline" color="success"></ion-icon>
-        <ion-label>
-          <h2>Submit a Tip</h2>
-          <p>Share your experience with other visitors</p>
-        </ion-label>
-        <ion-icon name="chevron-forward" slot="end"></ion-icon>
-      </ion-item>
+        <ion-card 
+          class="action-card"
+          (click)="submitTip()">
+          <ion-card-content>
+            <div class="action-content">
+              <div class="action-icon">
+                <ion-icon name="add-circle-outline" color="success"></ion-icon>
+              </div>
+              <div class="action-text">
+                <h4>Submit a Tip</h4>
+                <p>Share your experience with other visitors</p>
+              </div>
+              <ion-icon 
+                name="chevron-forward" 
+                class="action-arrow"
+                color="primary">
+              </ion-icon>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
     </div>
 
-    <!-- Stamp Collection Section -->
     <div class="stamp-section">
+      <h3 class="section-title">Collection</h3>
       <ion-card class="stamp-card">
         <ion-card-content>
           <div class="stamp-content">
-            <div class="stamp-info">
-              <ion-icon 
-                [name]="isStamped ? 'checkmark-circle' : 'bookmark-outline'" 
-                [color]="isStamped ? 'success' : 'primary'"
-                size="large">
-              </ion-icon>
+            <div class="stamp-visual">
+              <div class="stamp-icon-container" [class.collected]="isStamped">
+                <ion-icon 
+                  [name]="isStamped ? 'checkmark-circle' : 'bookmark-outline'" 
+                  [color]="isStamped ? 'success' : 'primary'"
+                  class="stamp-icon">
+                </ion-icon>
+                <div class="stamp-ring" *ngIf="!isStamped"></div>
+              </div>
               <div class="stamp-text">
-                <h3>{{ isStamped ? 'Stamp Collected!' : 'Collect Stamp' }}</h3>
+                <h4>{{ isStamped ? 'Stamp Collected!' : 'Collect Stamp' }}</h4>
                 <p>{{ isStamped ? 'You\'ve visited this landmark' : 'Visit to add this landmark to your collection' }}</p>
               </div>
             </div>
             
-            <ion-button 
-              [color]="isStamped ? 'medium' : 'success'"
-              [disabled]="isStamped"
-              (click)="collectStamp()"
-              class="collect-stamp-btn">
-              <ion-icon 
-                [name]="isStamped ? 'checkmark-circle' : 'bookmark'" 
-                slot="start">
-              </ion-icon>
-              {{ isStamped ? 'Collected' : 'Collect' }}
-            </ion-button>
-          </div>
+            <div class="stamp-actions">
+              <ion-button 
+                [color]="isStamped ? 'medium' : 'success'"
+                [disabled]="isStamped"
+                (click)="collectStamp()"
+                class="collect-stamp-btn"
+                size="small">
+                <ion-icon 
+                  [name]="isStamped ? 'checkmark-circle' : 'bookmark'" 
+                  slot="start">
+                </ion-icon>
+                {{ isStamped ? 'Collected' : 'Collect Stamp' }}
+              </ion-button>
 
-          <!-- Progress to stamp gallery -->
-          <ion-button 
-            *ngIf="isStamped"
-            expand="block" 
-            fill="outline" 
-            routerLink="/stamp-gallery"
-            color="primary"
-            class="view-collection-btn">
-            <ion-icon name="trophy" slot="start"></ion-icon>
-            View My Collection
-          </ion-button>
+              <ion-button 
+                *ngIf="isStamped"
+                size="small"
+                fill="outline" 
+                routerLink="/stamp-gallery"
+                color="primary"
+                class="view-collection-btn">
+                <ion-icon name="trophy" slot="start"></ion-icon>
+                View My Collection
+              </ion-button>
+            </div>
+          </div>
         </ion-card-content>
       </ion-card>
     </div>
 
   </ng-container>
 
-  <!-- Error State -->
   <div class="ion-text-center ion-padding" *ngIf="!loading && !landmark">
     <ion-icon name="alert-circle" size="large" color="danger"></ion-icon>
     <h2>Landmark Not Found</h2>
@@ -385,7 +459,6 @@
 
 </ion-content>
 
-<!-- Floating Action Button for Quick Actions -->
 <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="landmark && !loading">
   <ion-fab-button color="primary" size="small">
     <ion-icon name="ellipsis-horizontal"></ion-icon>

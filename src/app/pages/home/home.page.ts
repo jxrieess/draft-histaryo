@@ -1,372 +1,3 @@
-// import { Component, OnInit, OnDestroy } from '@angular/core';
-// import { Router } from '@angular/router';
-// import { NavController, ToastController, AlertController } from '@ionic/angular';
-// import { Subscription } from 'rxjs';
-
-// // Interface definitions
-// interface Landmark {
-//   id: string;
-//   name: string;
-//   description: string;
-//   imageUrl?: string;
-//   city?: string;
-//   difficulty?: 'easy' | 'medium' | 'hard';
-//   arContent?: boolean;
-//   scavengerHunt?: boolean;
-//   estimatedTime?: number; // in minutes
-//   tags?: string[];
-//   category?: string;
-//   latitude?: number;
-//   longitude?: number;
-// }
-
-// @Component({
-//   selector: 'app-home',
-//   templateUrl: './home.page.html',
-//   styleUrls: ['./home.page.scss'],
-//   standalone: false
-// })
-// export class HomePage implements OnInit, OnDestroy {
-  
-//   // Component properties
-//   loading = false;
-//   error = '';
-//   totalLandmarks = 4;
-//   featuredLandmarks: Landmark[] = [];
-//   nearbyLandmarks: Landmark[] = [];
-//   userLocation: any = null;
-//   unreadNotifications = 0;
-//   fabActivated = false;
-  
-//   private subscriptions: Subscription[] = [];
-
-//   constructor(
-//     private router: Router,
-//     private navCtrl: NavController,
-//     private toastCtrl: ToastController,
-//     private alertCtrl: AlertController
-//   ) {}
-
-//   ngOnInit() {
-//     this.loadContent();
-//     this.checkUserLocation();
-//     this.loadNotifications();
-//   }
-
-//   ngOnDestroy() {
-//     this.subscriptions.forEach(sub => sub.unsubscribe());
-//   }
-
-//   // Content loading methods
-//   async loadContent() {
-//     this.loading = true;
-//     this.error = '';
-    
-//     try {
-//       // Simulate API calls - replace with actual service calls
-//       await Promise.all([
-//         this.loadFeaturedLandmarks(),
-//         this.loadNearbyLandmarks(),
-//         this.loadStats()
-//       ]);
-//     } catch (error) {
-//       this.error = 'Failed to load content. Please try again.';
-//       console.error('Content loading error:', error);
-//     } finally {
-//       this.loading = false;
-//     }
-//   }
-
-//   private async loadFeaturedLandmarks() {
-//     // Mock data - replace with actual service call
-//     this.featuredLandmarks = [
-//       {
-//         id: '1',
-//         name: 'Fort San Pedro',
-//         description: 'The smallest triangular fort in the Philippines, built by Spanish conquistadors.',
-//         imageUrl: 'assets/img/fort-san-pedro.jpg',
-//         city: 'Cebu City',
-//         difficulty: 'easy',
-//         arContent: true,
-//         scavengerHunt: false,
-//         estimatedTime: 30,
-//         tags: ['Spanish Colonial', 'Military History'],
-//         category: 'Historical Site'
-//       },
-//       {
-//         id: '2',
-//         name: 'Basilica del Santo Niño',
-//         description: 'The oldest Roman Catholic church in the Philippines, housing the Santo Niño de Cebu.',
-//         imageUrl: 'assets/img/basilica.jpg',
-//         city: 'Cebu City',
-//         difficulty: 'medium',
-//         arContent: true,
-//         scavengerHunt: true,
-//         estimatedTime: 45,
-//         tags: ['Religious', 'Spanish Colonial'],
-//         category: 'Religious Site'
-//       }
-//     ];
-//   }
-
-//   private async loadNearbyLandmarks() {
-//     // Mock data - replace with actual service call based on user location
-//     this.nearbyLandmarks = [
-//       {
-//         id: '3',
-//         name: 'Magellan\'s Cross',
-//         description: 'Historic cross planted by Ferdinand Magellan in 1521.',
-//         imageUrl: 'assets/img/magellan-cross.jpg',
-//         city: 'Cebu City',
-//         difficulty: 'easy',
-//         arContent: true,
-//         estimatedTime: 20,
-//         category: 'Historical Marker'
-//       },
-//       {
-//         id: '4',
-//         name: 'Heritage Monument',
-//         description: 'Sculptures depicting the history of Cebu and the Philippines.',
-//         imageUrl: 'assets/img/heritage-monument.jpg',
-//         city: 'Cebu City',
-//         difficulty: 'medium',
-//         arContent: false,
-//         estimatedTime: 25,
-//         category: 'Monument'
-//       }
-//     ];
-//   }
-
-//   private async loadStats() {
-//     // Mock stats - replace with actual service call
-//     this.totalLandmarks = 4;
-//   }
-
-//   private checkUserLocation() {
-//     // Check if geolocation is available and get user location
-//     if ('geolocation' in navigator) {
-//       navigator.geolocation.getCurrentPosition(
-//         (position) => {
-//           this.userLocation = {
-//             latitude: position.coords.latitude,
-//             longitude: position.coords.longitude
-//           };
-//         },
-//         (error) => {
-//           console.warn('Location access denied:', error);
-//         }
-//       );
-//     }
-//   }
-
-//   private loadNotifications() {
-//     // Mock notification count - replace with actual service call
-//     this.unreadNotifications = 2;
-//   }
-
-//   // Navigation methods
-//   navigateToScan() {
-//     this.navCtrl.navigateForward('/scan');
-//   }
-
-//   navigateToMap() {
-//     this.navCtrl.navigateForward('/map');
-//   }
-
-//   navigateToStampGallery() {
-//     this.navCtrl.navigateForward('/stamps');
-//   }
-
-//   navigateToProgress() {
-//     this.navCtrl.navigateForward('/progress');
-//   }
-
-//   navigateToLandmark(landmark: Landmark) {
-//     this.navCtrl.navigateForward(`/landmark/${landmark.id}`);
-//   }
-
-//   navigateToAllLandmarks() {
-//     this.navCtrl.navigateForward('/landmarks');
-//   }
-
-//   // Action methods
-//   async exploreRandomLandmark() {
-//     const allLandmarks = [...this.featuredLandmarks, ...this.nearbyLandmarks];
-    
-//     if (allLandmarks.length === 0) {
-//       await this.showToast('No landmarks available at the moment');
-//       return;
-//     }
-
-//     const randomIndex = Math.floor(Math.random() * allLandmarks.length);
-//     const randomLandmark = allLandmarks[randomIndex];
-    
-//     const alert = await this.alertCtrl.create({
-//       header: 'Surprise Discovery!',
-//       subHeader: randomLandmark.name,
-//       message: randomLandmark.description,
-//       buttons: [
-//         {
-//           text: 'Maybe Later',
-//           role: 'cancel'
-//         },
-//         {
-//           text: 'Let\'s Go!',
-//           handler: () => {
-//             this.navigateToLandmark(randomLandmark);
-//           }
-//         }
-//       ]
-//     });
-
-//     await alert.present();
-//   }
-
-//   async openNotifications() {
-//     // Navigate to notifications page or show notifications modal
-//     this.navCtrl.navigateForward('/notifications');
-//   }
-
-//   // Refresh and reload methods
-//   async handleRefresh(event: any) {
-//     await this.refreshContent();
-//     event.target.complete();
-//   }
-
-//   async refreshContent() {
-//     await this.loadContent();
-//     await this.showToast('Content refreshed');
-//   }
-
-//   // Utility methods
-//   trackByLandmarkId(index: number, landmark: Landmark): string {
-//     return landmark.id;
-//   }
-
-//   onImageError(event: any) {
-//     // Handle image loading errors by setting a default image
-//     event.target.src = 'assets/img/default-landmark.jpg';
-//   }
-
-//   getShortDescription(description: string, limit: number = 100): string {
-//     if (!description) return '';
-    
-//     if (description.length <= limit) {
-//       return description;
-//     }
-    
-//     return description.slice(0, limit).trim() + '...';
-//   }
-
-//   getEstimatedTime(landmark: Landmark): string {
-//     if (!landmark.estimatedTime) return '';
-    
-//     const minutes = landmark.estimatedTime;
-//     if (minutes < 60) {
-//       return `${minutes} min`;
-//     } else {
-//       const hours = Math.floor(minutes / 60);
-//       const remainingMinutes = minutes % 60;
-//       return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
-//     }
-//   }
-
-//   getLandmarkDistance(landmark: Landmark): string {
-//     if (!this.userLocation || !landmark.latitude || !landmark.longitude) {
-//       return '';
-//     }
-
-//     // Calculate distance using Haversine formula (simplified)
-//     const distance = this.calculateDistance(
-//       this.userLocation.latitude,
-//       this.userLocation.longitude,
-//       landmark.latitude,
-//       landmark.longitude
-//     );
-
-//     if (distance < 1) {
-//       return `${Math.round(distance * 1000)}m`;
-//     } else {
-//       return `${distance.toFixed(1)}km`;
-//     }
-//   }
-
-//   private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-//     const R = 6371; // Radius of Earth in kilometers
-//     const dLat = this.deg2rad(lat2 - lat1);
-//     const dLon = this.deg2rad(lon2 - lon1);
-//     const a = 
-//       Math.sin(dLat/2) * Math.sin(dLat/2) +
-//       Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
-//       Math.sin(dLon/2) * Math.sin(dLon/2);
-//     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-//     return R * c;
-//   }
-
-//   private deg2rad(deg: number): number {
-//     return deg * (Math.PI/180);
-//   }
-
-//   getDifficultyColor(difficulty: string): string {
-//     switch (difficulty?.toLowerCase()) {
-//       case 'easy':
-//         return 'success';
-//       case 'medium':
-//         return 'warning';
-//       case 'hard':
-//         return 'danger';
-//       default:
-//         return 'medium';
-//     }
-//   }
-
-//   getDifficultyIcon(difficulty: string): string {
-//     switch (difficulty?.toLowerCase()) {
-//       case 'easy':
-//         return 'checkmark-circle';
-//       case 'medium':
-//         return 'alert-circle';
-//       case 'hard':
-//         return 'warning';
-//       default:
-//         return 'help-circle';
-//     }
-//   }
-
-//   hasSpecialFeatures(landmark: Landmark): boolean {
-//     return !!(landmark.arContent || landmark.scavengerHunt);
-//   }
-
-//   // FAB methods
-//   toggleFab() {
-//     this.fabActivated = !this.fabActivated;
-//   }
-
-//   // Helper methods
-//   private async showToast(message: string, color: string = 'primary') {
-//     const toast = await this.toastCtrl.create({
-//       message,
-//       duration: 2000,
-//       position: 'bottom',
-//       color
-//     });
-//     await toast.present();
-//   }
-
-//   // Mock data getters (for development)
-//   get mockFeaturedLandmarks(): Landmark[] {
-//     return this.featuredLandmarks.length > 0 ? this.featuredLandmarks : [];
-//   }
-
-//   get mockNearbyLandmarks(): Landmark[] {
-//     return this.nearbyLandmarks.length > 0 ? this.nearbyLandmarks : [];
-//   }
-// }
-
-
-
-
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { NavController, ToastController, AlertController, LoadingController } from '@ionic/angular';
@@ -374,24 +5,20 @@ import { Storage } from '@ionic/storage-angular';
 import { Subscription } from 'rxjs';
 import { LandmarkService, Landmark } from '../../services/landmark.service';
 
-// Interface for user session data
 interface UserSession {
   uid: string;
   email: string;
   name?: string;
   photoURL?: string;
-  visitCount: number;
-  stampsCollected: number;
-  lastVisit: string;
+  visitCount?: number;
+  stampsCollected?: number;
 }
 
-// Interface for user stats
 interface UserStats {
   totalVisits: number;
   stampsCollected: number;
   badgesEarned: number;
   completedTrivia: number;
-  favoriteLandmarks: string[];
   streakDays: number;
 }
 
@@ -403,39 +30,35 @@ interface UserStats {
 })
 export class HomePage implements OnInit, OnDestroy {
   
-  // User and session data
+  allLandmarks: Landmark[] = [];
+  featuredLandmarks: Landmark[] = [];
+  nearbyLandmarks: Landmark[] = [];
+  recentlyVisited: Landmark[] = [];
+  
   userSession: UserSession | null = null;
   userStats: UserStats = {
     totalVisits: 0,
     stampsCollected: 0,
     badgesEarned: 0,
     completedTrivia: 0,
-    favoriteLandmarks: [],
     streakDays: 0
   };
   
-  // Landmark data
-  featuredLandmarks: Landmark[] = [];
-  nearbyLandmarks: Landmark[] = [];
-  recentlyVisited: Landmark[] = [];
-  recommendedLandmarks: Landmark[] = [];
-  
-  // UI state
   loading = true;
   error = '';
   userLocation: any = null;
   unreadNotifications = 0;
   isRefreshing = false;
   selectedCategory = 'all';
+  fabActivated = false;
   
-  // Available categories
   categories = [
     { value: 'all', label: 'All', icon: 'apps' },
-    { value: 'Historical Site', label: 'Historical', icon: 'library' },
-    { value: 'Religious Site', label: 'Religious', icon: 'home' },
-    { value: 'Monument', label: 'Monuments', icon: 'trophy' },
+    { value: 'Historical', label: 'Historical', icon: 'library' },
+    { value: 'Religious', label: 'Religious', icon: 'home' },
     { value: 'Cultural', label: 'Cultural', icon: 'color-palette' },
-    { value: 'Natural', label: 'Natural', icon: 'leaf' }
+    { value: 'Natural', label: 'Natural', icon: 'leaf' },
+    { value: 'Modern', label: 'Modern', icon: 'business' }
   ];
   
   private subscriptions: Subscription[] = [];
@@ -450,31 +73,81 @@ export class HomePage implements OnInit, OnDestroy {
     private landmarkService: LandmarkService
   ) {}
 
+  goToProfile() {
+    this.router.navigate(['/profile']);
+  }
+
+  async logout() {
+    const alert = await this.alertCtrl.create({
+      header: 'Logout',
+      message: 'Are you sure you want to logout?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Logout',
+          handler: async () => {
+            // Clear all stored data
+            await this.storage.clear();
+            
+            // Navigate to login page
+            this.router.navigate(['/login']);
+            
+            // Show success message
+            const toast = await this.toastCtrl.create({
+              message: 'Logged out successfully',
+              duration: 2000,
+              position: 'bottom'
+            });
+            await toast.present();
+          }
+        }
+      ]
+    });
+    
+    await alert.present();
+  }
+
+  getDefaultImageUrl(imageUrl?: string, category?: string): string {
+    if (imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('placeholder')) {
+      return imageUrl;
+    }
+
+    switch (category?.toLowerCase()) {
+      case 'religious':
+        return 'assets/img/basilica.jpg';
+      case 'historical':
+        return 'assets/img/fort-san-pedro.jpg';
+      case 'cultural':
+        return 'assets/img/magellans-cross.jpg';
+      default:
+        return 'assets/img/default-landmark.jpg';
+    }
+  }
+
   async ngOnInit() {
     await this.storage.create();
     await this.initializeUser();
-    await this.loadContent();
+    await this.checkUserLocation();
     this.setupRealtimeUpdates();
+    await this.loadContent();
   }
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  // User initialization and session management
   private async initializeUser() {
     try {
-      // Load user session from storage
       const sessionData = await this.storage.get('userSession');
       if (sessionData) {
         this.userSession = sessionData;
         await this.loadUserStats();
       } else {
-        // Create anonymous session for first-time users
         await this.createGuestSession();
       }
-      
-      await this.checkUserLocation();
     } catch (error) {
       console.error('Error initializing user:', error);
     }
@@ -484,10 +157,7 @@ export class HomePage implements OnInit, OnDestroy {
     const guestSession: UserSession = {
       uid: 'guest_' + Date.now(),
       email: 'guest@histaryo.app',
-      name: 'Explorer',
-      visitCount: 0,
-      stampsCollected: 0,
-      lastVisit: new Date().toISOString()
+      name: 'Heritage Explorer'
     };
     
     this.userSession = guestSession;
@@ -498,47 +168,46 @@ export class HomePage implements OnInit, OnDestroy {
     if (!this.userSession) return;
     
     try {
-      // Load from local storage
-      const [stamps, visits, bookmarks, triviaResults] = await Promise.all([
-        this.storage.get('stamps') || [],
-        this.storage.get('visits') || [],
-        this.storage.get('bookmarks') || [],
-        this.storage.get('triviaResults') || []
-      ]);
-
-      // Load recently visited landmarks
-      const recentVisits = visits.slice(-5);
-      if (recentVisits.length > 0) {
-        const recentLandmarkIds = recentVisits.map((v: any) => v.landmarkId);
-        this.loadRecentlyVisited(recentLandmarkIds);
-      }
+      const stamps = await this.storage.get('stamps') ?? [];
+      const visits = await this.storage.get('visits') ?? [];
+      const triviaResults = await this.storage.get('triviaResults') ?? [];
 
       this.userStats = {
-        totalVisits: visits.length,
-        stampsCollected: stamps.length,
-        badgesEarned: this.calculateBadges(stamps.length, visits.length),
-        completedTrivia: triviaResults.length,
-        favoriteLandmarks: bookmarks,
-        streakDays: this.calculateStreak(visits)
+        totalVisits: Array.isArray(visits) ? visits.length : 0,
+        stampsCollected: Array.isArray(stamps) ? stamps.length : 0,
+        badgesEarned: this.calculateBadges(
+          Array.isArray(stamps) ? stamps.length : 0, 
+          Array.isArray(visits) ? visits.length : 0
+        ),
+        completedTrivia: Array.isArray(triviaResults) ? triviaResults.length : 0,
+        streakDays: this.calculateStreak(Array.isArray(visits) ? visits : [])
       };
 
-      // Update session data
-      this.userSession.visitCount = visits.length;
-      this.userSession.stampsCollected = stamps.length;
+      this.userSession.visitCount = Array.isArray(visits) ? visits.length : 0;
+      this.userSession.stampsCollected = Array.isArray(stamps) ? stamps.length : 0;
       await this.storage.set('userSession', this.userSession);
       
+      console.log('✅ User stats loaded:', this.userStats);
+      
     } catch (error) {
-      console.error('Error loading user stats:', error);
+      console.error('❌ Error loading user stats:', error);
+      this.userStats = {
+        totalVisits: 0,
+        stampsCollected: 0,
+        badgesEarned: 0,
+        completedTrivia: 0,
+        streakDays: 0
+      };
     }
   }
 
   private calculateBadges(stamps: number, visits: number): number {
     let badges = 0;
-    if (stamps >= 1) badges++; // First Stamp
-    if (stamps >= 5) badges++; // Explorer
-    if (stamps >= 10) badges++; // Heritage Hunter
-    if (visits >= 10) badges++; // Frequent Visitor
-    if (visits >= 25) badges++; // Heritage Master
+    if (stamps >= 1) badges++;
+    if (stamps >= 5) badges++;
+    if (stamps >= 10) badges++;
+    if (visits >= 10) badges++;
+    if (visits >= 25) badges++;
     return badges;
   }
 
@@ -564,191 +233,6 @@ export class HomePage implements OnInit, OnDestroy {
     return streak;
   }
 
-  // Content loading methods
-  async loadContent() {
-    this.loading = true;
-    this.error = '';
-    
-    try {
-      await Promise.all([
-        this.loadFeaturedLandmarks(),
-        this.loadNearbyLandmarks(),
-        this.loadRecommendedLandmarks(),
-        this.loadNotifications()
-      ]);
-    } catch (error) {
-      this.error = 'Failed to load content. Please try again.';
-      console.error('Content loading error:', error);
-      await this.showToast('Failed to load landmarks', 'danger');
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  private async loadFeaturedLandmarks() {
-    const subscription = this.landmarkService.getFeaturedLandmarks(6).subscribe({
-      next: (landmarks) => {
-        this.featuredLandmarks = landmarks.map(landmark => ({
-          ...landmark,
-          distance: this.userLocation ? 
-            this.calculateDistance(landmark.latitude, landmark.longitude) : undefined
-        }));
-      },
-      error: (error) => {
-        console.error('Error loading featured landmarks:', error);
-      }
-    });
-    
-    this.subscriptions.push(subscription);
-  }
-
-  private async loadNearbyLandmarks() {
-    if (!this.userLocation) {
-      // Load default landmarks for Cebu City if no location
-      const subscription = this.landmarkService.getLandmarksByCity('Cebu City').subscribe({
-        next: (landmarks) => {
-          this.nearbyLandmarks = landmarks.slice(0, 4);
-        },
-        error: (error) => {
-          console.error('Error loading city landmarks:', error);
-        }
-      });
-      this.subscriptions.push(subscription);
-      return;
-    }
-
-    const subscription = this.landmarkService.getNearbyLandmarks(
-      this.userLocation.latitude,
-      this.userLocation.longitude,
-      10 // 10km radius
-    ).subscribe({
-      next: (landmarks) => {
-        this.nearbyLandmarks = landmarks.slice(0, 4);
-      },
-      error: (error) => {
-        console.error('Error loading nearby landmarks:', error);
-        // Fallback to city landmarks
-        this.loadLandmarksByCity('Cebu City');
-      }
-    });
-    
-    this.subscriptions.push(subscription);
-  }
-
-  private async loadLandmarksByCity(city: string) {
-    const subscription = this.landmarkService.getLandmarksByCity(city).subscribe({
-      next: (landmarks) => {
-        this.nearbyLandmarks = landmarks.slice(0, 4);
-      }
-    });
-    this.subscriptions.push(subscription);
-  }
-
-  private async loadRecommendedLandmarks() {
-    if (this.userStats.favoriteLandmarks.length === 0) {
-      // For new users, recommend based on popular landmarks
-      const subscription = this.landmarkService.getFilteredLandmarks({
-        hasAR: true
-      }).subscribe({
-        next: (landmarks) => {
-          this.recommendedLandmarks = landmarks.slice(0, 3);
-        }
-      });
-      this.subscriptions.push(subscription);
-      return;
-    }
-
-    // For existing users, recommend similar landmarks
-    const favoriteCategories = await this.getFavoriteCategories();
-    if (favoriteCategories.length > 0) {
-      const subscription = this.landmarkService.getFilteredLandmarks({
-        category: favoriteCategories[0]
-      }).subscribe({
-        next: (landmarks) => {
-          // Filter out already visited landmarks
-          const unvisited = landmarks.filter(l => 
-            !this.userStats.favoriteLandmarks.includes(l.id)
-          );
-          this.recommendedLandmarks = unvisited.slice(0, 3);
-        }
-      });
-      this.subscriptions.push(subscription);
-    }
-  }
-
-  private async getFavoriteCategories(): Promise<string[]> {
-    const visits = await this.storage.get('visits') || [];
-    const categoryCount: { [key: string]: number } = {};
-    
-    visits.forEach((visit: any) => {
-      const landmark = this.featuredLandmarks.find(l => l.id === visit.landmarkId);
-      if (landmark?.category) {
-        categoryCount[landmark.category] = (categoryCount[landmark.category] || 0) + 1;
-      }
-    });
-    
-    return Object.keys(categoryCount).sort((a, b) => categoryCount[b] - categoryCount[a]);
-  }
-
-  private async loadRecentlyVisited(landmarkIds: string[]) {
-    const recentLandmarks: Landmark[] = [];
-    
-    for (const id of landmarkIds) {
-      const subscription = this.landmarkService.getLandmarkById(id).subscribe({
-        next: (landmark) => {
-          if (landmark) {
-            recentLandmarks.push(landmark);
-          }
-        }
-      });
-      this.subscriptions.push(subscription);
-    }
-    
-    this.recentlyVisited = recentLandmarks.slice(0, 4);
-  }
-
-  private async loadNotifications() {
-    // Mock notification count - replace with actual service
-    this.unreadNotifications = 0;
-    
-    // Check for achievement notifications
-    const lastStampCount = await this.storage.get('lastKnownStampCount') || 0;
-    if (this.userStats.stampsCollected > lastStampCount) {
-      this.unreadNotifications++;
-      await this.storage.set('lastKnownStampCount', this.userStats.stampsCollected);
-    }
-  }
-
-  private setupRealtimeUpdates() {
-    // Subscribe to landmark updates
-    const subscription = this.landmarkService.landmarks$.subscribe({
-      next: (landmarks) => {
-        // Update featured landmarks when data changes
-        this.updateFeaturedFromAll(landmarks);
-      },
-      error: (error) => {
-        console.error('Realtime update error:', error);
-      }
-    });
-    
-    this.subscriptions.push(subscription);
-  }
-
-  private updateFeaturedFromAll(allLandmarks: Landmark[]) {
-    // Update featured landmarks with latest data
-    const featured = allLandmarks
-      .filter(l => (l.rating ?? 0) > 0 || (l.visitCount ?? 0) > 0)
-      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-      .slice(0, 6);
-    
-    this.featuredLandmarks = featured.map(landmark => ({
-      ...landmark,
-      distance: this.userLocation ? 
-        this.calculateDistance(landmark.latitude, landmark.longitude) : undefined
-    }));
-  }
-
-  // Location services
   private async checkUserLocation() {
     if ('geolocation' in navigator) {
       try {
@@ -760,9 +244,10 @@ export class HomePage implements OnInit, OnDestroy {
         };
         
         await this.storage.set('lastKnownLocation', this.userLocation);
+        console.log('✅ User location obtained:', this.userLocation);
+        
       } catch (error) {
         console.warn('Location access denied or unavailable:', error);
-        // Try to load last known location
         this.userLocation = await this.storage.get('lastKnownLocation');
       }
     }
@@ -773,16 +258,154 @@ export class HomePage implements OnInit, OnDestroy {
       navigator.geolocation.getCurrentPosition(resolve, reject, {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000 // 5 minutes
+        maximumAge: 300000 
       });
     });
   }
 
-  // Navigation methods
+  private setupRealtimeUpdates() {
+    
+    const landmarksSubscription = this.landmarkService.getAllLandmarks().subscribe({
+      next: (landmarks) => {
+        console.log(`🏛️ Homepage received update: ${landmarks.length} landmarks from service`);
+        
+        if (landmarks.length === 0) {
+          console.log('⚠️ No landmarks received - checking service status...');
+          console.log('Service ready?', this.landmarkService.isServiceReady());
+          console.log('Current landmarks count:', this.landmarkService.getCurrentLandmarksCount());
+        } else {
+          console.log('📋 Landmark names received:', landmarks.slice(0, 3).map(l => l.name));
+        }
+
+        this.allLandmarks = landmarks;
+        this.updateDisplayedLandmarks();
+        
+        if (this.loading) {
+          this.loading = false;
+          this.error = '';
+          console.log('✅ Homepage loading complete');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Homepage real-time landmarks update error:', error);
+        this.loading = false;
+        this.error = 'Failed to load landmarks. Please check your connection.';
+      }
+    });
+    
+    this.subscriptions.push(landmarksSubscription);
+  }
+
+  private updateDisplayedLandmarks() {
+    if (this.allLandmarks.length === 0) return;
+
+    this.loadFeaturedLandmarks();
+    
+    this.loadNearbyLandmarks();
+    
+    this.loadNotifications();
+  }
+
+  async loadContent() {
+    this.loading = true;
+    this.error = '';
+    
+    try {
+      if (!this.landmarkService.isServiceReady()) {
+        console.log('⏳ Waiting for LandmarkService to initialize...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      
+    } catch (error) {
+      this.error = 'Failed to load content. Please try again.';
+      console.error('Content loading error:', error);
+      await this.showToast('Failed to load landmarks', 'danger');
+    }
+  }
+
+  private loadFeaturedLandmarks() {
+    const subscription = this.landmarkService.getFeaturedLandmarks(6).subscribe({
+      next: (landmarks) => {
+        console.log(`⭐ Featured landmarks: ${landmarks.length}`);
+        this.featuredLandmarks = landmarks.map(landmark => ({
+          ...landmark,
+          distance: this.userLocation ? 
+            this.calculateDistance(landmark.latitude!, landmark.longitude!) : undefined
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading featured landmarks:', error);
+      }
+    });
+    
+    this.subscriptions.push(subscription);
+  }
+
+  private loadNearbyLandmarks() {
+    if (this.userLocation) {
+      const subscription = this.landmarkService.getNearbyLandmarks(
+        this.userLocation.latitude,
+        this.userLocation.longitude,
+        10
+      ).subscribe({
+        next: (landmarks) => {
+          console.log(`📍 Nearby landmarks: ${landmarks.length} within 10km`);
+          this.nearbyLandmarks = landmarks.slice(0, 8);
+        },
+        error: (error) => {
+          console.error('Error loading nearby landmarks:', error);
+          this.loadLandmarksByCity('Cebu City');
+        }
+      });
+      
+      this.subscriptions.push(subscription);
+    } else {
+      this.loadLandmarksByCity('Cebu City');
+    }
+  }
+
+  private loadLandmarksByCity(city: string) {
+    const subscription = this.landmarkService.getLandmarksByCity(city).subscribe({
+      next: (landmarks) => {
+        console.log(`🏙️ ${city} landmarks: ${landmarks.length}`);
+        this.nearbyLandmarks = landmarks.slice(0, 8);
+      }
+    });
+    this.subscriptions.push(subscription);
+  }
+
+  private async loadNotifications() {
+    this.unreadNotifications = 0;
+    
+    const lastStampCount = await this.storage.get('lastKnownStampCount') || 0;
+    if (this.userStats.stampsCollected > lastStampCount) {
+      this.unreadNotifications++;
+      await this.storage.set('lastKnownStampCount', this.userStats.stampsCollected);
+    }
+  }
+
+  private calculateDistance(lat: number, lng: number): number {
+    if (!this.userLocation || !lat || !lng) return 0;
+    
+    const R = 6371; 
+    const dLat = this.deg2rad(lat - this.userLocation.latitude);
+    const dLng = this.deg2rad(lng - this.userLocation.longitude);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(this.deg2rad(this.userLocation.latitude)) * 
+      Math.cos(this.deg2rad(lat)) * 
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI/180);
+  }
+
   navigateToLandmark(landmark: Landmark) {
-    // Record navigation for analytics
     this.recordLandmarkInteraction(landmark.id, 'viewed');
-    this.navCtrl.navigateForward(`/landmark/${landmark.id}`);
+    this.navCtrl.navigateForward(`/landmark-details/${landmark.id}`);
   }
 
   navigateToMap() {
@@ -806,7 +429,6 @@ export class HomePage implements OnInit, OnDestroy {
     this.navCtrl.navigateForward('/landmarks', { queryParams });
   }
 
-  // Action methods
   async exploreRandomLandmark() {
     const loading = await this.loadingCtrl.create({
       message: 'Finding your next adventure...',
@@ -861,7 +483,7 @@ export class HomePage implements OnInit, OnDestroy {
     this.selectedCategory = category;
     
     if (category === 'all') {
-      await this.loadFeaturedLandmarks();
+      this.loadFeaturedLandmarks();
     } else {
       const subscription = this.landmarkService.getFilteredLandmarks({
         category: category
@@ -870,7 +492,7 @@ export class HomePage implements OnInit, OnDestroy {
           this.featuredLandmarks = landmarks.slice(0, 6).map(landmark => ({
             ...landmark,
             distance: this.userLocation ? 
-              this.calculateDistance(landmark.latitude, landmark.longitude) : undefined
+              this.calculateDistance(landmark.latitude!, landmark.longitude!) : undefined
           }));
         }
       });
@@ -878,7 +500,6 @@ export class HomePage implements OnInit, OnDestroy {
     }
   }
 
-  // Refresh and reload methods
   async handleRefresh(event: any) {
     this.isRefreshing = true;
     
@@ -896,24 +517,21 @@ export class HomePage implements OnInit, OnDestroy {
     }
   }
 
-  // Utility methods
-  private calculateDistance(lat: number, lng: number): number {
-    if (!this.userLocation) return 0;
+  async refreshContent() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Refreshing content...',
+      duration: 2000
+    });
+    await loading.present();
     
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = this.deg2rad(lat - this.userLocation.latitude);
-    const dLng = this.deg2rad(lng - this.userLocation.longitude);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(this.deg2rad(this.userLocation.latitude)) * 
-      Math.cos(this.deg2rad(lat)) * 
-      Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+    this.setupRealtimeUpdates();
+    
+    await loading.dismiss();
+    await this.showToast('Content updated!', 'success');
   }
 
-  private deg2rad(deg: number): number {
-    return deg * (Math.PI/180);
+  toggleFab() {
+    this.fabActivated = !this.fabActivated;
   }
 
   private async recordLandmarkInteraction(landmarkId: string, action: string) {
@@ -931,7 +549,6 @@ export class HomePage implements OnInit, OnDestroy {
     }
   }
 
-  // Template helper methods
   trackByLandmarkId(index: number, landmark: Landmark): string {
     return landmark.id;
   }
@@ -1000,7 +617,7 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   hasSpecialFeatures(landmark: Landmark): boolean {
-    return !!(landmark.arContent || landmark.scavengerHunt);
+    return !!(landmark.arContent || landmark.scavengerHunt || landmark.videoUrl);
   }
 
   getSpecialFeatures(landmark: Landmark): string[] {
@@ -1047,7 +664,6 @@ export class HomePage implements OnInit, OnDestroy {
     await toast.present();
   }
 
-  // Getter methods for template
   get hasUserData(): boolean {
     return !!this.userSession;
   }
@@ -1057,8 +673,12 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   get progressPercentage(): number {
-    const totalLandmarks = this.featuredLandmarks.length + this.nearbyLandmarks.length;
+    const totalLandmarks = this.allLandmarks.length;
     if (totalLandmarks === 0) return 0;
     return Math.round((this.userStats.stampsCollected / totalLandmarks) * 100);
+  }
+
+  get totalLandmarksCount(): number {
+    return this.allLandmarks.length;
   }
 }

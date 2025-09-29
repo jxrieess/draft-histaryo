@@ -1,8 +1,3 @@
-// =============================================
-// ONBOARDING PAGE SCSS
-// =============================================
-
-// Variables
 :root {
   --onboarding-primary: #3498db;
   --onboarding-secondary: #2ecc71;
@@ -15,12 +10,10 @@
   --onboarding-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-// Main content container
 ion-content {
   --background: #000;
 }
 
-// Swiper container
 .onboarding-swiper {
   height: 100vh;
   width: 100vw;
@@ -36,7 +29,6 @@ ion-content {
     flex-direction: column;
   }
 
-  // Custom pagination
   .swiper-pagination {
     bottom: 20px !important;
     
@@ -56,7 +48,6 @@ ion-content {
   }
 }
 
-// Base slide styling
 .slide {
   height: 100vh;
   width: 100vw;
@@ -87,7 +78,7 @@ ion-content {
       right: 0;
       bottom: 0;
       background: var(--onboarding-overlay);
-      pointer-events: none; // Critical: Don't block interactions
+      pointer-events: none; 
     }
 
     .final-overlay {
@@ -96,7 +87,7 @@ ion-content {
         rgba(52, 152, 219, 0.7),
         rgba(46, 204, 113, 0.7)
       );
-      pointer-events: none; // Critical: Don't block interactions
+      pointer-events: none;
     }
   }
 
@@ -109,7 +100,7 @@ ion-content {
     justify-content: space-between;
     padding: 60px 24px 40px;
     color: white;
-    pointer-events: auto; // Ensure content can be interacted with
+    pointer-events: auto; 
 
     .content-wrapper {
       flex: 1;
@@ -157,7 +148,7 @@ ion-content {
     .slide-actions {
       z-index: 20;
       position: relative;
-      pointer-events: auto; // Critical: Allow button interactions
+      pointer-events: auto; 
 
       ion-button {
         height: 48px;
@@ -165,8 +156,8 @@ ion-content {
         border-radius: 12px;
         margin-bottom: 16px;
         transition: var(--onboarding-transition);
-        pointer-events: auto; // Critical: Allow button clicks
-        touch-action: manipulation; // Prevent iOS touch delays
+        pointer-events: auto;
+        touch-action: manipulation;
 
         &:hover {
           transform: translateY(-2px);
@@ -193,7 +184,6 @@ ion-content {
   }
 }
 
-// Slide-specific styling
 .slide-1 {
   .features-list {
     display: flex;
@@ -320,7 +310,7 @@ ion-content {
       text-align: center;
       z-index: 25;
       position: relative;
-      pointer-events: auto; // Critical: Allow interactions
+      pointer-events: auto; 
 
       p {
         font-size: 14px;
@@ -345,7 +335,7 @@ ion-content {
           font-weight: 600;
           border-radius: 8px;
           transition: var(--onboarding-transition);
-          pointer-events: auto; // Critical: Allow button clicks
+          pointer-events: auto; 
           touch-action: manipulation;
           z-index: 30;
           position: relative;
@@ -363,7 +353,6 @@ ion-content {
             transform: translateY(0);
           }
 
-          // Ensure buttons are always clickable
           &[fill="outline"] {
             border: 2px solid currentColor;
           }
@@ -378,7 +367,6 @@ ion-content {
   }
 }
 
-// Progress indicator
 .progress-indicator {
   position: fixed;
   bottom: 30px;
@@ -410,7 +398,6 @@ ion-content {
   }
 }
 
-// Animations
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -453,7 +440,6 @@ ion-content {
   }
 }
 
-// Responsive adjustments
 @media (max-width: 768px) {
   .slide .slide-content {
     padding: 40px 20px 30px;
@@ -499,7 +485,6 @@ ion-content {
   }
 }
 
-// Accessibility
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -508,7 +493,6 @@ ion-content {
   }
 }
 
-// High contrast mode
 @media (prefers-contrast: high) {
   .slide-background .overlay {
     background: rgba(0, 0, 0, 0.8);
@@ -525,7 +509,6 @@ ion-content {
   }
 }
 
-// Print styles
 @media print {
   .slide {
     page-break-after: always;

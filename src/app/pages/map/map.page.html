@@ -2,6 +2,9 @@
   <ion-toolbar>
     <ion-title>Heritage Landmarks</ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="debugMapStatus()" fill="clear">
+        <ion-icon name="bug-outline" slot="icon-only"></ion-icon>
+      </ion-button>
       <ion-button (click)="recenterToUser()" fill="clear">
         <ion-icon name="locate-outline" slot="icon-only"></ion-icon>
       </ion-button>
@@ -10,35 +13,35 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+  
+  <!-- Quick Search Bar -->
+  <ion-toolbar *ngIf="!loading">
+    <ion-searchbar 
+      [(ngModel)]="searchQuery"
+      (ionInput)="updateMarkers()"
+      placeholder="Search landmarks..."
+      show-clear-button="focus"
+      debounce="300">
+    </ion-searchbar>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <!-- Loading Spinner -->
   <div *ngIf="loading" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
     <p>Loading curator-approved landmarks...</p>
   </div>
 
-  <!-- Filter Controls -->
+  <!-- Filter Card -->
   <ion-card class="filter-card" *ngIf="!loading">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="filter-outline"></ion-icon>
+        Filter Landmarks
+      </ion-card-title>
+    </ion-card-header>
     <ion-card-content>
-      <div class="info-badge">
-        <ion-icon name="checkmark-circle" color="success"></ion-icon>
-        <span>Showing only curator-approved heritage landmarks</span>
-      </div>
 
-      <!-- Search -->
-      <ion-item>
-        <ion-label position="stacked">Search Landmarks</ion-label>
-        <ion-input 
-          [(ngModel)]="searchQuery"
-          (ionInput)="updateMarkers()"
-          placeholder="Search by name, description, or location..."
-          clearInput="true">
-        </ion-input>
-      </ion-item>
-
-      <!-- Category Filter -->
       <ion-item>
         <ion-label position="stacked">Category</ion-label>
         <ion-select 
@@ -54,7 +57,6 @@
         </ion-select>
       </ion-item>
 
-      <!-- City Filter -->
       <ion-item>
         <ion-label position="stacked">City</ion-label>
         <ion-select 
@@ -70,21 +72,76 @@
         </ion-select>
       </ion-item>
 
-      <!-- Results Count -->
+      <ion-item>
+        <ion-label position="stacked">Difficulty</ion-label>
+        <ion-select 
+          [(ngModel)]="difficultyFilter"
+          (ionChange)="updateMarkers()"
+          placeholder="All difficulties">
+          <ion-select-option value="">All Difficulties</ion-select-option>
+          <ion-select-option value="easy">Easy</ion-select-option>
+          <ion-select-option value="medium">Medium</ion-select-option>
+          <ion-select-option value="hard">Hard</ion-select-option>
+        </ion-select>
+      </ion-item>
+
       <div class="results-info">
         <ion-chip color="primary" outline="true">
+          <ion-icon name="location-outline"></ion-icon>
           <ion-label>
             {{ displayedLandmarksCount }} of {{ totalLandmarksCount }} landmarks
           </ion-label>
         </ion-chip>
+        
+        <ion-button 
+          (click)="clearFilters()" 
+          fill="outline" 
+          size="small" 
+          color="medium">
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>
+          Clear Filters
+        </ion-button>
       </div>
     </ion-card-content>
   </ion-card>
 
-  <!-- Map Container -->
-  <div id="map" class="map-container" *ngIf="!loading"></div>
+  <div id="map" class="map-container" *ngIf="!loading">
+    <div *ngIf="!mapLoaded" class="map-loading">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading map...</p>
+    </div>
+    
+    <div class="map-fab-container">
+      <ion-fab-button 
+        (click)="recenterToUser()" 
+        class="fab-user-location"
+        color="primary">
+        <ion-icon name="locate-outline"></ion-icon>
+      </ion-fab-button>
+      
+      <ion-fab-button 
+        (click)="debugMapStatus()" 
+        class="fab-debug"
+        color="secondary">
+        <ion-icon name="bug-outline"></ion-icon>
+      </ion-fab-button>
+      
+      <ion-fab-button 
+        (click)="addSampleLandmarks()" 
+        class="fab-add-landmarks"
+        color="tertiary">
+        <ion-icon name="add-outline"></ion-icon>
+      </ion-fab-button>
+      
+      <ion-fab-button 
+        (click)="refreshLocation()" 
+        class="fab-refresh-location"
+        color="success">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-fab-button>
+    </div>
+  </div>
 
-  <!-- No Results Message -->
   <ion-card *ngIf="!loading && filteredLandmarks.length === 0" class="no-results-card">
     <ion-card-content class="ion-text-center">
       <ion-icon name="location-outline" size="large" color="medium"></ion-icon>
@@ -105,7 +162,6 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Landmark List (for small screens) -->
   <ion-list *ngIf="!loading && filteredLandmarks.length > 0" class="landmark-list">
     <ion-list-header>
       <ion-label>
@@ -116,11 +172,10 @@
 
     <ion-item 
       *ngFor="let landmark of filteredLandmarks; trackBy: trackByLandmark"
-      button 
-      (click)="navigateToLandmark(landmark.id)">
+      [attr.data-landmark-id]="landmark.id">
       
-      <ion-thumbnail slot="start" *ngIf="landmark.imageUrl">
-        <img [src]="landmark.imageUrl" [alt]="landmark.name">
+      <ion-thumbnail slot="start">
+        <img [src]="getDefaultImageUrl(landmark.imageUrl, landmark.category)" [alt]="landmark.name" (error)="onImageError($event)">
       </ion-thumbnail>
       
       <ion-label>
@@ -149,7 +204,22 @@
         </div>
       </ion-label>
 
-      <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+      <div class="landmark-actions" slot="end">
+        <ion-button 
+          fill="clear" 
+          size="small" 
+          (click)="getDirectionsToLandmark(landmark.id)"
+          title="Get Directions">
+          <ion-icon name="navigate-outline"></ion-icon>
+        </ion-button>
+        <ion-button 
+          fill="clear" 
+          size="small" 
+          (click)="navigateToLandmark(landmark.id)"
+          title="View Details">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+      </div>
     </ion-item>
   </ion-list>
 </ion-content>

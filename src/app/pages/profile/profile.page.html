@@ -1,0 +1,229 @@
+<ion-header [translucent]="true" class="profile-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>My Profile</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="openSettings()">
+        <ion-icon name="settings-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="profile-content">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content
+      pullingIcon="chevron-down-circle-outline"
+      pullingText="Pull to refresh"
+      refreshingSpinner="crescent"
+      refreshingText="Updating profile...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <div class="profile-main">
+    
+    <div class="profile-header-section">
+      <ion-card class="profile-card">
+        <div class="profile-banner">
+          <div class="banner-pattern"></div>
+          <div class="banner-overlay"></div>
+        </div>
+        
+        <ion-card-content class="profile-info">
+          <div class="avatar-section">
+            <div class="avatar-container">
+              <img 
+                [src]="userSession?.photoURL || 'assets/img/default-avatar.jpg'" 
+                [alt]="userSession?.name || 'User Avatar'"
+                class="profile-avatar"
+                (error)="onAvatarError($event)" />
+              
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                class="edit-avatar-btn"
+                (click)="changeAvatar()">
+                <ion-icon name="camera"></ion-icon>
+              </ion-button>
+            </div>
+            
+            <div class="user-details">
+              <h2 class="user-name">{{ userSession?.name || 'User Name' }}</h2>
+              <p class="user-email">{{ userSession?.email || 'user@example.com' }}</p>
+              <div class="member-since">
+                <ion-icon name="calendar-outline"></ion-icon>
+                <span>Member since {{ formatDate(userSession?.createdAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="stats-section">
+      <h3 class="section-title">
+        <ion-icon name="analytics-outline"></ion-icon>
+        Your Journey
+      </h3>
+      
+      <div class="stats-grid">
+        <div class="stat-card" *ngFor="let stat of statsCards">
+          <div class="stat-icon">
+            <ion-icon [name]="stat.icon"></ion-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-number">{{ stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="badges-section" *ngIf="badges.length > 0">
+      <div class="section-header">
+        <h3 class="section-title">
+          <ion-icon name="trophy-outline"></ion-icon>
+          Achievements
+        </h3>
+        <ion-button fill="clear" size="small" (click)="viewAllBadges()">
+          View All
+          <ion-icon name="chevron-forward" slot="end"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <div class="badges-grid">
+        <div class="badge-item" *ngFor="let badge of badges.slice(0, 6)">
+          <div class="badge-icon" [class.earned]="badge.earned">
+            <ion-icon [name]="badge.icon"></ion-icon>
+          </div>
+          <div class="badge-info">
+            <h4 class="badge-name">{{ badge.name }}</h4>
+            <p class="badge-description">{{ badge.description }}</p>
+            <div class="badge-progress" *ngIf="!badge.earned && badge.progress !== undefined">
+              <ion-progress-bar [value]="badge.target ? (badge.progress / badge.target) : 0"></ion-progress-bar>
+              <span class="progress-text">{{ badge.progress }}/{{ badge.target || 1 }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="activity-section" *ngIf="recentActivity.length > 0">
+      <div class="section-header">
+        <h3 class="section-title">
+          <ion-icon name="time-outline"></ion-icon>
+          Recent Activity
+        </h3>
+        <ion-button fill="clear" size="small" (click)="viewAllActivity()">
+          View All
+          <ion-icon name="chevron-forward" slot="end"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let activity of recentActivity.slice(0, 5)">
+          <div class="activity-icon" [class]="'activity-' + activity.type">
+            <ion-icon [name]="getActivityIcon(activity.type)"></ion-icon>
+          </div>
+          <div class="activity-content">
+            <p class="activity-description">{{ activity.description }}</p>
+            <div class="activity-meta">
+              <span class="activity-time">{{ formatTime(activity.timestamp) }}</span>
+              <span class="activity-location" *ngIf="activity.location">{{ activity.location }}</span>
+            </div>
+          </div>
+          <div class="activity-reward" *ngIf="activity.reward">
+            <ion-chip color="success" size="small">+{{ activity.reward }}</ion-chip>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-section">
+      <h3 class="section-title">
+        <ion-icon name="flash-outline"></ion-icon>
+        Quick Actions
+      </h3>
+      
+      <div class="action-buttons">
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          (click)="shareProfile()"
+          class="action-btn">
+          <ion-icon name="share-outline" slot="start"></ion-icon>
+          Share Profile
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          (click)="exportData()"
+          class="action-btn">
+          <ion-icon name="download-outline" slot="start"></ion-icon>
+          Export Data
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          color="medium"
+          (click)="editProfile()"
+          class="action-btn">
+          <ion-icon name="create-outline" slot="start"></ion-icon>
+          Edit Profile
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          color="danger"
+          (click)="logout()"
+          class="action-btn">
+          <ion-icon name="log-out-outline" slot="start"></ion-icon>
+          Logout
+        </ion-button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3 class="section-title">
+        <ion-icon name="cog-outline"></ion-icon>
+        Settings & Preferences
+      </h3>
+      
+      <ion-list class="settings-list">
+        <ion-item button (click)="openNotifications()">
+          <ion-icon name="notifications-outline" slot="start"></ion-icon>
+          <ion-label>Notifications</ion-label>
+          <ion-note slot="end">Manage alerts</ion-note>
+          <ion-icon name="chevron-forward" slot="end"></ion-icon>
+        </ion-item>
+        
+        <ion-item button (click)="openPrivacy()">
+          <ion-icon name="shield-outline" slot="start"></ion-icon>
+          <ion-label>Privacy & Security</ion-label>
+          <ion-note slot="end">Data protection</ion-note>
+          <ion-icon name="chevron-forward" slot="end"></ion-icon>
+        </ion-item>
+        
+        <ion-item button (click)="openHelp()">
+          <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+          <ion-label>Help & Support</ion-label>
+          <ion-note slot="end">Get assistance</ion-note>
+          <ion-icon name="chevron-forward" slot="end"></ion-icon>
+        </ion-item>
+        
+        <ion-item button (click)="openAbout()">
+          <ion-icon name="information-circle-outline" slot="start"></ion-icon>
+          <ion-label>About</ion-label>
+          <ion-note slot="end">App version 1.0.0</ion-note>
+          <ion-icon name="chevron-forward" slot="end"></ion-icon>
+        </ion-item>
+      </ion-list>
+    </div>
+
+  </div>
+</ion-content>

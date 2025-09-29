@@ -1,20 +1,7 @@
-// src/app/services/scavenger.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, from, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp
-} from 'firebase/firestore';
+import { collection,  doc,  getDocs,  getDoc,  addDoc,  updateDoc,  deleteDoc, query, where, orderBy, serverTimestamp} from 'firebase/firestore';
 import { auth, db } from '../firebase.config';
 import { Geolocation } from '@capacitor/geolocation';
 
@@ -24,7 +11,7 @@ export interface Hunt {
   description: string;
   imageUrl?: string;
   difficulty: 'easy' | 'medium' | 'hard';
-  estimatedDuration: number; // in minutes
+  estimatedDuration: number;
   landmarkId: string;
   landmarkName: string;
   clues: Clue[];
@@ -49,44 +36,38 @@ export interface Clue {
   pointsAwarded: number;
   rewardPoints: number;
   
-  // Question-specific properties
   question?: string;
   options?: string[];
   correctAnswer?: string | number | boolean;
   explanation?: string;
   
-  // Location-specific properties
   targetLocation?: {
     latitude: number;
     longitude: number;
-    radius: number; // in meters
+    radius: number;
     name?: string;
   };
   
-  // Photo challenge properties
   photoChallenge?: {
     instruction: string;
     requiredElements: string[];
     maxPhotos?: number;
   };
   
-  // AR scan properties
   targetObject?: {
     name: string;
     imageUrl?: string;
     modelUrl?: string;
   };
   
-  // Completion criteria
   completionCriteria: {
     requiresGPS: boolean;
     requiresPhoto: boolean;
     requiresAnswer: boolean;
     requiresAR?: boolean;
-    timeLimit?: number; // in seconds
+    timeLimit?: number;
   };
   
-  // Additional metadata
   difficulty?: 'easy' | 'medium' | 'hard';
   category?: string;
   isOptional?: boolean;
@@ -104,12 +85,12 @@ export interface UserProgress {
   endTime?: Date;
   completedClues: string[];
   skippedClues: string[];
-  hints: string[]; // clue IDs where hints were used
-  photos: string[]; // URLs of captured photos
+  hints: string[]; 
+  photos: string[]; 
   answers: { [clueId: string]: any };
   status: 'in_progress' | 'completed' | 'abandoned';
-  completionTime?: number; // in minutes
-  accuracy?: number; // percentage
+  completionTime?: number; 
+  accuracy?: number;
   createdAt?: any;
   updatedAt?: any;
 }
@@ -136,7 +117,6 @@ export class ScavengerService {
     this.loadHunts();
   }
 
-  // Hunt Management Methods
   public async loadHunts(): Promise<void> {
     this.loadingSubject.next(true);
     try {
@@ -165,7 +145,6 @@ export class ScavengerService {
             tags: data['tags'] || []
           };
           
-          // Calculate total points if not set
           if (hunt.totalPoints === 0 && hunt.clues.length > 0) {
             hunt.totalPoints = hunt.clues.reduce((sum, clue) => sum + clue.pointsAwarded, 0);
           }
@@ -239,7 +218,6 @@ export class ScavengerService {
     );
   }
 
-  // Progress Management Methods
   public async startHunt(huntId: string, landmarkId: string): Promise<UserProgress | null> {
     const user = auth.currentUser;
     if (!user) {
@@ -291,7 +269,6 @@ export class ScavengerService {
       this.saveProgressToLocal(progress);
     } catch (error) {
       console.error('Error saving progress:', error);
-      // Save to local storage as fallback
       this.saveProgressToLocal(progress);
     }
   }
@@ -403,13 +380,11 @@ export class ScavengerService {
       createdAt: new Date()
     };
 
-    // Calculate total points
     mockHunt.totalPoints = mockHunt.clues.reduce((sum, clue) => sum + clue.pointsAwarded, 0);
 
     return mockHunt;
   }
 
-  // Utility methods
   public clearError(): void {
     this.errorSubject.next(null);
   }
