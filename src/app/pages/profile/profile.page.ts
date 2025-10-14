@@ -4,6 +4,7 @@ import { NavController, ToastController, AlertController, ActionSheetController,
 import { Storage } from '@ionic/storage-angular';
 import { Subscription } from 'rxjs';
 import { LandmarkService, Landmark } from '../../services/landmark.service';
+import { AuthService } from '../../services/auth.service';
 
 interface UserSession {
   uid: string;
@@ -94,7 +95,8 @@ export class ProfilePage implements OnInit, OnDestroy {
     private loadingCtrl: LoadingController,
     private modalCtrl: ModalController,
     private storage: Storage,
-    private landmarkService: LandmarkService
+    private landmarkService: LandmarkService,
+    private authService: AuthService
   ) {}
 
   async logout() {
@@ -209,7 +211,7 @@ export class ProfilePage implements OnInit, OnDestroy {
       } else {
         this.userSession = {
           uid: 'guest_' + Date.now(),
-          email: 'guest@histaryo.app',
+          email: 'nixantigua@gmail.com',
           name: 'Heritage Explorer',
           createdAt: new Date()
         };
@@ -727,6 +729,15 @@ Join me in exploring Cebu's rich heritage! 🌟
 
   trackByActivityId(index: number, activity: Activity): string {
     return activity.id;
+  }
+
+  get isCuratorOrAdmin(): boolean {
+    const userProfile = this.authService.getCurrentUserProfile();
+    return userProfile?.role === 'curator' || userProfile?.role === 'admin';
+  }
+
+  openModeration() {
+    this.router.navigate(['/moderation']);
   }
 
   private async showToast(

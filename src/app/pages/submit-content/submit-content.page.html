@@ -1,0 +1,161 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Share Content</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancelSubmission()" fill="clear">
+        Cancel
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="submit-content-container">
+    
+    <ion-card *ngIf="landmark" class="landmark-info">
+      <ion-card-content>
+        <div class="landmark-image-section">
+          <img [src]="getLandmarkImageWithCacheBust(landmark)" 
+               [alt]="landmark.name" 
+               class="landmark-hero-image"
+               (error)="onImageError($event)"
+               (load)="onImageLoad($event)">
+        </div>
+        <div class="landmark-details">
+          <h3>{{ landmark.name }}</h3>
+          <p class="landmark-location">{{ landmark.city }}, {{ landmark.category }}</p>
+          <div class="landmark-description">
+            <p>{{ landmark.description }}</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="submission-form">
+      <ion-card-content>
+        
+        <div class="form-section">
+          <h4>Content Type</h4>
+          <ion-segment [(ngModel)]="tipType">
+            <ion-segment-button *ngFor="let type of tipTypes" [value]="type.value">
+              <ion-label>{{ type.label }}</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+          <p class="type-description">{{ currentTipTypeDescription }}</p>
+        </div>
+
+        <div class="form-section">
+          <h4>Title <span class="required">*</span></h4>
+          <ion-input 
+            [(ngModel)]="title"
+            placeholder="Enter a descriptive title"
+            maxlength="100"
+            [counter]="true"
+            [counterFormatter]="counterFormatter">
+          </ion-input>
+        </div>
+
+        <div class="form-section">
+          <h4>Content <span class="required">*</span></h4>
+          <ion-textarea 
+            [(ngModel)]="content"
+            placeholder="Share your tip, story, or information about this landmark..."
+            rows="6"
+            maxlength="1000"
+            [counter]="true"
+            [counterFormatter]="counterFormatter">
+          </ion-textarea>
+        </div>
+
+        <div class="form-section">
+          <h4>Photo (Optional)</h4>
+          <div class="image-upload" *ngIf="!selectedImage">
+            <ion-button (click)="selectImage()" fill="outline" expand="block">
+              <ion-icon name="camera" slot="start"></ion-icon>
+              Add Photo
+            </ion-button>
+            <p class="upload-hint">JPG, PNG, or WebP up to 5MB</p>
+          </div>
+          
+          <div class="image-preview" *ngIf="selectedImage">
+            <img [src]="imagePreview" [alt]="selectedImage.name" class="preview-image">
+            <div class="image-actions">
+              <ion-button (click)="selectImage()" size="small" fill="outline">
+                <ion-icon name="camera" slot="start"></ion-icon>
+                Change
+              </ion-button>
+              <ion-button (click)="removeImage()" size="small" color="danger" fill="outline">
+                <ion-icon name="trash" slot="start"></ion-icon>
+                Remove
+              </ion-button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>Tags (Optional)</h4>
+          <div class="tags-container">
+            <ion-chip *ngFor="let tag of tags" color="primary">
+              <ion-label>{{ tag }}</ion-label>
+              <ion-icon name="close" (click)="removeTag(tag)"></ion-icon>
+            </ion-chip>
+            <ion-button (click)="addTag()" size="small" fill="outline">
+              <ion-icon name="add" slot="start"></ion-icon>
+              Add Tag
+            </ion-button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>Attribution</h4>
+          <ion-segment [(ngModel)]="attribution">
+            <ion-segment-button *ngFor="let option of attributionOptions" [value]="option.value">
+              <ion-label>{{ option.label }}</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+          <p class="attribution-description">{{ currentAttributionDescription }}</p>
+        </div>
+
+        <div class="error-message" *ngIf="error">
+          <ion-icon name="alert-circle" color="danger"></ion-icon>
+          <span>{{ error }}</span>
+        </div>
+
+        <div class="submit-section">
+          <ion-button 
+            (click)="submitTip()" 
+            expand="block" 
+            size="large" 
+            color="primary"
+            [disabled]="loading || !title.trim() || !content.trim()">
+            <ion-icon name="send" slot="start"></ion-icon>
+            {{ loading ? 'Submitting...' : 'Submit Content' }}
+          </ion-button>
+          
+          <p class="submit-note">
+            <ion-icon name="information-circle" color="medium"></ion-icon>
+            Your content will be reviewed before being published
+          </p>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="guidelines">
+      <ion-card-content>
+        <h4>Content Guidelines</h4>
+        <ul>
+          <li>Be respectful and accurate</li>
+          <li>Share helpful, relevant information</li>
+          <li>Respect others' privacy and property</li>
+          <li>Don't include inappropriate content</li>
+          <li>Make sure your content adds value to visitors</li>
+        </ul>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+</ion-content>

@@ -1,0 +1,327 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Content Moderation</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refreshData()">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading moderation data...</p>
+  </div>
+
+  <div class="error-container" *ngIf="error && !loading">
+    <ion-icon name="alert-circle-outline" size="large" color="danger"></ion-icon>
+    <h3>Error Loading Data</h3>
+    <p>{{ error }}</p>
+    <ion-button (click)="refreshData()" fill="outline" color="primary">
+      <ion-icon name="refresh-outline" slot="start"></ion-icon>
+      Retry
+    </ion-button>
+  </div>
+
+  <div *ngIf="!loading && !error">
+    
+    <div class="stats-section">
+      <ion-grid>
+        <ion-row>
+          <ion-col size="6" size-md="3">
+            <ion-card class="stat-card pending">
+              <ion-card-content>
+                <div class="stat-content">
+                  <ion-icon name="time-outline" size="large"></ion-icon>
+                  <div class="stat-info">
+                    <h3>{{ moderationStats.totalPending }}</h3>
+                    <p>Pending Review</p>
+                  </div>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+          
+          <ion-col size="6" size-md="3">
+            <ion-card class="stat-card approved">
+              <ion-card-content>
+                <div class="stat-content">
+                  <ion-icon name="checkmark-circle-outline" size="large"></ion-icon>
+                  <div class="stat-info">
+                    <h3>{{ moderationStats.totalApproved }}</h3>
+                    <p>Approved</p>
+                  </div>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+          
+          <ion-col size="6" size-md="3">
+            <ion-card class="stat-card rejected">
+              <ion-card-content>
+                <div class="stat-content">
+                  <ion-icon name="close-circle-outline" size="large"></ion-icon>
+                  <div class="stat-info">
+                    <h3>{{ moderationStats.totalRejected }}</h3>
+                    <p>Rejected</p>
+                  </div>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+          
+          <ion-col size="6" size-md="3">
+            <ion-card class="stat-card flagged">
+              <ion-card-content>
+                <div class="stat-content">
+                  <ion-icon name="flag-outline" size="large"></ion-icon>
+                  <div class="stat-info">
+                    <h3>{{ moderationStats.totalFlagged }}</h3>
+                    <p>Flagged</p>
+                  </div>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <ion-segment [(ngModel)]="selectedTab" (ionChange)="clearSelection()">
+      <ion-segment-button value="pending">
+        <ion-label>Pending ({{ moderationQueue.pending.length }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="flagged">
+        <ion-label>Flagged ({{ moderationQueue.flagged.length }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="reviewed">
+        <ion-label>Recently Reviewed</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <div class="bulk-actions" *ngIf="selectedItems.length > 0">
+      <ion-card>
+        <ion-card-content>
+          <div class="bulk-content">
+            <div class="bulk-info">
+              <ion-icon name="checkmark-circle" color="primary"></ion-icon>
+              <span>{{ selectedItems.length }} items selected</span>
+            </div>
+            <div class="bulk-buttons">
+              <ion-button (click)="bulkApprove()" color="success" size="small">
+                <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+                Approve All
+              </ion-button>
+              <ion-button (click)="bulkReject()" color="danger" size="small">
+                <ion-icon name="close-outline" slot="start"></ion-icon>
+                Reject All
+              </ion-button>
+              <ion-button (click)="clearSelection()" fill="outline" size="small">
+                <ion-icon name="close-outline" slot="start"></ion-icon>
+                Clear
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="content-list">
+    
+      <div *ngIf="selectedTab === 'pending'">
+        <div class="list-header">
+          <h3>Pending Review</h3>
+          <ion-button (click)="selectAllItems()" fill="outline" size="small" *ngIf="moderationQueue.pending.length > 0">
+            <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+            Select All
+          </ion-button>
+        </div>
+        
+        <ion-card *ngFor="let item of moderationQueue.pending; trackBy: trackByItemId" class="content-item">
+          <ion-card-content>
+            <div class="item-header">
+              <div class="item-checkbox">
+                <ion-checkbox 
+                  [checked]="selectedItems.includes(item.id!)"
+                  (ionChange)="toggleItemSelection(item.id!)">
+                </ion-checkbox>
+              </div>
+              <div class="item-info">
+                <h4>{{ item.title }}</h4>
+                <div class="item-meta">
+                  <ion-chip [color]="getStatusColor(item.status)">
+                    <ion-icon [name]="getStatusIcon(item.status)"></ion-icon>
+                    <ion-label>{{ item.status }}</ion-label>
+                  </ion-chip>
+                  <ion-chip>
+                    <ion-icon [name]="getTypeIcon(item.type)"></ion-icon>
+                    <ion-label>{{ item.type }}</ion-label>
+                  </ion-chip>
+                  <span class="item-date">{{ formatDate(item.created_at) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="item-content">
+              <p>{{ item.content }}</p>
+              <div class="item-details">
+                <p><strong>Landmark:</strong> {{ item.landmarkName }}</p>
+                <p><strong>Submitted by:</strong> {{ item.submittedBy }}</p>
+              </div>
+            </div>
+            
+            <div class="item-actions">
+              <ion-button (click)="viewItemDetails(item)" fill="outline" size="small">
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                View
+              </ion-button>
+              <ion-button (click)="approveItem(item)" color="success" size="small">
+                <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+                Approve
+              </ion-button>
+              <ion-button (click)="rejectItem(item)" color="danger" size="small">
+                <ion-icon name="close-outline" slot="start"></ion-icon>
+                Reject
+              </ion-button>
+              <ion-button (click)="editItem(item)" fill="outline" size="small">
+                <ion-icon name="create-outline" slot="start"></ion-icon>
+                Edit
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+        
+        <div class="empty-state" *ngIf="moderationQueue.pending.length === 0">
+          <ion-icon name="checkmark-circle-outline" size="large" color="success"></ion-icon>
+          <h3>All Caught Up!</h3>
+          <p>No pending content to review.</p>
+        </div>
+      </div>
+
+      <div *ngIf="selectedTab === 'flagged'">
+        <div class="list-header">
+          <h3>Flagged Content</h3>
+          <ion-button (click)="selectAllItems()" fill="outline" size="small" *ngIf="moderationQueue.flagged.length > 0">
+            <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+            Select All
+          </ion-button>
+        </div>
+        
+        <ion-card *ngFor="let item of moderationQueue.flagged; trackBy: trackByItemId" class="content-item flagged">
+          <ion-card-content>
+            <div class="item-header">
+              <div class="item-checkbox">
+                <ion-checkbox 
+                  [checked]="selectedItems.includes(item.id!)"
+                  (ionChange)="toggleItemSelection(item.id!)">
+                </ion-checkbox>
+              </div>
+              <div class="item-info">
+                <h4>{{ item.title }}</h4>
+                <div class="item-meta">
+                  <ion-chip color="danger">
+                    <ion-icon name="flag-outline"></ion-icon>
+                    <ion-label>{{ item.reports }} reports</ion-label>
+                  </ion-chip>
+                  <ion-chip>
+                    <ion-icon [name]="getTypeIcon(item.type)"></ion-icon>
+                    <ion-label>{{ item.type }}</ion-label>
+                  </ion-chip>
+                  <span class="item-date">{{ formatDate(item.created_at) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="item-content">
+              <p>{{ item.content }}</p>
+              <div class="item-details">
+                <p><strong>Landmark:</strong> {{ item.landmarkName }}</p>
+                <p><strong>Submitted by:</strong> {{ item.submittedBy }}</p>
+              </div>
+            </div>
+            
+            <div class="item-actions">
+              <ion-button (click)="viewItemDetails(item)" fill="outline" size="small">
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                View
+              </ion-button>
+              <ion-button (click)="approveItem(item)" color="success" size="small">
+                <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+                Approve
+              </ion-button>
+              <ion-button (click)="rejectItem(item)" color="danger" size="small">
+                <ion-icon name="close-outline" slot="start"></ion-icon>
+                Reject
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+        
+        <div class="empty-state" *ngIf="moderationQueue.flagged.length === 0">
+          <ion-icon name="shield-checkmark-outline" size="large" color="success"></ion-icon>
+          <h3>No Flagged Content</h3>
+          <p>All content is clean!</p>
+        </div>
+      </div>
+
+      <div *ngIf="selectedTab === 'reviewed'">
+        <div class="list-header">
+          <h3>Recently Reviewed</h3>
+        </div>
+        
+        <ion-card *ngFor="let item of moderationQueue.recentlyReviewed; trackBy: trackByItemId" class="content-item reviewed">
+          <ion-card-content>
+            <div class="item-header">
+              <div class="item-info">
+                <h4>{{ item.title }}</h4>
+                <div class="item-meta">
+                  <ion-chip [color]="getStatusColor(item.status)">
+                    <ion-icon [name]="getStatusIcon(item.status)"></ion-icon>
+                    <ion-label>{{ item.status }}</ion-label>
+                  </ion-chip>
+                  <ion-chip>
+                    <ion-icon [name]="getTypeIcon(item.type)"></ion-icon>
+                    <ion-label>{{ item.type }}</ion-label>
+                  </ion-chip>
+                  <span class="item-date">{{ formatDate(item.approved_at) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="item-content">
+              <p>{{ item.content }}</p>
+              <div class="item-details">
+                <p><strong>Landmark:</strong> {{ item.landmarkName }}</p>
+                <p><strong>Submitted by:</strong> {{ item.submittedBy }}</p>
+                <p *ngIf="item.moderatorNotes"><strong>Moderator Notes:</strong> {{ item.moderatorNotes }}</p>
+              </div>
+            </div>
+            
+            <div class="item-actions">
+              <ion-button (click)="viewItemDetails(item)" fill="outline" size="small">
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                View Details
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+        
+        <div class="empty-state" *ngIf="moderationQueue.recentlyReviewed.length === 0">
+          <ion-icon name="time-outline" size="large" color="medium"></ion-icon>
+          <h3>No Recent Reviews</h3>
+          <p>Recently reviewed content will appear here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ion-refresher slot="fixed" (ionRefresh)="refreshData($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+</ion-content>
+

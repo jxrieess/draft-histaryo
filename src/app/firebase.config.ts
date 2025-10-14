@@ -20,6 +20,3 @@ export const db: Firestore = getFirestore(app);
 export const storage = getStorage(app);
 
 export { app };
-
-
-console.log('Firebase initialized successfully with project:', firebaseConfig.projectId);

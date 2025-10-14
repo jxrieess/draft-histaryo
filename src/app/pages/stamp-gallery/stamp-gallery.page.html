@@ -1,0 +1,60 @@
+<ion-header [translucent]="true" class="custom-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon name="arrow-back" class="back-button"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="header-content">
+        <span class="page-title">STAMP COLLECTION</span>
+      </div>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="stamp-gallery-content">
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading your stamp collection...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && collectedStamps.length === 0">
+    <div class="empty-icon">
+      <ion-icon name="bookmark-outline" color="medium"></ion-icon>
+    </div>
+    <h3>No Stamps Collected Yet</h3>
+    <p>Complete trivia at heritage sites to start collecting stamps!</p>
+    <ion-button fill="solid" color="primary" (click)="goBack()">
+      <ion-icon name="search" slot="start"></ion-icon>
+      Explore Heritage Sites
+    </ion-button>
+  </div>
+
+
+  <div class="stamps-list" *ngIf="!loading && collectedStamps.length > 0">
+    <div class="stamp-item" 
+         *ngFor="let stamp of collectedStamps; let i = index"
+         (click)="goToLandmark(stamp)">
+      <div class="stamp-icon">
+        <img [src]="stamp.landmarkImage" 
+             [alt]="stamp.landmarkName"
+             class="stamp-image">
+        <div class="collected-badge">
+          <ion-icon name="checkmark" color="warning"></ion-icon>
+        </div>
+      </div>
+      
+      <div class="stamp-details">
+        <h3 class="stamp-name">{{ stamp.landmarkName }}</h3>
+        <p class="stamp-date">{{ getFormattedDate(stamp.collectedAt) }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="continue-section" *ngIf="!loading && collectedStamps.length > 0">
+    <ion-button expand="block" fill="solid" color="primary" (click)="goBack()">
+      Continue
+    </ion-button>
+  </div>
+</ion-content>

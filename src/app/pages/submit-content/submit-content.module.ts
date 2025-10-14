@@ -4,17 +4,17 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { VisitorPageRoutingModule } from './visitor-routing.module';
+import { SubmitContentPageRoutingModule } from './submit-content-routing.module';
 
-import { VisitorPage } from './visitor.page';
+import { SubmitContentPage } from './submit-content.page';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    VisitorPageRoutingModule
+    SubmitContentPageRoutingModule
   ],
-  declarations: [VisitorPage]
+  declarations: [SubmitContentPage]
 })
-export class VisitorPageModule {}
+export class SubmitContentPageModule {}

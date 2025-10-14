@@ -1,39 +1,16 @@
-/*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
- */
-
-/* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
 
-/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
 
-/* Optional CSS utils that can be commented out */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
 
 @import "~mapbox-gl/dist/mapbox-gl.css";
@@ -53,61 +30,50 @@ html, body, ion-app, ion-content, .map-wrapper, #map {
   padding: 0;
 }
 
-// Enhanced Global App SCSS - Modern Startup Theme
-// src/global.scss
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
-// CSS Custom Properties for consistent theming
 :root {
-  // Brand Colors - Modern Startup Palette
-  --histaryo-primary: #667eea;
-  --histaryo-primary-shade: #5a6fd8;
-  --histaryo-primary-tint: #7386ec;
-  --histaryo-secondary: #764ba2;
-  --histaryo-secondary-shade: #68428f;
-  --histaryo-secondary-tint: #8459ab;
+  --histaryo-primary: #d97706;
+  --histaryo-primary-shade: #bf6905;
+  --histaryo-primary-tint: #dd851f;
+  --histaryo-secondary: #f59e0b;
+  --histaryo-secondary-shade: #d88a0a;
+  --histaryo-secondary-tint: #f6a824;
   
-  // Accent Colors
-  --histaryo-accent: #f093fb;
-  --histaryo-accent-shade: #e285f0;
-  --histaryo-accent-tint: #f19ffb;
-  --histaryo-success: #4facfe;
-  --histaryo-warning: #fbbf24;
-  --histaryo-danger: #ef4444;
+  --histaryo-accent: #fbbf24;
+  --histaryo-accent-shade: #dda91e;
+  --histaryo-accent-tint: #fbc53a;
+  --histaryo-success: #10b981;
+  --histaryo-warning: #f59e0b;
+  --histaryo-danger: #dc2626;
   --histaryo-info: #06b6d4;
   
-  // Neutral Colors
   --histaryo-white: #ffffff;
-  --histaryo-light: #f8fafc;
-  --histaryo-light-shade: #f1f5f9;
-  --histaryo-light-tint: #f9fafb;
-  --histaryo-medium: #64748b;
-  --histaryo-medium-shade: #475569;
-  --histaryo-medium-tint: #94a3b8;
-  --histaryo-dark: #1e293b;
-  --histaryo-dark-shade: #0f172a;
-  --histaryo-dark-tint: #334155;
+  --histaryo-light: #fef3c7;
+  --histaryo-light-shade: #fde68a;
+  --histaryo-light-tint: #fef4cd;
+  --histaryo-medium: #a3a3a3;
+  --histaryo-medium-shade: #8f8f8f;
+  --histaryo-medium-tint: #acacac;
+  --histaryo-dark: #92400e;
+  --histaryo-dark-shade: #78350f;
+  --histaryo-dark-tint: #9d5316;
   
-  // Surface Colors
   --histaryo-surface: #ffffff;
-  --histaryo-surface-variant: #f8fafc;
-  --histaryo-background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  --histaryo-background-alt: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --histaryo-surface-variant: #ffffff;
+  --histaryo-background: #ffffff;
+  --histaryo-background-alt: #ffffff;
   
-  // Text Colors
-  --histaryo-text-primary: #1e293b;
-  --histaryo-text-secondary: #64748b;
-  --histaryo-text-tertiary: #94a3b8;
+  --histaryo-text-primary: #92400e;
+  --histaryo-text-secondary: #a3a3a3;
+  --histaryo-text-tertiary: #d1d5db;
   --histaryo-text-inverse: #ffffff;
   
-  // Glass Morphism
   --histaryo-glass: rgba(255, 255, 255, 0.15);
   --histaryo-glass-strong: rgba(255, 255, 255, 0.25);
   --histaryo-glass-border: rgba(255, 255, 255, 0.2);
   
-  // Shadows
   --histaryo-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --histaryo-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --histaryo-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -115,14 +81,12 @@ html, body, ion-app, ion-content, .map-wrapper, #map {
   --histaryo-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --histaryo-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   
-  // Gradients
   --histaryo-gradient-primary: linear-gradient(135deg, var(--histaryo-primary) 0%, var(--histaryo-secondary) 100%);
   --histaryo-gradient-accent: linear-gradient(135deg, var(--histaryo-accent) 0%, #f5576c 100%);
   --histaryo-gradient-success: linear-gradient(135deg, var(--histaryo-success) 0%, #00f2fe 100%);
   --histaryo-gradient-warm: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
   --histaryo-gradient-cool: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
   
-  // Border Radius
   --histaryo-radius-xs: 0.25rem;
   --histaryo-radius-sm: 0.375rem;
   --histaryo-radius-md: 0.5rem;
@@ -131,7 +95,6 @@ html, body, ion-app, ion-content, .map-wrapper, #map {
   --histaryo-radius-2xl: 1.5rem;
   --histaryo-radius-full: 9999px;
   
-  // Spacing
   --histaryo-spacing-xs: 0.25rem;
   --histaryo-spacing-sm: 0.5rem;
   --histaryo-spacing-md: 0.75rem;
@@ -140,13 +103,11 @@ html, body, ion-app, ion-content, .map-wrapper, #map {
   --histaryo-spacing-2xl: 2rem;
   --histaryo-spacing-3xl: 3rem;
   
-  // Transitions
   --histaryo-transition-fast: 0.15s ease;
   --histaryo-transition-normal: 0.3s ease;
   --histaryo-transition-slow: 0.5s ease;
   --histaryo-transition-bounce: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
-  // Z-index layers
   --histaryo-z-dropdown: 1000;
   --histaryo-z-modal: 1050;
   --histaryo-z-popover: 1060;
@@ -154,7 +115,6 @@ html, body, ion-app, ion-content, .map-wrapper, #map {
   --histaryo-z-toast: 1080;
 }
 
-// Dark mode variables
 @media (prefers-color-scheme: dark) {
   :root {
     --histaryo-surface: #1e293b;
@@ -169,7 +129,6 @@ html, body, ion-app, ion-content, .map-wrapper, #map {
   }
 }
 
-// Global Reset and Base Styles
 * {
   box-sizing: border-box;
 }
@@ -185,13 +144,12 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background: var(--histaryo-background);
+  background: #ffffff;
   color: var(--histaryo-text-primary);
   font-size: 16px;
   font-weight: 400;
 }
 
-// Typography Enhancements
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Poppins', sans-serif;
   font-weight: 700;
@@ -225,16 +183,14 @@ a {
   }
 }
 
-// Enhanced Ionic Component Styling
 ion-app {
   font-family: 'Inter', sans-serif;
 }
 
-// Header Enhancements
 ion-header {
   &.header-md::after,
   &.header-ios::after {
-    display: none; // Remove default border
+    display: none;
   }
   
   ion-toolbar {
@@ -251,7 +207,7 @@ ion-header {
     }
     
     ion-back-button {
-      --color: var(--histaryo-primary);
+      --color: #000000;
       font-weight: 500;
     }
     
@@ -264,9 +220,8 @@ ion-header {
   }
 }
 
-// Content Area Enhancements
 ion-content {
-  --background: var(--histaryo-background);
+  --background: #ffffff;
   --color: var(--histaryo-text-primary);
   
   &.content-padding {
@@ -277,7 +232,6 @@ ion-content {
   }
 }
 
-// Enhanced Button Styles
 ion-button {
   --border-radius: var(--histaryo-radius-lg);
   font-family: 'Inter', sans-serif;
@@ -310,26 +264,22 @@ ion-button {
     font-size: 0.875rem;
   }
   
-  // Primary Button
   &.button-solid[color="primary"] {
     --background: var(--histaryo-gradient-primary);
     --color: var(--histaryo-text-inverse);
   }
   
-  // Success Button
   &.button-solid[color="success"] {
     --background: var(--histaryo-gradient-success);
     --color: var(--histaryo-text-inverse);
   }
   
-  // Accent Button
   &.button-solid[color="tertiary"] {
     --background: var(--histaryo-gradient-accent);
     --color: var(--histaryo-text-inverse);
   }
 }
 
-// Enhanced Card Styles
 ion-card {
   --background: var(--histaryo-surface);
   --color: var(--histaryo-text-primary);
@@ -374,7 +324,6 @@ ion-card {
   }
 }
 
-// Enhanced List Styles
 ion-list {
   background: transparent;
   
@@ -426,7 +375,6 @@ ion-list {
   }
 }
 
-// Enhanced Input Styles
 ion-input, ion-textarea, ion-select {
   --background: var(--histaryo-surface);
   --color: var(--histaryo-text-primary);
@@ -444,7 +392,6 @@ ion-input, ion-textarea, ion-select {
   }
 }
 
-// Enhanced Toast Styles
 .toast-custom {
   --background: var(--histaryo-glass-strong);
   --color: var(--histaryo-text-inverse);
@@ -455,7 +402,6 @@ ion-input, ion-textarea, ion-select {
   box-shadow: var(--histaryo-shadow-xl);
 }
 
-// Loading States
 .loading-skeleton {
   background: linear-gradient(90deg, var(--histaryo-surface) 25%, var(--histaryo-surface-variant) 50%, var(--histaryo-surface) 75%);
   background-size: 200% 100%;
@@ -468,7 +414,6 @@ ion-input, ion-textarea, ion-select {
   100% { background-position: -200% 0; }
 }
 
-// Glassmorphism Utility Classes
 .glass {
   background: var(--histaryo-glass);
   backdrop-filter: blur(20px);
@@ -483,7 +428,6 @@ ion-input, ion-textarea, ion-select {
   border: 1px solid var(--histaryo-glass-border);
 }
 
-// Gradient Backgrounds
 .gradient-primary {
   background: var(--histaryo-gradient-primary);
   color: var(--histaryo-text-inverse);
@@ -499,14 +443,12 @@ ion-input, ion-textarea, ion-select {
   color: var(--histaryo-text-inverse);
 }
 
-// Shadow Utilities
 .shadow-sm { box-shadow: var(--histaryo-shadow-sm); }
 .shadow-md { box-shadow: var(--histaryo-shadow-md); }
 .shadow-lg { box-shadow: var(--histaryo-shadow-lg); }
 .shadow-xl { box-shadow: var(--histaryo-shadow-xl); }
 .shadow-2xl { box-shadow: var(--histaryo-shadow-2xl); }
 
-// Spacing Utilities
 .p-xs { padding: var(--histaryo-spacing-xs); }
 .p-sm { padding: var(--histaryo-spacing-sm); }
 .p-md { padding: var(--histaryo-spacing-md); }
@@ -521,7 +463,6 @@ ion-input, ion-textarea, ion-select {
 .m-xl { margin: var(--histaryo-spacing-xl); }
 .m-2xl { margin: var(--histaryo-spacing-2xl); }
 
-// Border Radius Utilities
 .rounded-sm { border-radius: var(--histaryo-radius-sm); }
 .rounded-md { border-radius: var(--histaryo-radius-md); }
 .rounded-lg { border-radius: var(--histaryo-radius-lg); }
@@ -529,7 +470,6 @@ ion-input, ion-textarea, ion-select {
 .rounded-2xl { border-radius: var(--histaryo-radius-2xl); }
 .rounded-full { border-radius: var(--histaryo-radius-full); }
 
-// Text Utilities
 .text-primary { color: var(--histaryo-text-primary); }
 .text-secondary { color: var(--histaryo-text-secondary); }
 .text-tertiary { color: var(--histaryo-text-tertiary); }
@@ -542,7 +482,6 @@ ion-input, ion-textarea, ion-select {
 .font-bold { font-weight: 700; }
 .font-extrabold { font-weight: 800; }
 
-// Animation Utilities
 .fade-in {
   animation: fadeIn 0.5s ease-in-out;
 }
@@ -589,7 +528,6 @@ ion-input, ion-textarea, ion-select {
   }
 }
 
-// Responsive Design
 @media (max-width: 768px) {
   h1 { font-size: 2rem; }
   h2 { font-size: 1.75rem; }
@@ -639,7 +577,6 @@ ion-input, ion-textarea, ion-select {
   }
 }
 
-// Accessibility Improvements
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -673,7 +610,6 @@ ion-input, ion-textarea, ion-select {
   }
 }
 
-// Print Styles
 @media print {
   * {
     background: transparent !important;
@@ -706,7 +642,6 @@ ion-input, ion-textarea, ion-select {
   }
 }
 
-// High DPI / Retina Display Optimizations
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .high-dpi-image {
     image-rendering: -webkit-optimize-contrast;
@@ -714,7 +649,6 @@ ion-input, ion-textarea, ion-select {
   }
 }
 
-// Focus Management for Better Accessibility
 :focus-visible {
   outline: 2px solid var(--histaryo-primary);
   outline-offset: 2px;
@@ -728,7 +662,6 @@ ion-card:focus-visible {
   outline-offset: 2px;
 }
 
-// Enhanced Loading States
 .shimmer {
   position: relative;
   overflow: hidden;
@@ -755,7 +688,6 @@ ion-card:focus-visible {
   100% { left: 100%; }
 }
 
-// Status Bar and Safe Area Handling
 ion-app {
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
@@ -763,7 +695,6 @@ ion-app {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-// Enhanced Scroll Behavior
 html {
   scroll-behavior: smooth;
 }
@@ -772,7 +703,6 @@ ion-content {
   scroll-behavior: smooth;
 }
 
-// Custom Scrollbar Styling (WebKit browsers)
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -791,7 +721,6 @@ ion-content {
   }
 }
 
-// Enhanced Selection Styling
 ::selection {
   background: rgba(var(--histaryo-primary), 0.2);
   color: var(--histaryo-text-primary);
@@ -802,7 +731,6 @@ ion-content {
   color: var(--histaryo-text-primary);
 }
 
-// Custom Ionic Component Overrides for Startup Look
 ion-segment {
   --background: var(--histaryo-surface);
   border-radius: var(--histaryo-radius-xl);
@@ -899,7 +827,6 @@ ion-toggle {
   --handle-box-shadow: var(--histaryo-shadow-md);
 }
 
-// Tab Bar Enhancements
 ion-tab-bar {
   --background: var(--histaryo-surface);
   --color: var(--histaryo-text-tertiary);
@@ -923,7 +850,6 @@ ion-tab-bar {
   }
 }
 
-// Modal Enhancements
 ion-modal {
   --backdrop-opacity: 0.5;
   --border-radius: var(--histaryo-radius-2xl) var(--histaryo-radius-2xl) 0 0;
@@ -935,7 +861,6 @@ ion-modal {
   }
 }
 
-// Popover Enhancements
 ion-popover {
   --background: var(--histaryo-glass-strong);
   --box-shadow: var(--histaryo-shadow-xl);
@@ -945,7 +870,6 @@ ion-popover {
   border: 1px solid var(--histaryo-glass-border);
 }
 
-// Alert Enhancements
 ion-alert {
   --background: var(--histaryo-surface);
   --color: var(--histaryo-text-primary);
@@ -968,7 +892,6 @@ ion-alert {
   }
 }
 
-// Action Sheet Enhancements
 ion-action-sheet {
   --background: var(--histaryo-glass-strong);
   --color: var(--histaryo-text-primary);
@@ -984,7 +907,6 @@ ion-action-sheet {
   }
 }
 
-// Utility Classes for Common Patterns
 .hero-section {
   padding: var(--histaryo-spacing-3xl) var(--histaryo-spacing-xl);
   text-align: center;

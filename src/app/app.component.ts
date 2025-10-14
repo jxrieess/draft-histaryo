@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Platform } from '@ionic/angular';
 import { filter } from 'rxjs/operators';
+import { LandmarkService } from './services/landmark.service';
+import { db } from './firebase.config';
 
 @Component({
   selector: 'app-root',
@@ -14,7 +16,8 @@ export class AppComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private platform: Platform
+    private platform: Platform,
+    private landmarkService: LandmarkService
   ) {
     this.platform.ready().then(() => {
       this.initializeApp();
@@ -24,9 +27,8 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: NavigationEnd) => {
-      console.log('Navigation completed to:', event.url);
-    });
+        ).subscribe((event: NavigationEnd) => {
+        });
   }
 
   private initializeApp(): void {
@@ -36,34 +38,28 @@ export class AppComponent implements OnInit {
     
     this.hasInitialized = true;
     
-    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding') === 'true';
-    const currentPath = window.location.pathname;
-    
-    console.log('App initializing:', { hasSeenOnboarding, currentPath });
+        const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding') === 'true';
+        const currentPath = window.location.pathname;
 
-    if (this.isAuthRoute(currentPath)) {
-      console.log('Auth route detected, allowing access');
-      return;
-    }
+        if (this.isAuthRoute(currentPath)) {
+          return;
+        }
 
-    if (!hasSeenOnboarding) {
-      if (currentPath !== '/onboarding') {
-        console.log('First time user, redirecting to onboarding');
-        this.router.navigateByUrl('/onboarding', { replaceUrl: true });
-      }
-    } else {
-      if (currentPath === '/' || currentPath === '/onboarding') {
-        console.log('Returning user, redirecting to login');
-        this.router.navigateByUrl('/login', { replaceUrl: true });
-      }
-    }
+        if (!hasSeenOnboarding) {
+          if (currentPath !== '/onboarding') {
+            this.router.navigateByUrl('/onboarding', { replaceUrl: true });
+          }
+        } else {
+          if (currentPath === '/' || currentPath === '/onboarding') {
+            this.router.navigateByUrl('/login', { replaceUrl: true });
+          }
+        }
   }
 
   private isAuthRoute(path: string): boolean {
     const authRoutes = ['/login', '/register', '/forgot-password'];
-    const isAuth = authRoutes.some(route => path.startsWith(route));
-    console.log('Checking if auth route:', path, 'Result:', isAuth);
-    return isAuth;
+      const isAuth = authRoutes.some(route => path.startsWith(route));
+      return isAuth;
   }
 
   private handleRouteProtection(): void {
@@ -73,7 +69,6 @@ export class AppComponent implements OnInit {
       const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding') === 'true';
       
       if (!hasSeenOnboarding && !this.isAuthRoute(event.url) && event.url !== '/onboarding') {
-        console.log('Redirecting to onboarding from:', event.url);
         this.router.navigateByUrl('/onboarding', { replaceUrl: true });
       }
     });

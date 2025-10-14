@@ -34,6 +34,16 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   
   availableCities: string[] = [];
   availableCategories: string[] = [];
+
+  showDirections = false;
+  currentRoute: any = null;
+  routeSteps: any[] = [];
+  routeDistance = '';
+  routeDuration = '';
+  routeProfile = 'walking'; 
+  directionsPanelVisible = false;
+  selectedLandmark: Landmark | null = null;
+  isCalculatingRoute = false;
   
   private storage = getStorage();
   private landmarksSubscription?: Subscription;
@@ -46,25 +56,57 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     private landmarkService: LandmarkService
   ) {}
 
-  getDefaultImageUrl(imageUrl?: string, category?: string): string {
-    if (imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('placeholder')) {
-      return imageUrl;
+  getDefaultImageUrl(imageUrl?: string, category?: string, landmarkId?: string, landmarkName?: string): string {
+    if (landmarkName) {
+      const name = landmarkName.toLowerCase().trim();
+      
+      if (name.includes('basilica') || name.includes('santo niño') || name.includes('santo nino')) {
+        return 'assets/img/basilica.jpg';
+      }
+    
+      if (name.includes('casa gorordo') || name.includes('gorordo')) {
+        return 'assets/img/Casa-Gorordo.jpg';
+      }
+      
+      if (name.includes('cathedral') || name.includes('archdiocesan')) {
+        return 'assets/img/Cathedral-Museum.jpg';
+      }
+      
+      if (name.includes('fort san pedro') || name.includes('fort') && name.includes('san pedro')) {
+        return 'assets/img/fort-san-pedro.jpg';
+      }
+      
+      if (name.includes('magellan') || name.includes('cross')) {
+        return 'assets/img/magellans-cross.jpg';
+      }
+      
+      if (name.includes('liberty') || name.includes('lapu-lapu') || name.includes('mactan')) {
+        return 'assets/img/Liberty-Shrine.jpg';
+      }
+      
+      if (name.includes('joseph') || name.includes('mandaue')) {
+        return 'assets/img/Nat-Shrine-of-St.Joseph.jpg';
+      }
+    
+      if (name.includes('san isidro') || name.includes('isidro') || name.includes('talisay')) {
+        return 'assets/img/San-Isidro-Labrador.jpg';
+      }
     }
 
-    switch (category?.toLowerCase()) {
-      case 'religious':
-        return 'assets/img/basilica.jpg';
-      case 'historical':
-        return 'assets/img/fort-san-pedro.jpg';
-      case 'cultural':
-        return 'assets/img/magellans-cross.jpg';
-      default:
-        return 'assets/img/default-landmark.jpg';
+    if (category) {
+      const cat = category.toLowerCase();
+      if (cat === 'religious') return 'assets/img/basilica.jpg';
+      if (cat === 'historical') return 'assets/img/fort-san-pedro.jpg';
+      if (cat === 'cultural') return 'assets/img/magellans-cross.jpg';
+      if (cat === 'museum') return 'assets/img/Cathedral-Museum.jpg';
+      if (cat === 'architecture') return 'assets/img/Casa-Gorordo.jpg';
+      if (cat === 'park') return 'assets/img/Liberty-Shrine.jpg';
     }
+
+    return 'assets/img/default-landmark.jpg';
   }
 
   onImageError(event: any): void {
-    console.log('Image load error, using fallback');
     event.target.src = 'assets/img/default-landmark.jpg';
   }
 
@@ -74,7 +116,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     
     this.route.queryParams.subscribe(params => {
       if (params['landmarkId']) {
-        console.log('🎯 Map opened with specific landmark ID:', params['landmarkId']);
         this.focusOnLandmark(params['landmarkId']);
       }
     });
@@ -89,14 +130,12 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     
     setTimeout(() => {
       if (!this.mapLoaded) {
-        console.log('🔄 Retrying map initialization...');
     this.initializeMap();
       }
     }, 1000);
 
     setTimeout(() => {
       if (this.mapLoaded) {
-        console.log('🗺️ Auto-adding sample landmarks for testing');
         this.addSampleLandmarks();
       }
     }, 3000);
@@ -127,7 +166,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async getCurrentLocation(): Promise<void> {
-    console.log('🌍 Requesting real-time user location...');
     
     try {
       const position = await Geolocation.getCurrentPosition({
@@ -145,8 +183,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
         timestamp: position.timestamp
       };
 
-      console.log('✅ Real-time user location obtained:', this.userLocation);
-      console.log(`📍 Accuracy: ${position.coords.accuracy} meters`);
 
       if (this.mapLoaded) {
         this.updateUserLocationOnMap();
@@ -196,7 +232,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       timestamp: Date.now(),
       isFallback: true
     };
-    console.log('📍 Using fallback location (Cebu City):', this.userLocation);
     
     if (this.mapLoaded) {
       this.updateUserLocationOnMap();
@@ -213,7 +248,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
 
     this.landmarksSubscription = this.landmarkService.getAllLandmarks().subscribe({
       next: (landmarks) => {
-        console.log(`🏛️ Map received ${landmarks.length} landmarks from service`);
         
         this.landmarks = landmarks;
       this.filteredLandmarks = [...this.landmarks];
@@ -323,7 +357,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
 
       (mapboxgl as any).accessToken = 'pk.eyJ1IjoianhyaWVlc3NzIiwiYSI6ImNtZDVxejZ6djAxamEyb29yMWRkajM4aWUifQ.a3uBgsbAZHm-hQf27958wA';
 
-      console.log('🗺️ Initializing map with center:', [this.userLng, this.userLat]);
 
       this.map = new mapboxgl.Map({
         container: 'map',
@@ -334,7 +367,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       });
 
     this.map.on('load', () => {
-      console.log('🗺️ Map loaded successfully');
       this.mapLoaded = true;
       this.setupMap();
     });
@@ -345,7 +377,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.map.on('style.load', () => {
-      console.log('🗺️ Map style loaded');
     });
 
     this.map.on('style.error', (e) => {
@@ -374,7 +405,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   private updateUserLocationOnMap(): void {
     if (!this.map || !this.userLocation) return;
 
-    console.log('📍 Adding user location marker at:', this.userLocation);
 
     const userMarker = document.createElement('div');
     userMarker.className = 'user-location-marker';
@@ -463,16 +493,16 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       duration: 2000
     });
 
-    console.log('✅ User location marker added successfully');
   }
 
   private addLandmarksToMap(): void {
     if (!this.map || !this.mapLoaded) return;
 
-    console.log('🗺️ Adding landmarks to map:', this.filteredLandmarks.length);
 
     if (this.map.getSource('landmarks')) {
       this.map.removeLayer('landmarks-layer');
+      this.map.removeLayer('landmarks-glow');
+      this.map.removeLayer('landmarks-labels');
       this.map.removeSource('landmarks');
     }
 
@@ -489,35 +519,196 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       return isValid;
     });
 
-    console.log('🗺️ Valid landmarks for map:', validLandmarks.length);
 
     if (validLandmarks.length === 0) {
       console.warn('⚠️ No valid landmarks to display on map');
       return;
     }
 
+    this.loadCustomIcons().then(() => {
+      this.addLandmarksWithCustomIcons(validLandmarks);
+    });
+  }
+
+  private async loadCustomIcons(): Promise<void> {
+    const iconCategories = ['church', 'fortress', 'museum', 'monument', 'historical', 'cultural', 'religious', 'default'];
+    
+    for (const category of iconCategories) {
+      const iconName = `landmark-${category}`;
+      
+      if (!this.map.hasImage(iconName)) {
+        const svgIcon = this.createCustomIcon(category);
+        const img = new Image();
+        img.onload = () => {
+          this.map.addImage(iconName, img);
+        };
+        img.src = `data:image/svg+xml;base64,${btoa(svgIcon)}`;
+      }
+    }
+  }
+
+  private createCustomIcon(category: string): string {
+    const iconMap: { [key: string]: string } = {
+      church: this.getChurchIcon(),
+      fortress: this.getFortressIcon(),
+      museum: this.getMuseumIcon(),
+      monument: this.getMonumentIcon(),
+      historical: this.getHistoricalIcon(),
+      cultural: this.getCulturalIcon(),
+      religious: this.getReligiousIcon(),
+      default: this.getDefaultIcon()
+    };
+
+    return iconMap[category] || iconMap['default'];
+  }
+
+  private getChurchIcon(): string {
+    return `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#d97706" stroke="#fff" stroke-width="2"/>
+        <path d="M16 6 L20 10 L20 14 L18 14 L18 26 L14 26 L14 14 L12 14 L12 10 Z" fill="#fff"/>
+        <circle cx="16" cy="8" r="2" fill="#d97706"/>
+        <rect x="15" y="20" width="2" height="6" fill="#fff"/>
+      </svg>
+    `;
+  }
+
+  private getFortressIcon(): string {
+    return `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#dc2626" stroke="#fff" stroke-width="2"/>
+        <rect x="8" y="12" width="16" height="12" fill="#fff"/>
+        <rect x="10" y="8" width="4" height="8" fill="#fff"/>
+        <rect x="18" y="8" width="4" height="8" fill="#fff"/>
+        <rect x="14" y="6" width="4" height="6" fill="#fff"/>
+        <rect x="12" y="16" width="2" height="4" fill="#dc2626"/>
+        <rect x="18" y="16" width="2" height="4" fill="#dc2626"/>
+      </svg>
+    `;
+  }
+
+  private getMuseumIcon(): string {
+    return `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#059669" stroke="#fff" stroke-width="2"/>
+        <rect x="6" y="12" width="20" height="12" fill="#fff"/>
+        <rect x="8" y="8" width="16" height="4" fill="#fff"/>
+        <rect x="10" y="6" width="12" height="2" fill="#fff"/>
+        <rect x="12" y="16" width="2" height="6" fill="#059669"/>
+        <rect x="18" y="16" width="2" height="6" fill="#059669"/>
+        <circle cx="16" cy="10" r="1" fill="#059669"/>
+      </svg>
+    `;
+  }
+
+  private getMonumentIcon(): string {
+    return `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+        <rect x="14" y="8" width="4" height="16" fill="#fff"/>
+        <rect x="12" y="6" width="8" height="2" fill="#fff"/>
+        <rect x="13" y="4" width="6" height="2" fill="#fff"/>
+        <rect x="14" y="2" width="4" height="2" fill="#fff"/>
+        <circle cx="16" cy="20" r="2" fill="#7c3aed"/>
+      </svg>
+    `;
+  }
+
+  private getHistoricalIcon(): string {
+    return `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#ea580c" stroke="#fff" stroke-width="2"/>
+        <path d="M16 6 L22 12 L22 18 L20 18 L20 26 L12 26 L12 18 L10 18 L10 12 Z" fill="#fff"/>
+        <rect x="14" y="14" width="4" height="8" fill="#ea580c"/>
+        <circle cx="16" cy="10" r="1.5" fill="#ea580c"/>
+      </svg>
+    `;
+  }
+
+  private getCulturalIcon(): string {
+    return `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#be185d" stroke="#fff" stroke-width="2"/>
+        <path d="M16 6 C20 6, 24 10, 24 16 C24 22, 20 26, 16 26 C12 26, 8 22, 8 16 C8 10, 12 6, 16 6 Z" fill="#fff"/>
+        <circle cx="16" cy="16" r="6" fill="#be185d"/>
+        <circle cx="16" cy="16" r="3" fill="#fff"/>
+        <circle cx="16" cy="16" r="1" fill="#be185d"/>
+      </svg>
+    `;
+  }
+
+  private getReligiousIcon(): string {
+    return `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#0891b2" stroke="#fff" stroke-width="2"/>
+        <path d="M16 4 L20 8 L20 12 L18 12 L18 24 L14 24 L14 12 L12 12 L12 8 Z" fill="#fff"/>
+        <circle cx="16" cy="6" r="1.5" fill="#0891b2"/>
+        <rect x="15" y="18" width="2" height="4" fill="#0891b2"/>
+        <path d="M14 14 L18 14 L17 16 L15 16 Z" fill="#0891b2"/>
+      </svg>
+    `;
+  }
+
+  private getDefaultIcon(): string {
+    return `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#6b7280" stroke="#fff" stroke-width="2"/>
+        <path d="M16 6 L20 10 L20 14 L18 14 L18 26 L14 26 L14 14 L12 14 L12 10 Z" fill="#fff"/>
+        <circle cx="16" cy="8" r="2" fill="#6b7280"/>
+      </svg>
+    `;
+  }
+
+  private getIconCategory(category: string): string {
+    const categoryMap: { [key: string]: string } = {
+      'church': 'church',
+      'cathedral': 'church',
+      'basilica': 'church',
+      'fortress': 'fortress',
+      'fort': 'fortress',
+      'castle': 'fortress',
+      'museum': 'museum',
+      'monument': 'monument',
+      'memorial': 'monument',
+      'statue': 'monument',
+      'historical': 'historical',
+      'heritage': 'historical',
+      'cultural': 'cultural',
+      'culture': 'cultural',
+      'religious': 'religious',
+      'temple': 'religious',
+      'shrine': 'religious',
+      'mosque': 'religious'
+    };
+
+    const normalizedCategory = category.toLowerCase().trim();
+    return categoryMap[normalizedCategory] || 'default';
+  }
+
+  private addLandmarksWithCustomIcons(validLandmarks: Landmark[]): void {
     const geojson: GeoJSON.FeatureCollection = {
       type: 'FeatureCollection',
       features: validLandmarks.map((landmark) => {
         const coords = [landmark.longitude!, landmark.latitude!];
-        console.log('📍 Adding landmark:', landmark.name, 'at', coords);
+        const category = this.getIconCategory(landmark.category || 'default');
         
         return {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
             coordinates: coords
-        },
-        properties: {
-          id: landmark.id,
-          name: landmark.name,
-          description: landmark.description,
-          category: landmark.category || null,
-          city: landmark.city || null,
-          imageUrl: landmark.imageUrl || null,
+          },
+          properties: {
+            id: landmark.id,
+            name: landmark.name,
+            description: landmark.description,
+            category: landmark.category || null,
+            city: landmark.city || null,
+            imageUrl: landmark.imageUrl || null,
+            iconCategory: category,
             created_by_role: 'service',
             created_by_email: ''
-        }
+          }
         };
       })
     };
@@ -527,8 +718,88 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       data: geojson
     });
 
+    this.map.addLayer({
+      id: 'landmarks-glow',
+      type: 'circle',
+      source: 'landmarks',
+      paint: {
+        'circle-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 20,
+          15, 30,
+          20, 40
+        ],
+        'circle-color': [
+          'match',
+          ['get', 'iconCategory'],
+          'church', '#d97706',
+          'fortress', '#dc2626',
+          'museum', '#059669',
+          'monument', '#7c3aed',
+          'historical', '#ea580c',
+          'cultural', '#be185d',
+          'religious', '#0891b2',
+          '#6b7280'
+        ],
+        'circle-opacity': 0.15,
+        'circle-stroke-width': 0
+      }
+    });
+
+    this.map.addLayer({
+      id: 'landmarks-layer',
+      type: 'symbol',
+      source: 'landmarks',
+      layout: {
+        'icon-image': [
+          'concat',
+          'landmark-',
+          ['get', 'iconCategory']
+        ],
+        'icon-size': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 0.8,
+          15, 1.2,
+          20, 1.6
+        ],
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true
+      }
+    });
+
+    this.map.addLayer({
+      id: 'landmarks-labels',
+      type: 'symbol',
+      source: 'landmarks',
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+        'text-offset': [0, 2.5],
+        'text-anchor': 'top',
+        'text-size': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 10,
+          15, 12,
+          20, 14
+        ],
+        'text-optional': true,
+        'text-allow-overlap': false
+      },
+      paint: {
+        'text-color': '#1e293b',
+        'text-halo-color': '#fff',
+        'text-halo-width': 2,
+        'text-halo-blur': 1
+      }
+    });
+
     if (validLandmarks.length === 0) {
-      console.log('🗺️ Adding test landmarks for Cebu area');
       const testLandmarks: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
         features: [
@@ -582,73 +853,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
-    this.map.addLayer({
-      id: 'landmarks-layer',
-      type: 'circle',
-      source: 'landmarks',
-      paint: {
-        'circle-radius': [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          10, 8,
-          15, 12,
-          20, 16
-        ],
-        'circle-color': '#d97706',
-        'circle-stroke-width': 3,
-        'circle-stroke-color': '#fff',
-        'circle-opacity': 0.9,
-        'circle-stroke-opacity': 1
-      }
-    });
-
-    this.map.addLayer({
-      id: 'landmarks-glow',
-      type: 'circle',
-      source: 'landmarks',
-      paint: {
-        'circle-radius': [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          10, 16,
-          15, 24,
-          20, 32
-        ],
-        'circle-color': '#d97706',
-        'circle-opacity': 0.2,
-        'circle-stroke-width': 0
-      }
-    });
-
-    this.map.addLayer({
-      id: 'landmarks-labels',
-      type: 'symbol',
-      source: 'landmarks',
-      layout: {
-        'text-field': ['get', 'name'],
-        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-        'text-offset': [0, 2.5],
-        'text-anchor': 'top',
-        'text-size': [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          10, 10,
-          15, 12,
-          20, 14
-        ],
-        'text-optional': true,
-        'text-allow-overlap': false
-      },
-      paint: {
-        'text-color': '#1e293b',
-        'text-halo-color': '#fff',
-        'text-halo-width': 2,
-        'text-halo-blur': 1
-      }
-    });
 
     this.map.on('click', 'landmarks-layer', (e) => {
       if (!e.features || e.features.length === 0) return;
@@ -686,9 +890,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToLandmark(landmarkId: string): void {
-    console.log('🔗 Navigating to landmark details for ID:', landmarkId);
-    console.log('🔗 Landmark ID type:', typeof landmarkId);
-    console.log('🔗 Landmark ID length:', landmarkId?.length);
     
     if (!landmarkId) {
       console.error('❌ No landmark ID provided');
@@ -698,7 +899,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     
     this.router.navigate(['/landmark-details', landmarkId]).then(success => {
       if (success) {
-        console.log('✅ Successfully navigated to landmark details');
       } else {
         console.error('❌ Failed to navigate to landmark details');
         this.showToast('Failed to open landmark details', 'danger');
@@ -710,7 +910,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async getDirectionsToLandmark(landmarkId: string): Promise<void> {
-    console.log('🧭 Getting directions to landmark:', landmarkId);
     
     const landmark = this.landmarks.find(l => l.id === landmarkId);
     if (!landmark || !landmark.latitude || !landmark.longitude) {
@@ -724,25 +923,127 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    try {
-      const distance = this.calculateDistance(
-        this.userLat, this.userLng,
-        landmark.latitude, landmark.longitude
-      );
-      
-      const bearing = this.calculateBearing(
-        this.userLat, this.userLng,
-        landmark.latitude, landmark.longitude
-      );
+    this.selectedLandmark = landmark;
+    this.isCalculatingRoute = true;
+    this.showDirections = true;
+    this.directionsPanelVisible = true;
 
-      const direction = this.getDirectionText(bearing);
-      
-      this.showDirectionsPopup(landmark, distance, direction, bearing);
-      
+    try {
+      await this.getMapboxDirections(landmark);
     } catch (error) {
       console.error('Error getting directions:', error);
       this.showToast('Failed to get directions', 'danger');
+      this.isCalculatingRoute = false;
     }
+  }
+
+  async getMapboxDirections(landmark: Landmark): Promise<void> {
+    if (!this.userLat || !this.userLng) return;
+
+    try {
+      const start = [this.userLng, this.userLat];
+      const end = [landmark.longitude!, landmark.latitude!];
+      
+
+      const response = await fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/${this.routeProfile}/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=pk.eyJ1IjoianhyaWVlc3NzIiwiYSI6ImNtZDVxejZ6djAxamEyb29yMWRkajM4aWUifQ.a3uBgsbAZHm-hQf27958wA`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Directions API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.routes && data.routes.length > 0) {
+        this.currentRoute = data.routes[0];
+        this.routeSteps = data.routes[0].legs[0].steps;
+        this.routeDistance = this.formatDistance(data.routes[0].distance);
+        this.routeDuration = this.formatDuration(data.routes[0].duration);
+        
+        this.addRouteToMap(data.routes[0]);
+        this.fitMapToRoute(data.routes[0]);
+        
+      } else {
+        throw new Error('No routes found');
+      }
+    } catch (error) {
+      console.error('❌ Mapbox Directions API error:', error);
+      this.showSimpleDirections(landmark);
+    } finally {
+      this.isCalculatingRoute = false;
+    }
+  }
+
+  private addRouteToMap(route: any): void {
+    if (!this.map) return;
+
+    if (this.map.getSource('route')) {
+      this.map.removeLayer('route');
+      this.map.removeSource('route');
+    }
+
+    this.map.addSource('route', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: route.geometry
+      }
+    });
+
+    this.map.addLayer({
+      id: 'route',
+      type: 'line',
+      source: 'route',
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': '#d97706',
+        'line-width': 4,
+        'line-opacity': 0.8
+      }
+    });
+  }
+
+  private fitMapToRoute(route: any): void {
+    if (!this.map) return;
+
+    const coordinates = route.geometry.coordinates;
+    const bounds = coordinates.reduce((bounds: any, coord: any) => {
+      return bounds.extend(coord);
+    }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+    this.map.fitBounds(bounds, {
+      padding: 50,
+      maxZoom: 16
+    });
+  }
+
+  private showSimpleDirections(landmark: Landmark): void {
+    const distance = this.calculateDistance(
+      this.userLat!, this.userLng!,
+      landmark.latitude!, landmark.longitude!
+    );
+    
+    const bearing = this.calculateBearing(
+      this.userLat!, this.userLng!,
+      landmark.latitude!, landmark.longitude!
+    );
+
+    const direction = this.getDirectionText(bearing);
+    
+    this.routeDistance = this.formatDistance(distance * 1000);
+    this.routeDuration = this.formatDuration(Math.round(distance * 12));
+    this.routeSteps = [{
+      maneuver: {
+        type: 'depart',
+        instruction: `Head ${direction} towards ${landmark.name}`
+      },
+      distance: distance * 1000
+    }];
   }
 
   private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -787,6 +1088,70 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     ];
     const index = Math.round(bearing / 45) % 8;
     return directions[index];
+  }
+
+  formatDistance(meters: number): string {
+    if (meters < 1000) {
+      return `${Math.round(meters)}m`;
+    } else {
+      return `${(meters / 1000).toFixed(1)}km`;
+    }
+  }
+
+  formatDuration(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
+  }
+
+  clearRoute(): void {
+    if (this.map && this.map.getSource('route')) {
+      this.map.removeLayer('route');
+      this.map.removeSource('route');
+    }
+    this.currentRoute = null;
+    this.routeSteps = [];
+    this.routeDistance = '';
+    this.routeDuration = '';
+    this.directionsPanelVisible = false;
+    this.showDirections = false;
+    this.selectedLandmark = null;
+    this.showToast('Route cleared', 'success');
+  }
+
+  changeRouteProfile(profile: string | number | undefined): void {
+    if (!profile) return;
+     const profileString = String(profile);
+    this.routeProfile = profileString;
+    this.showToast(`Route profile changed to ${profileString}`, 'primary');
+    
+    if (this.currentRoute && this.selectedLandmark) {
+      this.getMapboxDirections(this.selectedLandmark);
+    }
+  }
+
+  getStepIcon(maneuverType: string): string {
+    switch (maneuverType) {
+      case 'turn': return 'arrow-forward';
+      case 'depart': return 'play';
+      case 'arrive': return 'flag';
+      case 'continue': return 'arrow-forward';
+      case 'merge': return 'git-merge';
+      case 'ramp': return 'trending-up';
+      default: return 'arrow-forward';
+    }
+  }
+
+  openInExternalMaps(): void {
+    if (!this.selectedLandmark) return;
+    
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${this.selectedLandmark.latitude},${this.selectedLandmark.longitude}&travelmode=${this.routeProfile}`;
+    window.open(googleMapsUrl, '_blank');
   }
 
   private showDirectionsPopup(landmark: Landmark, distance: number, direction: string, bearing: number): void {
@@ -883,7 +1248,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   refreshLocation(): void {
-    console.log('🔄 Refreshing user location...');
     this.showToast('Refreshing your location...', 'primary');
     this.getCurrentLocation();
   }
@@ -903,13 +1267,11 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   focusOnLandmark(landmarkId: string): void {
-    console.log('🎯 Focusing on landmark:', landmarkId);
     
     const checkAndFocus = () => {
       if (this.landmarks.length > 0 && this.map && this.mapLoaded) {
         const landmark = this.landmarks.find(l => l.id === landmarkId);
         if (landmark && landmark.latitude && landmark.longitude) {
-          console.log('🎯 Found landmark, centering map:', landmark.name);
           
           this.map.flyTo({
             center: [landmark.longitude, landmark.latitude],
@@ -986,10 +1348,8 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
                          landmark.longitude !== 0 && landmark.latitude !== 0)
       .map(landmark => [landmark.longitude!, landmark.latitude!] as [number, number]);
 
-    console.log('🗺️ Fitting map to landmarks:', coordinates.length);
 
     if (coordinates.length === 0) {
-      console.log('🗺️ No valid landmarks, centering on Cebu City');
       this.map.flyTo({
         center: [123.8854, 10.3157], 
         zoom: 12
@@ -1012,14 +1372,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   debugMapStatus(): void {
-    console.log('🔍 Map Debug Status:');
-    console.log('- Map instance:', this.map);
-    console.log('- Map loaded:', this.mapLoaded);
-    console.log('- Map container exists:', !!document.getElementById('map'));
-    console.log('- Landmarks count:', this.landmarks.length);
-    console.log('- Filtered landmarks count:', this.filteredLandmarks.length);
-    console.log('- User location:', { lat: this.userLat, lng: this.userLng });
-    console.log('- Landmark coordinates:', this.filteredLandmarks.map(l => [l.longitude, l.latitude]));
     
     this.addSampleLandmarks();
   }
@@ -1027,7 +1379,6 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   addSampleLandmarks(): void {
     if (!this.map || !this.mapLoaded) return;
 
-    console.log('🗺️ Adding sample landmarks for testing');
 
     this.map.addLayer({
       id: 'sample-landmarks-layer',
@@ -1127,5 +1478,18 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
 
   get totalLandmarksCount(): number {
     return this.landmarks.length;
+  }
+
+  goBackToHome(): void {
+    this.router.navigate(['/home']).then(success => {
+      if (success) {
+      } else {
+        console.error('❌ Failed to navigate to home page');
+        this.showToast('Failed to navigate to home page', 'danger');
+      }
+    }).catch(error => {
+      console.error('❌ Navigation error:', error);
+      this.showToast('Navigation error occurred', 'danger');
+    });
   }
 }

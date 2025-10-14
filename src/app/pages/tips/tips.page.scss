@@ -1,5 +1,3 @@
-// src/app/pages/tips/tips.page.scss
-
 :host {
   --tip-primary: #3498db;
   --tip-success: #27ae60;
@@ -17,7 +15,6 @@ ion-content {
   --background: #f8f9fa;
 }
 
-// Loading state
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -37,7 +34,6 @@ ion-content {
   }
 }
 
-// Landmark header
 .landmark-header {
   margin: 16px 0;
   border-radius: var(--tip-border-radius);
@@ -68,7 +64,6 @@ ion-content {
   }
 }
 
-// Filter section
 .filter-card {
   margin: 16px 0;
   border-radius: var(--tip-border-radius);
@@ -97,7 +92,6 @@ ion-content {
   }
 }
 
-// Empty states
 .empty-state {
   text-align: center;
   padding: 2rem;
@@ -123,7 +117,6 @@ ion-content {
   }
 }
 
-// Tip cards
 .tips-section {
   .tip-card {
     margin: 16px 0;
@@ -166,7 +159,6 @@ ion-content {
   }
 }
 
-// Tip header
 .tip-header {
   display: flex;
   justify-content: space-between;
@@ -215,7 +207,6 @@ ion-content {
   margin: 0;
 }
 
-// Tip content
 .tip-content {
   margin: 16px 0;
   
@@ -233,7 +224,6 @@ ion-content {
   }
 }
 
-// Tip photo
 .tip-photo {
   margin: 16px 0;
   
@@ -251,7 +241,6 @@ ion-content {
   }
 }
 
-// Tip actions
 .tip-actions {
   display: flex;
   justify-content: space-between;
@@ -293,7 +282,6 @@ ion-content {
   }
 }
 
-// Load more section
 .load-more {
   margin: 2rem 0;
   padding: 0 1rem;
@@ -308,7 +296,6 @@ ion-content {
   }
 }
 
-// FAB styling
 ion-fab {
   ion-fab-button {
     --background: var(--tip-primary);
@@ -321,7 +308,6 @@ ion-fab {
   }
 }
 
-// Responsive design
 @media (max-width: 768px) {
   .landmark-header .landmark-info {
     gap: 12px;
@@ -372,7 +358,6 @@ ion-fab {
   }
 }
 
-// Dark mode support
 @media (prefers-color-scheme: dark) {
   :host {
     --tip-light: #34495e;
@@ -393,7 +378,6 @@ ion-fab {
   }
 }
 
-// Accessibility improvements
 @media (prefers-reduced-motion: reduce) {
   .tip-card {
     transition: none;
@@ -408,7 +392,6 @@ ion-fab {
   }
 }
 
-// High contrast mode
 @media (prefers-contrast: high) {
   .tip-card {
     border: 2px solid var(--tip-dark);

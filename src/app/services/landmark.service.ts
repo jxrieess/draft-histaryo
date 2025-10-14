@@ -3,22 +3,8 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, catchError, take } from 'rxjs/operators';
 
 import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc,
-  onSnapshot, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  QuerySnapshot,
-  DocumentData,
-  GeoPoint,
-  Timestamp
+import { getFirestore, collection, doc, getDocs, getDoc, addDoc,onSnapshot, query, 
+  where, orderBy, limit, QuerySnapshot,DocumentData,GeoPoint,Timestamp
 } from 'firebase/firestore';
 
 import { firebaseConfig } from '../firebase.config';
@@ -55,7 +41,21 @@ export interface Landmark {
   isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
-  distance?: number; 
+  distance?: number;
+  curatorImages?: CuratorImage[];
+}
+
+export interface CuratorImage {
+  id: string;
+  imageUrl: string;
+  title: string;
+  description?: string;
+  submittedBy: string;
+  submittedAt: Date;
+  landmarkId: string;
+  status: 'approved' | 'pending' | 'rejected';
+  likes: number;
+  tags?: string[];
 }
 
 export interface UserTip {
@@ -97,53 +97,33 @@ export class LandmarkService {
 
   private async testFirestoreConnection() {
     try {
-      console.log('🧪 Testing Firestore connection...');
-      
       const landmarksRef = collection(db, 'landmarks');
       const snapshot = await getDocs(landmarksRef);
-      
-      console.log(`📊 Direct query result: ${snapshot.size} documents found`);
-      
-      if (snapshot.size > 0) {
-        console.log('📄 Sample document data:');
-        const firstDoc = snapshot.docs[0];
-        console.log('Document ID:', firstDoc.id);
-        console.log('Document data:', firstDoc.data());
-      }
-      
     } catch (error) {
       console.error('❌ Firestore connection test failed:', error);
-      console.log('🔍 Possible issues:');
-      console.log('1. Firestore rules may be blocking read access');
-      console.log('2. Collection may not exist');
-      console.log('3. Network connectivity issues');
     }
   }
 
   private initializeRealtimeListener(): void {
-    console.log('🔄 Initializing real-time listener...');
     const landmarksRef = collection(db, 'landmarks');
     
     this.initializeSimpleListener();
   }
 
   private initializeSimpleListener(): void {
-    console.log('🔄 Setting up simple query without orderBy...');
     const landmarksRef = collection(db, 'landmarks');
 
     onSnapshot(landmarksRef, async (querySnapshot: QuerySnapshot) => {
-      console.log(`📊 Simple query received ${querySnapshot.size} documents`);
       try {
         const landmarks = await this.processLandmarkSnapshots(querySnapshot);
         this.landmarksSubject.next(landmarks);
         this.isInitialized = true;
-        console.log(`✅ Loaded ${landmarks.length} landmarks from Firebase (simple query)`);
       } catch (error) {
-        console.error('❌ Error processing landmark snapshots (simple query):', error);
+        console.error('❌ Error processing landmark snapshots:', error);
         this.landmarksSubject.next([]);
       }
     }, (error) => {
-      console.error('❌ Error in landmarks real-time listener (simple query):', error);
+      console.error('❌ Error in landmarks real-time listener:', error);
       this.landmarksSubject.next([]);
     });
   }
@@ -151,41 +131,32 @@ export class LandmarkService {
   private async processLandmarkSnapshots(querySnapshot: QuerySnapshot): Promise<Landmark[]> {
     const landmarks: Landmark[] = [];
     
-    console.log(`🔄 Processing ${querySnapshot.size} documents...`);
-    
     for (const docSnapshot of querySnapshot.docs) {
       try {
         const data = docSnapshot.data();
-        console.log(`📄 Processing document ${docSnapshot.id}:`, data);
         
         const landmark = this.mapFirebaseDocToLandmarkSync(docSnapshot.id, data);
         
         if (landmark) {
           landmarks.push(landmark);
-          console.log(`✅ Successfully processed landmark: ${landmark.name}`);
-        } else {
-          console.warn(`❌ Failed to process landmark ${docSnapshot.id} - mapping returned null`);
         }
       } catch (error) {
         console.error(`❌ Error processing landmark ${docSnapshot.id}:`, error);
       }
     }
     
-    console.log(`📊 Final result: ${landmarks.length} landmarks processed successfully`);
-    return landmarks;
+    const landmarksWithImages = await this.loadCuratorImagesForLandmarks(landmarks);
+    
+    return landmarksWithImages;
   }
 
   private mapFirebaseDocToLandmarkSync(id: string, data: DocumentData): Landmark | null {
     try {
-      console.log(`🗺️ Mapping document ${id} with data:`, data);
-      
       const name = data['name'];
       if (!name) {
         console.warn(`❌ Document ${id} missing 'name' field`);
         return null;
       }
-
-      console.log(`📝 Document ${id} has name: "${name}"`);
 
       let latitude: number | undefined;
       let longitude: number | undefined;
@@ -193,14 +164,10 @@ export class LandmarkService {
       const latValue = data['latitude'] || data['lati'] || data['lat'];
       const lngValue = data['longitude'] || data['longti'] || data['lng'] || data['lon'];
       
-      console.log(`🔍 Coordinate search for ${id}: latValue=${latValue}, lngValue=${lngValue}`);
-      
       if (latValue !== undefined && lngValue !== undefined) {
         try {
           latitude = typeof latValue === 'number' ? latValue : parseFloat(String(latValue));
           longitude = typeof lngValue === 'number' ? lngValue : parseFloat(String(lngValue));
-          
-          console.log(`🔢 Parsed coordinates: ${latitude}, ${longitude}`);
           
           if (isNaN(latitude) || isNaN(longitude) || 
               latitude < -90 || latitude > 90 || 
@@ -208,8 +175,6 @@ export class LandmarkService {
             console.warn(`⚠️ Invalid coordinates for ${id}: ${latitude}, ${longitude}`);
             latitude = undefined;
             longitude = undefined;
-          } else {
-            console.log(`📍 Valid coordinates: ${latitude}, ${longitude}`);
           }
         } catch (coordError) {
           console.warn(`⚠️ Could not parse coordinates for ${id}:`, coordError);
@@ -235,7 +200,7 @@ export class LandmarkService {
         id,
         name: String(name),
         description: String(data['description'] || ''),
-        imageUrl: this.getDefaultImageUrl(data['image_path'] || data['imageUrl'] || data['image'], data['category']),
+        imageUrl: data['image_path'] || data['imageUrl'] || data['image'] || undefined,
         image_path: data['image_path'] || data['imageUrl'] || data['image'] || undefined,
         thenUrl: data['then_image_path'] || data['thenImageUrl'] || data['then_image'] || undefined,
         then_image_path: data['then_image_path'] || data['thenImageUrl'] || data['then_image'] || undefined,
@@ -262,8 +227,6 @@ export class LandmarkService {
         updatedAt: createdAt
       };
 
-      console.log(`✅ Successfully created landmark object for: ${landmark.name}`);
-      console.log(`📍 Landmark coordinates: lat=${landmark.latitude}, lng=${landmark.longitude}`);
       return landmark;
 
     } catch (error) {
@@ -276,20 +239,34 @@ export class LandmarkService {
     return this.mapFirebaseDocToLandmarkSync(id, data);
   }
 
-  private getDefaultImageUrl(imageUrl?: string, category?: string): string {
+  private getDefaultImageUrl(imageUrl?: string, category?: string, landmarkId?: string): string {
     if (imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('placeholder')) {
       return imageUrl;
     }
-    switch (category?.toLowerCase()) {
-      case 'religious':
+
+    if (category) {
+      const cat = category.toLowerCase();
+      if (cat === 'religious') {
         return 'assets/img/basilica.jpg';
-      case 'historical':
+      }
+      if (cat === 'historical') {
         return 'assets/img/fort-san-pedro.jpg';
-      case 'cultural':
+      }
+      if (cat === 'cultural') {
         return 'assets/img/magellans-cross.jpg';
-      default:
-        return 'assets/img/default-landmark.jpg';
+      }
+      if (cat === 'museum') {
+        return 'assets/img/Cathedral-Museum.jpg';
+      }
+      if (cat === 'architecture') {
+        return 'assets/img/Casa-Gorordo.jpg';
+      }
+      if (cat === 'park') {
+        return 'assets/img/Liberty-Shrine.jpg';
+      }
     }
+
+    return 'assets/img/default-landmark.jpg';
   }
 
   private processImageUrl(imagePath: string | undefined): string | undefined {
@@ -343,7 +320,7 @@ export class LandmarkService {
 
   private async loadLandmarkTrivia(landmarkId: string): Promise<TriviaQuestion[]> {
     try {
-      const triviaRef = collection(db, 'trivia_questions');
+      const triviaRef = collection(db, 'trivia');
       const triviaQuery = query(
         triviaRef, 
         where('landmark_id', '==', landmarkId)
@@ -368,6 +345,60 @@ export class LandmarkService {
       return trivia;
     } catch (error) {
       console.error('Error loading landmark trivia:', error);
+      return [];
+    }
+  }
+
+  async getTriviaQuestionsForLandmark(landmarkId: string): Promise<TriviaQuestion[]> {
+    try {
+      const triviaRef = collection(db, 'trivia');
+      const triviaQuery = query(
+        triviaRef, 
+        where('landmark_id', '==', landmarkId)
+      );
+      
+      const querySnapshot = await getDocs(triviaQuery);
+      const trivia: TriviaQuestion[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        
+        const options = data['options'] || data['choices'] || [];
+
+        let correctAnswerValue = data['correct_answer'] || 
+                               data['correctAnswer'] || 
+                               data['correct_answer_index'] || 
+                               data['correctAnswerIndex'] ||
+                               data['answer'] ||
+                               data['right_answer'] ||
+                               data['rightAnswer'] ||
+                               0;
+        
+        let correctAnswer = 0; 
+        
+        if (typeof correctAnswerValue === 'string') {
+          const index = options.findIndex((option: string) => 
+            option.toLowerCase().trim() === correctAnswerValue.toLowerCase().trim()
+          );
+          correctAnswer = index >= 0 ? index : 0;
+        } else if (typeof correctAnswerValue === 'number') {
+          correctAnswer = correctAnswerValue;
+        }
+        
+        trivia.push({
+          id: doc.id,
+          question: data['question'] || '',
+          options: data['options'] || data['choices'] || [],
+          correctAnswer: correctAnswer,
+          explanation: data['explanation'],
+          difficulty: data['difficulty'] || 'medium',
+          landmarkId: data['landmark_id'] || data['landmarkId']
+        });
+      });
+      
+      return trivia;
+    } catch (error) {
+      console.error('Error loading trivia questions for landmark:', error);
       return [];
     }
   }
@@ -543,5 +574,86 @@ export class LandmarkService {
 
   getCurrentLandmarksCount(): number {
     return this.landmarksSubject.value.length;
+  }
+
+  async debugCrowdsourcedTips(): Promise<void> {
+    try {
+      
+      const tipsRef = collection(db, 'crowdsourced_tips');
+      const querySnapshot = await getDocs(tipsRef);
+      
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+      });
+      
+    } catch (error) {
+      console.error('❌ Error debugging crowdsourced_tips:', error);
+    }
+  }
+
+  async getCuratorImagesForLandmark(landmarkId: string): Promise<CuratorImage[]> {
+    try {
+      
+      const tipsRef = collection(db, 'crowdsourced_tips');
+      const q = query(
+        tipsRef,
+        where('landmarkId', '==', landmarkId),
+        where('type', '==', 'photo'),
+        where('status', '==', 'approved')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      const curatorImages: CuratorImage[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        
+        if (data['imageUrl']) {
+          curatorImages.push({
+            id: doc.id,
+            imageUrl: data['imageUrl'],
+            title: data['title'] || 'Curator Photo',
+            description: data['content'],
+            submittedBy: data['submittedBy'] || 'Anonymous',
+            submittedAt: data['created_at']?.toDate() || new Date(),
+            landmarkId: data['landmarkId'],
+            status: data['status'] || 'approved',
+            likes: data['likes'] || 0,
+            tags: data['tags'] || []
+          });
+        } else {
+        }
+      });
+      
+      curatorImages.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+      
+      return curatorImages;
+      
+    } catch (error) {
+      console.error('❌ Error fetching curator images:', error);
+      return [];
+    }
+  }
+
+  async loadCuratorImagesForLandmarks(landmarks: Landmark[]): Promise<Landmark[]> {
+    
+    const landmarksWithImages = await Promise.all(
+      landmarks.map(async (landmark) => {
+        try {
+          const curatorImages = await this.getCuratorImagesForLandmark(landmark.id);
+          return {
+            ...landmark,
+            curatorImages
+          };
+        } catch (error) {
+          console.error(`❌ Error loading curator images for ${landmark.name}:`, error);
+          return landmark;
+        }
+      })
+    );
+    
+    return landmarksWithImages;
   }
 }

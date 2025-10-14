@@ -1,5 +1,10 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBackToHome()" fill="clear">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
     <ion-title>Heritage Landmarks</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="debugMapStatus()" fill="clear">
@@ -14,7 +19,6 @@
     </ion-buttons>
   </ion-toolbar>
   
-  <!-- Quick Search Bar -->
   <ion-toolbar *ngIf="!loading">
     <ion-searchbar 
       [(ngModel)]="searchQuery"
@@ -32,7 +36,6 @@
     <p>Loading curator-approved landmarks...</p>
   </div>
 
-  <!-- Filter Card -->
   <ion-card class="filter-card" *ngIf="!loading">
     <ion-card-header>
       <ion-card-title>
@@ -175,7 +178,7 @@
       [attr.data-landmark-id]="landmark.id">
       
       <ion-thumbnail slot="start">
-        <img [src]="getDefaultImageUrl(landmark.imageUrl, landmark.category)" [alt]="landmark.name" (error)="onImageError($event)">
+        <img [src]="getDefaultImageUrl(landmark.imageUrl, landmark.category, landmark.id, landmark.name)" [alt]="landmark.name" (error)="onImageError($event)">
       </ion-thumbnail>
       
       <ion-label>
@@ -222,4 +225,86 @@
       </div>
     </ion-item>
   </ion-list>
+
+  <div class="directions-panel" *ngIf="directionsPanelVisible && showDirections">
+    <ion-card>
+      <ion-card-header>
+        <div class="directions-header">
+          <h3>🧭 Directions to {{ selectedLandmark?.name }}</h3>
+          <ion-button fill="clear" size="small" (click)="clearRoute()">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        
+        <div class="route-profile-selector">
+          <ion-segment [(ngModel)]="routeProfile" (ionChange)="changeRouteProfile($event.detail.value)">
+            <ion-segment-button value="walking">
+              <ion-icon name="walk"></ion-icon>
+              <ion-label>Walk</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="driving">
+              <ion-icon name="car"></ion-icon>
+              <ion-label>Drive</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="cycling">
+              <ion-icon name="bicycle"></ion-icon>
+              <ion-label>Bike</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+
+        <div class="route-summary" *ngIf="routeDistance && routeDuration">
+          <ion-chip color="primary">
+            <ion-icon name="time-outline"></ion-icon>
+            <ion-label>{{ routeDuration }}</ion-label>
+          </ion-chip>
+          <ion-chip color="secondary">
+            <ion-icon name="location-outline"></ion-icon>
+            <ion-label>{{ routeDistance }}</ion-label>
+          </ion-chip>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div *ngIf="isCalculatingRoute" class="loading-directions">
+          <ion-spinner name="crescent"></ion-spinner>
+          <p>Calculating route...</p>
+        </div>
+
+        <div class="route-steps" *ngIf="!isCalculatingRoute && routeSteps.length > 0">
+          <ion-item *ngFor="let step of routeSteps; let i = index" class="route-step">
+            <ion-icon
+              [name]="getStepIcon(step.maneuver.type)"
+              slot="start"
+              [color]="i === 0 ? 'primary' : 'medium'">
+            </ion-icon>
+            <ion-label>
+              <h4>{{ step.maneuver.instruction }}</h4>
+              <p *ngIf="step.distance > 0">{{ formatDistance(step.distance) }}</p>
+            </ion-label>
+          </ion-item>
+        </div>
+
+        <div *ngIf="!isCalculatingRoute && routeSteps.length === 0" class="no-route">
+          <ion-icon name="warning-outline" color="warning"></ion-icon>
+          <p>No route found. Using simple directions.</p>
+        </div>
+
+        <div class="route-actions">
+          <ion-button expand="block" fill="outline" (click)="openInExternalMaps()">
+            <ion-icon name="open-outline" slot="start"></ion-icon>
+            Open in Maps
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <ion-fab-button
+    (click)="clearRoute()"
+    class="fab-clear-route"
+    color="danger"
+    *ngIf="showDirections">
+    <ion-icon name="close-outline"></ion-icon>
+  </ion-fab-button>
 </ion-content>

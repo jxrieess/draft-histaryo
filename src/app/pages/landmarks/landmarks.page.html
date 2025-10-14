@@ -1,0 +1,404 @@
+<ion-header class="landmarks-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBackToHome()" fill="clear" class="back-btn">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="landmarks-title">
+      <div class="title-content">
+        <div class="title-main">
+          <ion-icon name="library" class="title-icon"></ion-icon>
+          <h1>Heritage Landmarks</h1>
+        </div>
+        <div class="title-stats">
+          <ion-chip color="dark" class="stats-chip">
+            <ion-icon name="location" slot="start"></ion-icon>
+            <ion-label>{{ filteredLandmarksCount }} of {{ totalLandmarksCount }} sites</ion-label>
+          </ion-chip>
+        </div>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end" class="header-actions">
+      <ion-button fill="clear" (click)="toggleViewMode()" class="action-btn view-toggle-btn">
+        <ion-icon [name]="viewMode === 'grid' ? 'list-outline' : 'grid-outline'" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button fill="clear" (click)="refreshLandmarks()" class="action-btn refresh-btn">
+        <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="landmarks-content" [fullscreen]="true">
+
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <h3>Loading Heritage Sites</h3>
+    <p>Discovering cultural landmarks...</p>
+  </div>
+
+  <div class="error-container" *ngIf="error && !loading">
+    <ion-icon name="alert-circle" size="large" color="danger"></ion-icon>
+    <h3>Oops! Something went wrong</h3>
+    <p>{{ error }}</p>
+    <ion-button (click)="refreshLandmarks()" fill="outline" color="primary">
+      <ion-icon name="refresh-outline" slot="start"></ion-icon>
+      Try Again
+    </ion-button>
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+
+    <div class="search-filter-section">
+      <ion-card class="search-card">
+        <ion-card-content>
+          <div class="horizontal-filter-container" style="display: flex !important; flex-direction: row !important; align-items: flex-end; gap: 20px; flex-wrap: wrap; width: 100%;">
+            <div class="search-container" style="flex: 1 1 auto; min-width: 250px; max-width: 400px;">
+              <ion-searchbar 
+                [(ngModel)]="searchQuery"
+                (ionInput)="onSearchChange()"
+                placeholder="Search heritage landmarks..."
+                show-clear-button="focus"
+                debounce="300"
+                class="search-bar">
+              </ion-searchbar>
+            </div>
+
+            <div class="filter-controls" style="display: flex !important; flex-direction: row !important; align-items: flex-end; gap: 16px; flex-wrap: wrap; flex: 0 0 auto;">
+              <div class="filter-group">
+                <ion-label class="filter-label">Category</ion-label>
+                <ion-select 
+                  [(ngModel)]="categoryFilter"
+                  (ionChange)="onFilterChange()"
+                  placeholder="All Categories"
+                  class="filter-select">
+                  <ion-select-option value="">All Categories</ion-select-option>
+                  <ion-select-option 
+                    *ngFor="let category of availableCategories" 
+                    [value]="category">
+                    {{ category }}
+                  </ion-select-option>
+                </ion-select>
+              </div>
+
+              <div class="filter-group">
+                <ion-label class="filter-label">City</ion-label>
+                <ion-select 
+                  [(ngModel)]="cityFilter"
+                  (ionChange)="onFilterChange()"
+                  placeholder="All Cities"
+                  class="filter-select">
+                  <ion-select-option value="">All Cities</ion-select-option>
+                  <ion-select-option 
+                    *ngFor="let city of availableCities" 
+                    [value]="city">
+                    {{ city }}
+                  </ion-select-option>
+                </ion-select>
+              </div>
+
+              <div class="filter-group">
+                <ion-label class="filter-label">Sort</ion-label>
+                <ion-select 
+                  [(ngModel)]="sortBy"
+                  (ionChange)="onSortChange()"
+                  placeholder="Sort by"
+                  class="filter-select">
+                  <ion-select-option value="name">Name</ion-select-option>
+                  <ion-select-option value="category">Category</ion-select-option>
+                  <ion-select-option value="city">City</ion-select-option>
+                  <ion-select-option value="date">Date Built</ion-select-option>
+                </ion-select>
+              </div>
+
+              <div class="filter-actions" *ngIf="hasFilters">
+                <ion-button 
+                  fill="outline" 
+                  size="small" 
+                  color="medium"
+                  (click)="clearFilters()"
+                  class="clear-filters-btn">
+                  <ion-icon name="close-outline" slot="start"></ion-icon>
+                  Clear
+                </ion-button>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="results-info" *ngIf="filteredLandmarksCount > 0">
+      <ion-chip color="primary" outline="true">
+        <ion-icon name="location-outline"></ion-icon>
+        <ion-label>{{ showingResults }}</ion-label>
+      </ion-chip>
+    </div>
+
+    <div class="no-results" *ngIf="filteredLandmarksCount === 0 && !loading">
+      <ion-icon name="search-outline" size="large" color="medium"></ion-icon>
+      <h3>No landmarks found</h3>
+      <p *ngIf="totalLandmarksCount === 0">
+        No heritage landmarks have been added yet.<br>
+        Check back soon for new discoveries!
+      </p>
+      <p *ngIf="totalLandmarksCount > 0">
+        No landmarks match your current search criteria.
+      </p>
+      <ion-button 
+        *ngIf="hasFilters"
+        (click)="clearFilters()" 
+        fill="outline"
+        color="primary">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Clear Filters
+      </ion-button>
+    </div>
+
+    <div class="landmarks-container" *ngIf="filteredLandmarksCount > 0">
+
+      <div class="landmarks-grid" *ngIf="viewMode === 'grid'">
+        <ion-card 
+          class="landmark-card"
+          [attr.data-category]="landmark.category"
+          *ngFor="let landmark of paginatedLandmarks; trackBy: trackByLandmarkId"
+          button="true"
+          (click)="navigateToLandmark(landmark)">
+          
+          <div class="card-image-container">
+            <img 
+              [src]="getDefaultImageUrl(landmark.imageUrl, landmark.category, landmark.id, landmark.name)" 
+              [alt]="landmark.name"
+              class="card-image"
+              loading="lazy" 
+              (error)="onImageError($event)" />
+            
+            <div class="card-gradient"></div>
+            
+            <div class="card-overlay">
+              <div class="card-badges">
+                <ion-chip 
+                  *ngIf="landmark.category"
+                  color="light" 
+                  class="category-chip">
+                  <ion-icon name="location" slot="start"></ion-icon>
+                  <ion-label>{{ landmark.category }}</ion-label>
+                </ion-chip>
+                <ion-chip 
+                  *ngIf="isStamped(landmark.id)"
+                  color="success" 
+                  class="visited-chip">
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                  <ion-label>Visited</ion-label>
+                </ion-chip>
+                <ion-chip 
+                  *ngIf="landmark.hasTrivia"
+                  color="tertiary" 
+                  class="trivia-chip">
+                  <ion-icon name="school"></ion-icon>
+                  <ion-label>{{ landmark.triviaCount }} trivia</ion-label>
+                </ion-chip>
+              </div>
+              
+              <div class="card-actions">
+                <ion-button 
+                  fill="clear" 
+                  size="small" 
+                  color="light"
+                  (click)="navigateToMap(landmark); $event.stopPropagation()"
+                  title="View on Map"
+                  class="action-btn">
+                  <ion-icon name="navigate-outline"></ion-icon>
+                </ion-button>
+                <ion-button 
+                  fill="clear" 
+                  size="small" 
+                  [color]="isBookmarked(landmark.id) ? 'warning' : 'light'"
+                  (click)="toggleBookmark(landmark); $event.stopPropagation()"
+                  title="Bookmark"
+                  class="action-btn">
+                  <ion-icon 
+                    [name]="isBookmarked(landmark.id) ? 'bookmark' : 'bookmark-outline'">
+                  </ion-icon>
+                </ion-button>
+              </div>
+            </div>
+          </div>
+          
+          <ion-card-content class="card-content">
+            <div class="card-header">
+              <h3 class="landmark-name">{{ landmark.name }}</h3>
+              <div class="landmark-rating" *ngIf="landmark.constructionDate">
+                <ion-icon name="calendar" color="primary"></ion-icon>
+                <span>{{ landmark.constructionDate }}</span>
+              </div>
+            </div>
+            
+            <p class="landmark-description">
+              {{ landmark.description | slice:0:120 }}{{ landmark.description && landmark.description.length > 120 ? '...' : '' }}
+            </p>
+            
+            <div class="landmark-meta">
+              <div class="meta-item" *ngIf="landmark.city">
+                <ion-icon name="business" color="primary"></ion-icon>
+                <span>{{ landmark.city }}</span>
+              </div>
+              <div class="meta-item" *ngIf="landmark.historicalSignificance">
+                <ion-icon name="library" color="secondary"></ion-icon>
+                <span>Historical</span>
+              </div>
+              <div class="meta-item" *ngIf="landmark.hasTrivia">
+                <ion-icon name="school" color="tertiary"></ion-icon>
+                <span>{{ landmark.triviaCount }} trivia</span>
+              </div>
+            </div>
+            
+            <div class="card-footer">
+              <ion-button 
+                fill="outline" 
+                size="small" 
+                color="primary"
+                (click)="navigateToLandmark(landmark); $event.stopPropagation()"
+                class="view-details-btn">
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                View Details
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <div class="landmarks-list" *ngIf="viewMode === 'list'">
+        <ion-card 
+          [attr.data-category]="landmark.category"
+          *ngFor="let landmark of paginatedLandmarks; trackBy: trackByLandmarkId"
+          class="landmark-list-item"
+          button="true"
+          (click)="navigateToLandmark(landmark)">
+          
+          <ion-card-content class="list-item-content">
+            <div class="list-item-main">
+              <div class="list-thumbnail">
+                <img 
+                  [src]="getDefaultImageUrl(landmark.imageUrl, landmark.category, landmark.id, landmark.name)" 
+                  [alt]="landmark.name"
+                  class="thumbnail-image"
+                  loading="lazy" 
+                  (error)="onImageError($event)" />
+                <div class="thumbnail-overlay" *ngIf="isStamped(landmark.id)">
+                  <ion-icon name="checkmark-circle" color="success"></ion-icon>
+                </div>
+              </div>
+              
+              <div class="list-item-info">
+                <div class="list-item-header">
+                  <h3 class="list-item-title">{{ landmark.name }}</h3>
+                  <div class="list-item-badges">
+                    <ion-chip 
+                      *ngIf="landmark.category"
+                      color="primary" 
+                      size="small"
+                      class="category-badge">
+                      <ion-icon name="location" slot="start"></ion-icon>
+                      <ion-label>{{ landmark.category }}</ion-label>
+                    </ion-chip>
+                    <ion-chip 
+                      *ngIf="landmark.city"
+                      color="secondary" 
+                      size="small"
+                      class="city-badge">
+                      <ion-icon name="business" slot="start"></ion-icon>
+                      <ion-label>{{ landmark.city }}</ion-label>
+                    </ion-chip>
+                    <ion-chip 
+                      *ngIf="landmark.hasTrivia"
+                      color="tertiary" 
+                      size="small"
+                      class="trivia-badge">
+                      <ion-icon name="school" slot="start"></ion-icon>
+                      <ion-label>{{ landmark.triviaCount }} trivia</ion-label>
+                    </ion-chip>
+                  </div>
+                </div>
+                
+                <p class="list-item-description">
+                  {{ landmark.description | slice:0:100 }}{{ landmark.description && landmark.description.length > 100 ? '...' : '' }}
+                </p>
+                
+                <div class="list-item-meta">
+                  <div class="meta-item" *ngIf="landmark.constructionDate">
+                    <ion-icon name="calendar" color="primary"></ion-icon>
+                    <span>{{ landmark.constructionDate }}</span>
+                  </div>
+                  <div class="meta-item" *ngIf="landmark.historicalSignificance">
+                    <ion-icon name="library" color="secondary"></ion-icon>
+                    <span>Historical Site</span>
+                  </div>
+                  <div class="meta-item" *ngIf="landmark.hasTrivia">
+                    <ion-icon name="school" color="tertiary"></ion-icon>
+                    <span>{{ landmark.triviaCount }} trivia</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="list-item-actions">
+              <ion-button 
+                fill="outline" 
+                size="small" 
+                color="primary"
+                (click)="navigateToMap(landmark); $event.stopPropagation()"
+                class="action-btn">
+                <ion-icon name="navigate-outline" slot="start"></ion-icon>
+                Map
+              </ion-button>
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                [color]="isBookmarked(landmark.id) ? 'warning' : 'medium'"
+                (click)="toggleBookmark(landmark); $event.stopPropagation()"
+                class="action-btn bookmark-btn">
+                <ion-icon 
+                  [name]="isBookmarked(landmark.id) ? 'bookmark' : 'bookmark-outline'">
+                </ion-icon>
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <div class="pagination-container" *ngIf="totalPages > 1">
+        <ion-button 
+          fill="outline" 
+          size="small"
+          [disabled]="currentPage === 1"
+          (click)="currentPage = currentPage - 1">
+          <ion-icon name="chevron-back" slot="start"></ion-icon>
+          Previous
+        </ion-button>
+        
+        <span class="page-info">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        
+        <ion-button 
+          fill="outline" 
+          size="small"
+          [disabled]="currentPage === totalPages"
+          (click)="currentPage = currentPage + 1">
+          Next
+          <ion-icon name="chevron-forward" slot="end"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+
+  </ng-container>
+
+</ion-content>
+
+<ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="!loading && !error">
+  <ion-fab-button color="primary" (click)="refreshLandmarks()">
+    <ion-icon name="refresh"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

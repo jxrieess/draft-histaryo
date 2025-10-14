@@ -5,32 +5,33 @@ import {
   Router,
   RouterStateSnapshot
 } from '@angular/router';
-import { auth, db } from '../firebase.config';
-import { doc, getDoc } from 'firebase/firestore';
+import { AuthService } from '../services/auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class RoleGuard implements CanActivate {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
-    const user = auth.currentUser;
     const allowedRoles = route.data['roles'] as string[];
-
-    if (!user) {
+    
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
       this.router.navigate(['/login']);
       return false;
     }
 
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    if (!userDoc.exists()) {
+    const userProfile = this.authService.getCurrentUserProfile();
+    if (!userProfile) {
       this.router.navigate(['/login']);
       return false;
     }
 
-    const userRole = userDoc.data()['role'];
-    if (allowedRoles.includes(userRole)) {
+    if (allowedRoles.includes(userProfile.role)) {
       return true;
     }
 

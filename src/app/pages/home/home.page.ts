@@ -4,6 +4,7 @@ import { NavController, ToastController, AlertController, LoadingController } fr
 import { Storage } from '@ionic/storage-angular';
 import { Subscription } from 'rxjs';
 import { LandmarkService, Landmark } from '../../services/landmark.service';
+import { OfflineService } from '../../services/offline.service';
 
 interface UserSession {
   uid: string;
@@ -45,7 +46,6 @@ export class HomePage implements OnInit, OnDestroy {
   };
   
   loading = true;
-  error = '';
   userLocation: any = null;
   unreadNotifications = 0;
   isRefreshing = false;
@@ -70,7 +70,8 @@ export class HomePage implements OnInit, OnDestroy {
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
     private storage: Storage,
-    private landmarkService: LandmarkService
+    private landmarkService: LandmarkService,
+    private offlineService: OfflineService
   ) {}
 
   goToProfile() {
@@ -89,13 +90,10 @@ export class HomePage implements OnInit, OnDestroy {
         {
           text: 'Logout',
           handler: async () => {
-            // Clear all stored data
             await this.storage.clear();
             
-            // Navigate to login page
             this.router.navigate(['/login']);
             
-            // Show success message
             const toast = await this.toastCtrl.create({
               message: 'Logged out successfully',
               duration: 2000,
@@ -110,21 +108,54 @@ export class HomePage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  getDefaultImageUrl(imageUrl?: string, category?: string): string {
-    if (imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('placeholder')) {
-      return imageUrl;
+  getDefaultImageUrl(imageUrl?: string, category?: string, landmarkId?: string, landmarkName?: string): string {
+    if (landmarkName) {
+      const name = landmarkName.toLowerCase().trim();
+      
+      if (name.includes('basilica') || name.includes('santo niño') || name.includes('santo nino')) {
+        return 'assets/img/basilica.jpg';
+      }
+      
+      if (name.includes('casa gorordo') || name.includes('gorordo')) {
+        return 'assets/img/Casa-Gorordo.jpg';
+      }
+      
+      if (name.includes('cathedral') || name.includes('archdiocesan')) {
+        return 'assets/img/Cathedral-Museum.jpg';
+      }
+      
+      if (name.includes('fort san pedro') || name.includes('fort') && name.includes('san pedro')) {
+        return 'assets/img/fort-san-pedro.jpg';
+      }
+      
+      if (name.includes('magellan') || name.includes('cross')) {
+        return 'assets/img/magellans-cross.jpg';
+      }
+      
+      if (name.includes('liberty') || name.includes('lapu-lapu') || name.includes('mactan')) {
+        return 'assets/img/Liberty-Shrine.jpg';
+      }
+      
+      if (name.includes('joseph') || name.includes('mandaue')) {
+        return 'assets/img/Nat-Shrine-of-St.Joseph.jpg';
+      }
+      
+      if (name.includes('san isidro') || name.includes('isidro') || name.includes('talisay')) {
+        return 'assets/img/San-Isidro-Labrador.jpg';
+      }
     }
 
-    switch (category?.toLowerCase()) {
-      case 'religious':
-        return 'assets/img/basilica.jpg';
-      case 'historical':
-        return 'assets/img/fort-san-pedro.jpg';
-      case 'cultural':
-        return 'assets/img/magellans-cross.jpg';
-      default:
-        return 'assets/img/default-landmark.jpg';
+    if (category) {
+      const cat = category.toLowerCase();
+      if (cat === 'religious') return 'assets/img/basilica.jpg';
+      if (cat === 'historical') return 'assets/img/fort-san-pedro.jpg';
+      if (cat === 'cultural') return 'assets/img/magellans-cross.jpg';
+      if (cat === 'museum') return 'assets/img/Cathedral-Museum.jpg';
+      if (cat === 'architecture') return 'assets/img/Casa-Gorordo.jpg';
+      if (cat === 'park') return 'assets/img/Liberty-Shrine.jpg';
     }
+
+    return 'assets/img/default-landmark.jpg';
   }
 
   async ngOnInit() {
@@ -137,6 +168,10 @@ export class HomePage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  async ionViewWillEnter() {
+    await this.loadUserStats();
   }
 
   private async initializeUser() {
@@ -187,7 +222,6 @@ export class HomePage implements OnInit, OnDestroy {
       this.userSession.stampsCollected = Array.isArray(stamps) ? stamps.length : 0;
       await this.storage.set('userSession', this.userSession);
       
-      console.log('✅ User stats loaded:', this.userStats);
       
     } catch (error) {
       console.error('❌ Error loading user stats:', error);
@@ -199,6 +233,49 @@ export class HomePage implements OnInit, OnDestroy {
         streakDays: 0
       };
     }
+  }
+
+  async resetUserData() {
+    const alert = await this.alertCtrl.create({
+      header: 'Reset Data',
+      message: 'This will clear all your stamps, visits, and trivia results. Are you sure?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Reset',
+          handler: async () => {
+            try {
+              await this.storage.remove('stamps');
+              await this.storage.remove('visits');
+              await this.storage.remove('triviaResults');
+              
+              this.userStats = {
+                totalVisits: 0,
+                stampsCollected: 0,
+                badgesEarned: 0,
+                completedTrivia: 0,
+                streakDays: 0
+              };
+              
+              if (this.userSession) {
+                this.userSession.visitCount = 0;
+                this.userSession.stampsCollected = 0;
+                await this.storage.set('userSession', this.userSession);
+              }
+              
+              await this.showToast('Data reset successfully!', 'success');
+            } catch (error) {
+              console.error('❌ Error resetting data:', error);
+              await this.showToast('Failed to reset data', 'danger');
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 
   private calculateBadges(stamps: number, visits: number): number {
@@ -244,7 +321,6 @@ export class HomePage implements OnInit, OnDestroy {
         };
         
         await this.storage.set('lastKnownLocation', this.userLocation);
-        console.log('✅ User location obtained:', this.userLocation);
         
       } catch (error) {
         console.warn('Location access denied or unavailable:', error);
@@ -267,14 +343,9 @@ export class HomePage implements OnInit, OnDestroy {
     
     const landmarksSubscription = this.landmarkService.getAllLandmarks().subscribe({
       next: (landmarks) => {
-        console.log(`🏛️ Homepage received update: ${landmarks.length} landmarks from service`);
         
         if (landmarks.length === 0) {
-          console.log('⚠️ No landmarks received - checking service status...');
-          console.log('Service ready?', this.landmarkService.isServiceReady());
-          console.log('Current landmarks count:', this.landmarkService.getCurrentLandmarksCount());
         } else {
-          console.log('📋 Landmark names received:', landmarks.slice(0, 3).map(l => l.name));
         }
 
         this.allLandmarks = landmarks;
@@ -282,22 +353,38 @@ export class HomePage implements OnInit, OnDestroy {
         
         if (this.loading) {
           this.loading = false;
-          this.error = '';
-          console.log('✅ Homepage loading complete');
         }
       },
       error: (error) => {
         console.error('❌ Homepage real-time landmarks update error:', error);
         this.loading = false;
-        this.error = 'Failed to load landmarks. Please check your connection.';
       }
     });
     
     this.subscriptions.push(landmarksSubscription);
+    
+    setTimeout(async () => {
+      if (this.loading) {
+        console.warn('⏰ Loading timeout reached - attempting to load cached data');
+        this.loading = false;
+        
+        try {
+          const cachedLandmarks = this.offlineService.getCachedLandmarks();
+          if (cachedLandmarks && cachedLandmarks.length > 0) {
+            this.allLandmarks = cachedLandmarks;
+            this.updateDisplayedLandmarks();
+          }
+        } catch (error) {
+          console.error('Error loading cached data:', error);
+        }
+      }
+    }, 20000); 
   }
 
   private updateDisplayedLandmarks() {
-    if (this.allLandmarks.length === 0) return;
+    if (this.allLandmarks.length === 0) {
+      return;
+    }
 
     this.loadFeaturedLandmarks();
     
@@ -308,17 +395,22 @@ export class HomePage implements OnInit, OnDestroy {
 
   async loadContent() {
     this.loading = true;
-    this.error = '';
     
     try {
+      await this.landmarkService.debugCrowdsourcedTips();
+      
       if (!this.landmarkService.isServiceReady()) {
-        console.log('⏳ Waiting for LandmarkService to initialize...');
         await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (!this.landmarkService.isServiceReady()) {
+          console.warn('⚠️ LandmarkService still not ready after waiting');
+          this.loading = false;
+        }
       }
       
     } catch (error) {
-      this.error = 'Failed to load content. Please try again.';
       console.error('Content loading error:', error);
+      this.loading = false;
       await this.showToast('Failed to load landmarks', 'danger');
     }
   }
@@ -326,7 +418,6 @@ export class HomePage implements OnInit, OnDestroy {
   private loadFeaturedLandmarks() {
     const subscription = this.landmarkService.getFeaturedLandmarks(6).subscribe({
       next: (landmarks) => {
-        console.log(`⭐ Featured landmarks: ${landmarks.length}`);
         this.featuredLandmarks = landmarks.map(landmark => ({
           ...landmark,
           distance: this.userLocation ? 
@@ -349,7 +440,6 @@ export class HomePage implements OnInit, OnDestroy {
         10
       ).subscribe({
         next: (landmarks) => {
-          console.log(`📍 Nearby landmarks: ${landmarks.length} within 10km`);
           this.nearbyLandmarks = landmarks.slice(0, 8);
         },
         error: (error) => {
@@ -367,7 +457,6 @@ export class HomePage implements OnInit, OnDestroy {
   private loadLandmarksByCity(city: string) {
     const subscription = this.landmarkService.getLandmarksByCity(city).subscribe({
       next: (landmarks) => {
-        console.log(`🏙️ ${city} landmarks: ${landmarks.length}`);
         this.nearbyLandmarks = landmarks.slice(0, 8);
       }
     });
@@ -416,12 +505,8 @@ export class HomePage implements OnInit, OnDestroy {
     this.navCtrl.navigateForward('/scan');
   }
 
-  navigateToStampGallery() {
-    this.navCtrl.navigateForward('/stamps');
-  }
-
-  navigateToProgress() {
-    this.navCtrl.navigateForward('/progress');
+  navigateToStamps() {
+    this.navCtrl.navigateForward('/stamp-gallery'); 
   }
 
   navigateToAllLandmarks(category?: string) {
@@ -524,6 +609,10 @@ export class HomePage implements OnInit, OnDestroy {
     });
     await loading.present();
     
+    this.loading = true;
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions = [];
+    
     this.setupRealtimeUpdates();
     
     await loading.dismiss();
@@ -551,6 +640,18 @@ export class HomePage implements OnInit, OnDestroy {
 
   trackByLandmarkId(index: number, landmark: Landmark): string {
     return landmark.id;
+  }
+
+  trackByCuratorImageId(index: number, curatorImage: any): string {
+    return curatorImage.id;
+  }
+
+  viewCuratorImage(curatorImage: any, event: Event): void {
+    event.stopPropagation();
+  }
+
+  viewAllCuratorImages(landmark: Landmark, event: Event): void {
+    event.stopPropagation();
   }
 
   onImageError(event: any) {
@@ -680,5 +781,12 @@ export class HomePage implements OnInit, OnDestroy {
 
   get totalLandmarksCount(): number {
     return this.allLandmarks.length;
+  }
+
+  async checkServiceStatus() {
+    
+    if (!this.landmarkService.isServiceReady()) {
+      this.setupRealtimeUpdates();
+    }
   }
 }

@@ -1,102 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8" />
-  <title>HistARyo - Heritage Exploration</title>
-
-  <base href="/" />
-
-  <meta name="color-scheme" content="light dark" />
-  <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="format-detection" content="telephone=no" />
-  <meta name="msapplication-tap-highlight" content="no" />
-
-  <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
-
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-
-  <meta name="theme-color" content="#3498db" />
-  <meta name="apple-mobile-web-app-title" content="HistARyo">
-  <meta name="application-name" content="HistARyo">
-  <meta name="msapplication-TileColor" content="#3498db">
-  <meta name="msapplication-TileImage" content="assets/icon/icon-144x144.png">
-
-  <link rel="manifest" href="manifest.json" />
-
-  <link rel="apple-touch-icon" sizes="57x57" href="assets/icon/icon-57.png">
-  <link rel="apple-touch-icon" sizes="60x60" href="assets/icon/icon-60.png">
-  <link rel="apple-touch-icon" sizes="72x72" href="assets/icon/icon-72.png">
-  <link rel="apple-touch-icon" sizes="76x76" href="assets/icon/icon-76.png">
-  <link rel="apple-touch-icon" sizes="114x114" href="assets/icon/icon-114.png">
-  <link rel="apple-touch-icon" sizes="120x120" href="assets/icon/icon-120.png">
-  <link rel="apple-touch-icon" sizes="144x144" href="assets/icon/icon-144.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="assets/icon/icon-152.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon/icon-180.png">
-
-  <link rel="preload" href="assets/fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/css/critical.css" as="style">
-
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #fafafa;
-    }
-    
-    .loading-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #3498db;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      color: white;
-    }
-    
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top: 3px solid white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
-</head>
-
-<body>
-  <app-root>
-    <div class="loading-container">
-      <div>
-        <div class="loading-spinner"></div>
-        <p style="margin-top: 20px; text-align: center;">Loading HistARyo...</p>
-      </div>
-    </div>
-  </app-root>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(registration => console.log('SW registered', registration))
-        .catch(error => console.log('SW registration failed', error));
-    }
-  </script>
-</body>
-
-</html> -->
-
-<!-- Add in <head> section -->
    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
 
@@ -115,26 +16,19 @@
   <meta name="format-detection" content="telephone=no" />
   <meta name="msapplication-tap-highlight" content="no" />
 
-  <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#3498db" />
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="HistARyo">
 
-  <!-- Android specific -->
   <meta name="mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- Prevent zoom on input focus (Android) -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
 
-  <!-- Manifest -->
   <link rel="manifest" href="manifest.json" />
 
-  <!-- Critical CSS for faster loading -->
   <style>
-    /* Critical CSS for Android loading */
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -193,7 +87,6 @@
       100% { opacity: 1; transform: translateY(0); }
     }
 
-    /* Hide loading screen when app loads */
     .app-loaded .loading-container {
       opacity: 0;
       pointer-events: none;
@@ -204,7 +97,6 @@
 
 <body>
   <app-root>
-    <!-- Android-optimized loading screen -->
     <div class="loading-container" id="initial-loader">
       <div class="loading-content">
         <div class="loading-spinner"></div>
@@ -214,9 +106,7 @@
     </div>
   </app-root>
 
-  <!-- Remove loading screen when app loads -->
   <script>
-    // Hide loading screen when Angular app is ready
     document.addEventListener('DOMContentLoaded', function() {
       setTimeout(function() {
         const loader = document.getElementById('initial-loader');
@@ -228,12 +118,10 @@
       }, 2000);
     });
 
-    // Android back button handling
     document.addEventListener('deviceready', function() {
       if (window.device && window.device.platform === 'Android') {
         document.addEventListener('backbutton', function(e) {
           e.preventDefault();
-          // Let Angular handle back button
         }, false);
       }
     });

@@ -47,6 +47,7 @@ export class AuthService {
   private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
   public userProfile$ = this.userProfileSubject.asObservable();
 
+
   constructor(private router: Router) {
     this.initAuthListener();
   }

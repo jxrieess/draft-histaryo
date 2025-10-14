@@ -1,15 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  addDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  limit
+import { collection, doc, getDocs, addDoc,updateDoc,
+  query,where,orderBy,serverTimestamp,limit
 } from 'firebase/firestore';
 import { 
   ref, 
@@ -28,7 +20,7 @@ export interface CrowdsourcedTip {
   title: string;
   content: string;
   imageUrl?: string;
-  submittedBy: string; // User display name
+  submittedBy: string; 
   status: 'pending' | 'approved' | 'rejected';
   moderatorNotes?: string;
   likes: number;
@@ -38,6 +30,17 @@ export interface CrowdsourcedTip {
   created_at: any;
   approved_at?: any;
   moderator_id?: string;
+  attribution?: 'waive' | 'credit';
+  attributionWaived?: boolean;
+  rejectionReason?: string;
+  flagged_at?: any;
+  flagReason?: string;
+  flaggedBy?: string;
+  edited_at?: any;
+  edited_by?: string;
+  editNotes?: string;
+  bulkApproved?: boolean;
+  bulkRejected?: boolean;
 }
 
 export interface TipSubmission {
@@ -64,7 +67,6 @@ export class TipsService {
 
   constructor() {}
 
-  // Submit a new tip
   async submitTip(submission: TipSubmission): Promise<boolean> {
     this.loadingSubject.next(true);
     this.errorSubject.next(null);
@@ -75,15 +77,12 @@ export class TipsService {
         this.errorSubject.next('Please log in to submit tips');
         return false;
       }
-
-      // Validate submission
       if (!this.validateSubmission(submission)) {
         return false;
       }
 
       let imageUrl = '';
 
-      // Upload image if provided
       if (submission.image) {
         imageUrl = await this.uploadTipImage(submission.image, submission.landmarkId);
         if (!imageUrl) {
@@ -92,7 +91,6 @@ export class TipsService {
         }
       }
 
-      // Create tip document
       const tipData: Omit<CrowdsourcedTip, 'id'> = {
         userId: user.uid,
         landmarkId: submission.landmarkId,
@@ -110,7 +108,6 @@ export class TipsService {
         created_at: serverTimestamp()
       };
 
-      // Save to Firestore
       await addDoc(collection(db, 'crowdsourced_tips'), tipData);
 
       this.successSubject.next('Tip submitted successfully! It will be reviewed before being published.');
@@ -125,7 +122,6 @@ export class TipsService {
     }
   }
 
-  // Get approved tips for a landmark
   async getTipsForLandmark(landmarkId: string): Promise<CrowdsourcedTip[]> {
     try {
       const q = query(
@@ -155,7 +151,6 @@ export class TipsService {
     }
   }
 
-  // Get user's submitted tips
   async getUserTips(): Promise<CrowdsourcedTip[]> {
     try {
       const user = auth.currentUser;
@@ -184,7 +179,6 @@ export class TipsService {
     }
   }
 
-  // Get recent approved tips (for homepage or general display)
   async getRecentTips(limitCount: number = 10): Promise<CrowdsourcedTip[]> {
     try {
       const q = query(
@@ -211,20 +205,16 @@ export class TipsService {
     }
   }
 
-  // Upload tip image to Firebase Storage
   private async uploadTipImage(image: File, landmarkId: string): Promise<string> {
     try {
       const user = auth.currentUser;
       if (!user) return '';
 
-      // Create unique filename
       const fileName = `tips/${landmarkId}/${user.uid}_${Date.now()}_${image.name}`;
       const storageRef = ref(storage, fileName);
 
-      // Upload file
       const snapshot = await uploadBytes(storageRef, image);
       
-      // Get download URL
       const downloadURL = await getDownloadURL(snapshot.ref);
       
       return downloadURL;
@@ -234,7 +224,6 @@ export class TipsService {
     }
   }
 
-  // Validate tip submission
   private validateSubmission(submission: TipSubmission): boolean {
     if (!submission.landmarkId || !submission.landmarkName) {
       this.errorSubject.next('Please select a valid landmark');
@@ -261,9 +250,8 @@ export class TipsService {
       return false;
     }
 
-    // Validate image if provided
     if (submission.image) {
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024; 
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
       if (submission.image.size > maxSize) {
@@ -280,13 +268,11 @@ export class TipsService {
     return true;
   }
 
-  // Clear success and error messages
   clearMessages(): void {
     this.errorSubject.next(null);
     this.successSubject.next(null);
   }
 
-  // Get tip types for form dropdown
   getTipTypes(): Array<{value: string, label: string, description: string}> {
     return [
       { 

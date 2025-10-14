@@ -1,0 +1,205 @@
+<ion-header>
+  <ion-toolbar style="--background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); --color: white;">
+    <ion-title>{{ mode === 'quiz' ? 'Quiz Time!' : 'Trivia Questions' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="closeModal()" fill="clear">
+        <ion-icon name="close" color="light"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="header-section">
+    <div class="landmark-info">
+      <h2>{{ landmarkName }}</h2>
+      <p class="subtitle">{{ mode === 'quiz' ? 'Answer correctly to earn your stamp!' : 'Test your knowledge with these trivia questions' }}</p>
+    </div>
+    <div class="trivia-count" *ngIf="existingTrivia.length > 0">
+      <ion-chip color="secondary">
+        <ion-icon name="school"></ion-icon>
+        <ion-label>{{ existingTrivia.length }} Question{{ existingTrivia.length > 1 ? 's' : '' }}</ion-label>
+      </ion-chip>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading trivia questions...</p>
+  </div>
+
+  <div *ngIf="!isLoading && existingTrivia.length > 0 && mode === 'quiz'">
+
+    <div class="quiz-progress" *ngIf="!quizState.isCompleted">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="(quizState.currentQuestionIndex + 1) / quizState.totalQuestions * 100"></div>
+      </div>
+      <p class="progress-text">Question {{ quizState.currentQuestionIndex + 1 }} of {{ quizState.totalQuestions }}</p>
+    </div>
+
+    <div class="quiz-question" *ngIf="!quizState.isCompleted && getCurrentQuestion()">
+      <ion-card class="question-card"
+                [ngClass]="'question-' + (quizState.currentQuestionIndex + 1)">
+        <ion-card-content>
+          <div class="question-header">
+            <div class="question-number">
+              <ion-chip color="primary" outline>
+                <ion-label>Q{{ quizState.currentQuestionIndex + 1 }}</ion-label>
+              </ion-chip>
+            </div>
+            <div class="difficulty-badge">
+              <ion-chip [color]="getDifficultyColor(getCurrentQuestion()?.difficulty || 'medium')">
+                <ion-icon [name]="getDifficultyIcon(getCurrentQuestion()?.difficulty || 'medium')"></ion-icon>
+                <ion-label>{{ getCurrentQuestion()?.difficulty || 'medium' | titlecase }}</ion-label>
+              </ion-chip>
+            </div>
+          </div>
+          
+          <div class="question-content">
+            <h3 class="question-text">{{ getCurrentQuestion()?.question }}</h3>
+            
+            <div class="options-container">
+              <div *ngFor="let option of getCurrentQuestion()?.options; let j = index" 
+                   class="option-item"
+                   [class.selected]="isAnswerSelected(j)"
+                   [class.correct]="showAnswer && isCorrectAnswer(j)"
+                   [class.wrong]="showAnswer && isWrongAnswer(j)"
+                   (click)="selectAnswer(j)">
+                <div class="option-indicator">
+                  <ion-icon *ngIf="!showAnswer" 
+                            [name]="isAnswerSelected(j) ? 'radio-button-on' : 'radio-button-off'"
+                            [color]="isAnswerSelected(j) ? 'primary' : 'medium'"></ion-icon>
+                  <ion-icon *ngIf="showAnswer && isCorrectAnswer(j)" 
+                            name="checkmark-circle" 
+                            color="success"></ion-icon>
+                  <ion-icon *ngIf="showAnswer && isWrongAnswer(j)" 
+                            name="close-circle" 
+                            color="danger"></ion-icon>
+                  <ion-icon *ngIf="showAnswer && !isCorrectAnswer(j) && !isWrongAnswer(j)" 
+                            name="ellipse-outline" 
+                            color="medium"></ion-icon>
+                </div>
+                <div class="option-content">
+                  <span class="option-letter">{{ getOptionLetter(j) }}.</span>
+                  <span class="option-text">{{ option }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="explanation-section" *ngIf="showAnswer && getCurrentQuestion()?.explanation">
+              <div class="explanation-header">
+                <ion-icon name="bulb" color="warning"></ion-icon>
+                <span>Explanation</span>
+              </div>
+              <p class="explanation-text">{{ getCurrentQuestion()?.explanation }}</p>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="quiz-results" *ngIf="quizState.isCompleted && showResult">
+      <ion-card class="results-card">
+        <ion-card-content>
+          <div class="results-header">
+            <ion-icon [name]="quizState.canCollectStamp ? 'trophy' : 'sad'" 
+                      [color]="quizState.canCollectStamp ? 'warning' : 'medium'" 
+                      size="large"></ion-icon>
+            <h2>{{ quizState.canCollectStamp ? 'Congratulations!' : 'Keep Learning!' }}</h2>
+          </div>
+          
+          <div class="score-section">
+            <div class="score-circle">
+              <span class="score-number">{{ quizState.score }}</span>
+              <span class="score-total">/ {{ quizState.totalQuestions }}</span>
+            </div>
+            <p class="score-percentage">{{ getScorePercentage() }}%</p>
+          </div>
+          
+          <div class="results-message">
+            <p *ngIf="quizState.canCollectStamp">
+              🎉 Great job! You scored {{ quizState.score }}/{{ quizState.totalQuestions }}. 
+              You can now collect your stamp for this landmark!
+            </p>
+            <p *ngIf="!quizState.canCollectStamp">
+              You scored {{ quizState.score }}/{{ quizState.totalQuestions }}. 
+              Score at least 70% to collect a stamp. Try again!
+            </p>
+          </div>
+          
+          <div class="results-actions">
+            <ion-button fill="outline" color="medium" (click)="restartQuiz()">
+              <ion-icon name="refresh" slot="start"></ion-icon>
+              Try Again
+            </ion-button>
+            <ion-button fill="solid" color="primary" (click)="closeModal()">
+              <ion-icon name="checkmark" slot="start"></ion-icon>
+              {{ quizState.canCollectStamp ? 'Collect Stamp' : 'Close' }}
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <div class="trivia-list" *ngIf="!isLoading && existingTrivia.length > 0 && mode === 'view'">
+    <ion-card *ngFor="let trivia of existingTrivia; let i = index" 
+              class="trivia-card"
+              [ngClass]="'question-' + (i + 1)">
+      <ion-card-content>
+        <div class="question-header">
+          <div class="question-number">
+            <ion-chip color="primary" outline>
+              <ion-label>Q{{ i + 1 }}</ion-label>
+            </ion-chip>
+          </div>
+          <div class="difficulty-badge">
+            <ion-chip [color]="getDifficultyColor(trivia.difficulty || 'medium')">
+              <ion-icon [name]="getDifficultyIcon(trivia.difficulty || 'medium')"></ion-icon>
+              <ion-label>{{ trivia.difficulty || 'medium' | titlecase }}</ion-label>
+            </ion-chip>
+          </div>
+        </div>
+        
+        <div class="question-content">
+          <h3 class="question-text">{{ trivia.question }}</h3>
+          
+          <div class="options-container">
+            <div *ngFor="let option of trivia.options; let j = index" 
+                 class="option-item"
+                 [class.correct]="j === trivia.correctAnswer">
+              <div class="option-indicator">
+                <ion-icon [name]="j === trivia.correctAnswer ? 'checkmark-circle' : 'ellipse-outline'"
+                          [color]="j === trivia.correctAnswer ? 'success' : 'medium'"></ion-icon>
+              </div>
+              <div class="option-content">
+                <span class="option-letter">{{ getOptionLetter(j) }}.</span>
+                <span class="option-text">{{ option }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="explanation-section" *ngIf="trivia.explanation">
+            <div class="explanation-header">
+              <ion-icon name="bulb" color="warning"></ion-icon>
+              <span>Explanation</span>
+            </div>
+            <p class="explanation-text">{{ trivia.explanation }}</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div *ngIf="!isLoading && existingTrivia.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <ion-icon name="school-outline"></ion-icon>
+    </div>
+    <h3>No Trivia Available</h3>
+    <p>There are no trivia questions available for this landmark yet.</p>
+    <ion-button fill="outline" color="medium" (click)="closeModal()">
+      <ion-icon name="arrow-back" slot="start"></ion-icon>
+      Go Back
+    </ion-button>
+  </div>
+</ion-content>

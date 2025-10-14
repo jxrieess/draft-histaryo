@@ -23,7 +23,6 @@ export class ScanPage implements OnInit {
   }
 
   onCodeResult(result: string) {
-  console.log('Scanned:', result);
   this.router.navigate(['/landmark', result]);
 }
 

@@ -52,15 +52,11 @@ export class RegisterPage implements OnInit, OnDestroy {
     private toastController: ToastController,
     private modalController: ModalController
   ) {
-    console.log('RegisterPage constructor called');
-    console.log('Current URL:', this.router.url);
     
     this.preventRedirects();
   }
 
   ngOnInit() {
-    console.log('RegisterPage ngOnInit called');
-    console.log('Current route:', this.router.url);
     
     this.pageLoaded = true;
     
@@ -68,11 +64,9 @@ export class RegisterPage implements OnInit, OnDestroy {
     
     localStorage.setItem('hasSeenOnboarding', 'true');
     
-    console.log('Register page initialized successfully');
   }
 
   ngOnDestroy() {
-    console.log('RegisterPage destroyed');
     this.subscriptions.unsubscribe();
   }
 
@@ -90,7 +84,6 @@ export class RegisterPage implements OnInit, OnDestroy {
     const routeSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
-      console.log('Route changed while on register page:', event.url);
       
       if (event.url !== '/register') {
         console.warn('Register page was redirected to:', event.url);
@@ -345,7 +338,6 @@ export class RegisterPage implements OnInit, OnDestroy {
   }
 
   navigateToLogin() {
-    console.log('Navigating to login from register page');
     this.router.navigate(['/login'], { 
       replaceUrl: true
     });
@@ -505,14 +497,10 @@ export class RegisterPage implements OnInit, OnDestroy {
       color: 'success'
     });
     toast.then(t => t.present());
-    console.log('Register page test successful');
   }
 
   async testFirebase() {
     try {
-      console.log('Testing Firebase connection...');
-      const testAuth = getAuth();
-      console.log('Auth instance:', testAuth);
       
       const toast = await this.toastController.create({
         message: 'Firebase connection successful! ✅',

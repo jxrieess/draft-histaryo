@@ -100,7 +100,6 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   nextSlide(): void {
-    console.log('nextSlide() called'); 
     
     if (this.swiperRef?.swiperRef && this.isInitialized) {
       this.swiperRef.swiperRef.slideNext();
@@ -112,7 +111,6 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   previousSlide(): void {
-    console.log('previousSlide() called'); 
     
     if (this.swiperRef?.swiperRef && this.isInitialized) {
       this.swiperRef.swiperRef.slidePrev();
@@ -124,7 +122,6 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goToSlide(index: number): void {
-    console.log(`goToSlide(${index}) called`); 
     
     if (index < 0 || index >= this.totalSlides) {
       console.warn('Invalid slide index:', index);
@@ -140,19 +137,16 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   skip(): void {
-    console.log('skip() called'); 
     this.logOnboardingSkipped(this.currentSlideIndex);
     this.finishOnboarding();
   }
 
   continueToApp(): void {
-    console.log('continueToApp() called');
     this.logOnboardingCompleted();
     this.finishOnboarding();
   }
 
   goToLogin(): void {
-    console.log('goToLogin() called - DEBUG');
     
     try {
       localStorage.setItem('hasSeenOnboarding', 'true');
@@ -160,7 +154,6 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
       
       this.router.navigate(['/login']).then(success => {
         if (success) {
-          console.log('Navigation to login successful');
         } else {
           console.error('Navigation to login failed');
           this.router.navigateByUrl('/login', { replaceUrl: true });
@@ -176,7 +169,6 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goToRegister(): void {
-    console.log('goToRegister() called - DEBUG');
     
     try {
       localStorage.setItem('hasSeenOnboarding', 'true');
@@ -184,7 +176,6 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
       
       this.router.navigate(['/register']).then(success => {
         if (success) {
-          console.log('Navigation to register successful');
         } else {
           console.error('Navigation to register failed');
           this.router.navigateByUrl('/register', { replaceUrl: true });
@@ -201,7 +192,6 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
 
   testButtonClick(): void {
     alert('Button is clickable!');
-    console.log('Test button clicked successfully');
   }
 
   private finishOnboarding(): void {
@@ -244,19 +234,15 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private logSlideView(slideIndex: number): void {
-    console.log(`Onboarding slide viewed: ${slideIndex + 1}/${this.totalSlides}`);
   }
 
   private logOnboardingCompleted(): void {
-    console.log('Onboarding completed successfully');
   }
 
   private logOnboardingSkipped(atSlide: number): void {
-    console.log(`Onboarding skipped at slide: ${atSlide + 1}/${this.totalSlides}`);
   }
 
   private logNavigationEvent(destination: string): void {
-    console.log(`Navigation to ${destination} from onboarding`);
   }
 
   onSwiperInitError(error: any): void {
@@ -265,7 +251,6 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private handleSwiperFallback(): void {
-    console.log('Falling back to simple slide navigation');
   }
 
   get isLastSlide(): boolean {
@@ -317,9 +302,7 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
 
   onVisibilityChange(): void {
     if (document.hidden) {
-      console.log('Onboarding paused - tab not visible');
     } else {
-      console.log('Onboarding resumed - tab visible');
     }
   }
 
@@ -327,6 +310,5 @@ export class OnboardingPage implements OnInit, AfterViewInit, OnDestroy {
     localStorage.removeItem('hasSeenOnboarding');
     this.currentSlideIndex = 0;
     this.goToSlide(0);
-    console.log('Onboarding reset');
   }
 }

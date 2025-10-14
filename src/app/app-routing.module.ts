@@ -17,6 +17,10 @@ export const routes: Routes = [
     loadChildren: () => import('./pages/landmark-details/landmark-details.module').then( m => m.LandmarkDetailsPageModule)
   },
   {
+    path: 'landmarks',
+    loadChildren: () => import('./pages/landmarks/landmarks.module').then( m => m.LandmarksPageModule)
+  },
+  {
     path: 'login',
     loadChildren: () => import('./pages/login/login.module').then( m => m.LoginPageModule)
   },
@@ -36,12 +40,12 @@ export const routes: Routes = [
     path: 'onboarding',
     loadChildren: () => import('./pages/onboarding/onboarding.module').then( m => m.OnboardingPageModule)
   },
-  {
-    path: 'visitor',
-    loadChildren: () => import('./pages/visitor/visitor.module').then( m => m.VisitorPageModule),
-    canActivate: [RoleGuard],
-    data: { roles: ['visitor'] }
-  },
+  // {
+  //   path: 'visitor',
+  //   loadChildren: () => import('./pages/visitor/visitor.module').then( m => m.VisitorPageModule),
+  //   canActivate: [RoleGuard],
+  //   data: { roles: ['visitor'] }
+  // },
   {
     path: 'scavenger',
     loadChildren: () => import('./pages/scavenger/scavenger.module').then( m => m.ScavengerPageModule)
@@ -53,6 +57,20 @@ export const routes: Routes = [
   {
     path: 'profile',
     loadChildren: () => import('./pages/profile/profile.module').then( m => m.ProfilePageModule)
+  },
+  {
+    path: 'moderation',
+    loadChildren: () => import('./pages/moderation/moderation.module').then( m => m.ModerationPageModule),
+    canActivate: [RoleGuard],
+    data: { roles: ['curator', 'admin'] }
+  },
+  {
+    path: 'submit-content',
+    loadChildren: () => import('./pages/submit-content/submit-content.module').then( m => m.SubmitContentPageModule)
+  },
+  {
+    path: 'stamp-gallery',
+    loadChildren: () => import('./pages/stamp-gallery/stamp-gallery.module').then( m => m.StampGalleryPageModule)
   },
   { path: '**', redirectTo: 'home' }
 ];

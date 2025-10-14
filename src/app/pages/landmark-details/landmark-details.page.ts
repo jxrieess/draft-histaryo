@@ -2,9 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController, LoadingController, AlertController, ModalController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
-import {collection, doc, getDoc, getDocs, query, where, addDoc, serverTimestamp} from 'firebase/firestore';
+import {collection, doc, getDoc, getDocs, query, where, addDoc, serverTimestamp, orderBy} from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { db } from '../../firebase.config';
+import { TriviaManagerComponent } from '../../components/trivia-manager/trivia-manager.component';
 
 interface LandmarkDoc {
   name: string;
@@ -44,6 +45,20 @@ interface LandmarkVM {
   architecturalStyle?: string;
   funFacts?: string[];
   visitingTips?: string[];
+  curatorImages?: CuratorImage[];
+}
+
+interface CuratorImage {
+  id: string;
+  imageUrl: string;
+  title: string;
+  description?: string;
+  submittedBy: string;
+  submittedAt: Date;
+  landmarkId: string;
+  status: 'approved' | 'pending' | 'rejected';
+  likes: number;
+  tags?: string[];
 }
 
 interface UserTip {
@@ -73,6 +88,7 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
   activeTab = 'story';
   sliderValue = 50;
   isStamped = false;
+  canCollectStamp = false; 
   isBookmarked = false;
   showArExperience = false;
   arContent: any = null;
@@ -87,7 +103,7 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
+    public router: Router,
     private local: Storage,
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
@@ -95,27 +111,59 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     private modalCtrl: ModalController
   ) {}
 
-  getDefaultImageUrl(imageUrl?: string, category?: string): string {
-    if (imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('placeholder')) {
-      return imageUrl;
+  getDefaultImageUrl(imageUrl?: string, category?: string, landmarkId?: string, landmarkName?: string): string {
+    if (landmarkName) {
+      const name = landmarkName.toLowerCase().trim();
+      
+      if (name.includes('basilica') || name.includes('santo niño') || name.includes('santo nino')) {
+        return 'assets/img/basilica.jpg';
+      }
+      
+      if (name.includes('casa gorordo') || name.includes('gorordo')) {
+        return 'assets/img/Casa-Gorordo.jpg';
+      }
+      
+      if (name.includes('cathedral') || name.includes('archdiocesan')) {
+        return 'assets/img/Cathedral-Museum.jpg';
+      }
+      
+      if (name.includes('fort san pedro') || name.includes('fort') && name.includes('san pedro')) {
+        return 'assets/img/fort-san-pedro.jpg';
+      }
+      
+      if (name.includes('magellan') || name.includes('cross')) {
+        return 'assets/img/magellans-cross.jpg';
+      }
+      
+      if (name.includes('liberty') || name.includes('lapu-lapu') || name.includes('mactan')) {
+        return 'assets/img/Liberty-Shrine.jpg';
+      }
+      
+      if (name.includes('joseph') || name.includes('mandaue')) {
+        return 'assets/img/Nat-Shrine-of-St.Joseph.jpg';
+      }
+      
+      if (name.includes('san isidro') || name.includes('isidro') || name.includes('talisay')) {
+        return 'assets/img/San-Isidro-Labrador.jpg';
+      }
     }
 
-    switch (category?.toLowerCase()) {
-      case 'religious':
-        return 'assets/img/basilica.jpg';
-      case 'historical':
-        return 'assets/img/fort-san-pedro.jpg';
-      case 'cultural':
-        return 'assets/img/magellans-cross.jpg';
-      default:
-        return 'assets/img/default-landmark.jpg';
+    if (category) {
+      const cat = category.toLowerCase();
+      if (cat === 'religious') return 'assets/img/basilica.jpg';
+      if (cat === 'historical') return 'assets/img/fort-san-pedro.jpg';
+      if (cat === 'cultural') return 'assets/img/magellans-cross.jpg';
+      if (cat === 'museum') return 'assets/img/Cathedral-Museum.jpg';
+      if (cat === 'architecture') return 'assets/img/Casa-Gorordo.jpg';
+      if (cat === 'park') return 'assets/img/Liberty-Shrine.jpg';
     }
+
+    return 'assets/img/default-landmark.jpg';
   }
 
   async ngOnInit(): Promise<void> {
     await this.local.create();
     await this.loadLandmarkFromRoute();
-    // Load tips after landmark is loaded
     if (this.landmark) {
       await this.loadUserTips();
     }
@@ -128,55 +176,86 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     this.loading = true;
     this.landmark = null;
 
+    const timeoutPromise = new Promise<void>((_, reject) => 
+      setTimeout(() => reject(new Error('Loading timeout')), 30000) 
+    );
+
+    const loadPromise = this.performLandmarkLoad();
+
     try {
-      const routeId = this.route.snapshot.paramMap.get('id');
-      const queryId = this.route.snapshot.queryParamMap.get('id');
-      const slug = this.route.snapshot.queryParamMap.get('slug');
-
-      console.log('🔍 Landmark Details - Route ID:', routeId);
-      console.log('🔍 Landmark Details - Query ID:', queryId);
-      console.log('🔍 Landmark Details - Slug:', slug);
-
-      const landmarkId = routeId || queryId;
-      console.log('🔍 Landmark Details - Final ID:', landmarkId);
-
-      if (landmarkId) {
-        await this.loadById(landmarkId);
-      } else if (slug) {
-        await this.loadBySlug(slug);
-      } else {
-        await this.showToast('Invalid landmark link.', 'danger');
-        this.router.navigate(['/home']);
-        return;
-      }
-
-      const currentLandmark = this.landmark as LandmarkVM | null;
-      
-      if (currentLandmark !== null && currentLandmark.id) {
-        await Promise.all([
-          this.syncStamp(currentLandmark.id),
-          this.syncBookmark(currentLandmark.id),
-          this.loadArContent(currentLandmark.id),
-          this.loadTriviaQuestions(currentLandmark.id),
-          this.checkScavengerHunt(currentLandmark.id),
-          this.loadUserTips()
-        ]);
-      } else {
-        await this.showToast('Landmark not found.', 'danger');
-        this.router.navigate(['/home']);
-      }
+      await Promise.race([loadPromise, timeoutPromise]);
     } catch (error) {
       console.error('Error loading landmark:', error);
-      await this.showToast('Failed to load landmark.', 'danger');
+      
+      if (error instanceof Error && error.message === 'Loading timeout') {
+        await this.showToast('Heritage site details are taking longer to load. This might be due to a slow connection. Please try refreshing or check your internet connection.', 'warning');
+      } else {
+        await this.showToast('Failed to load landmark details. Please check your connection and try again.', 'danger');
+      }
+      
       this.router.navigate(['/home']);
     } finally {
       this.loading = false;
     }
   }
 
+  private async performLandmarkLoad(): Promise<void> {
+    const routeId = this.route.snapshot.paramMap.get('id');
+    const queryId = this.route.snapshot.queryParamMap.get('id');
+    const slug = this.route.snapshot.queryParamMap.get('slug');
+
+
+    const landmarkId = routeId || queryId;
+
+    if (landmarkId) {
+      await this.loadById(landmarkId);
+    } else if (slug) {
+      await this.loadBySlug(slug);
+    } else {
+      await this.showToast('Invalid landmark link.', 'danger');
+      this.router.navigate(['/home']);
+      return;
+    }
+
+    const currentLandmark = this.landmark as LandmarkVM | null;
+    
+    if (currentLandmark !== null && currentLandmark.id) {
+      
+      const additionalDataPromises = [
+        this.syncStamp(currentLandmark.id),
+        this.syncBookmark(currentLandmark.id),
+        this.loadArContent(currentLandmark.id),
+        this.loadTriviaQuestions(currentLandmark.id),
+        this.checkScavengerHunt(currentLandmark.id),
+        this.loadUserTips()
+      ].map(promise => 
+        Promise.race([
+          promise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Additional data timeout')), 10000)
+          )
+        ]).catch(error => {
+          console.warn('Additional data loading failed:', error);
+          return null; 
+        })
+      );
+      
+      await Promise.all(additionalDataPromises);
+    } else {
+      await this.showToast('Landmark not found.', 'danger');
+      this.router.navigate(['/home']);
+    }
+  }
+
   private async loadById(id: string): Promise<void> {
     try {
-      const snap = await getDoc(doc(db, 'landmarks', id));
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Firebase timeout')), 15000)
+      );
+      
+      const firebasePromise = getDoc(doc(db, 'landmarks', id));
+      const snap = await Promise.race([firebasePromise, timeoutPromise]);
+      
       if (!snap.exists()) {
         await this.showToast('Landmark not found.', 'danger');
         this.landmark = null;
@@ -186,14 +265,24 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       this.landmark = await this.toVM(snap.id, data);
     } catch (error) {
       console.error('Error loading landmark by ID:', error);
+      if (error instanceof Error && error.message === 'Firebase timeout') {
+        throw new Error('Connection timeout - please check your internet connection');
+      }
       this.landmark = null;
+      throw error;
     }
   }
 
   private async loadBySlug(slug: string): Promise<void> {
     try {
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Firebase timeout')), 15000)
+      );
+      
       const q = query(collection(db, 'landmarks'), where('slug', '==', slug));
-      const snap = await getDocs(q);
+      const firebasePromise = getDocs(q);
+      const snap = await Promise.race([firebasePromise, timeoutPromise]);
+      
       if (snap.empty) {
         await this.showToast('Landmark not found.', 'danger');
         this.landmark = null;
@@ -203,15 +292,20 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       this.landmark = await this.toVM(d.id, d.data() as LandmarkDoc);
     } catch (error) {
       console.error('Error loading landmark by slug:', error);
+      if (error instanceof Error && error.message === 'Firebase timeout') {
+        throw new Error('Connection timeout - please check your internet connection');
+      }
       this.landmark = null;
+      throw error;
     }
   }
 
   private async toVM(id: string, data: LandmarkDoc): Promise<LandmarkVM> {
-    const [img, thenImg, nowImg] = await Promise.all([
+    const [img, thenImg, nowImg, curatorImages] = await Promise.all([
       this.resolveImage(data.image_path),
       this.resolveImage(data.then_image_path),
       this.resolveImage(data.now_image_path),
+      this.loadCuratorImages(id)
     ]);
 
     return {
@@ -231,7 +325,8 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       architect: data.architect,
       architecturalStyle: data.architectural_style,
       funFacts: data.fun_facts || [],
-      visitingTips: data.visiting_tips || []
+      visitingTips: data.visiting_tips || [],
+      curatorImages: curatorImages
     };
   }
 
@@ -239,7 +334,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     if (!pathOrUrl) return null;
     if (pathOrUrl.startsWith('http')) return pathOrUrl;
     try {
-      // Add timeout to prevent hanging on CORS errors
       const timeoutPromise = new Promise<never>((_, reject) => 
         setTimeout(() => reject(new Error('Image load timeout')), 5000)
       );
@@ -267,13 +361,20 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
   private async loadTriviaQuestions(landmarkId: string): Promise<void> {
     try {
       const triviaRef = collection(db, 'trivia');
-      const q = query(triviaRef, where('landmarkId', '==', landmarkId));
+      const q = query(triviaRef, where('landmark_id', '==', landmarkId));
       const querySnapshot = await getDocs(q);
+      
       
       this.triviaQuestions = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        question: doc.data()['question'] || '',
+        options: doc.data()['options'] || doc.data()['choices'] || [],
+        correctAnswer: doc.data()['correct_answer'] || doc.data()['correctAnswer'] || 0,
+        explanation: doc.data()['explanation'],
+        difficulty: doc.data()['difficulty'] || 'medium',
+        landmarkId: doc.data()['landmark_id'] || doc.data()['landmarkId']
       }));
+      
     } catch (error) {
       console.error('Error loading trivia questions:', error);
     }
@@ -352,6 +453,10 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       await this.local.set('stamps', stamps);
       
       this.isStamped = true;
+      this.canCollectStamp = false; 
+      
+      await this.updateUserSessionStats();
+      
       await this.showToast('Stamp collected! 🎉', 'success');
       
       await this.recordVisit(currentLandmark.id);
@@ -360,6 +465,23 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       await this.showToast('Failed to collect stamp', 'danger');
     } finally {
       await loading.dismiss();
+    }
+  }
+
+  private async updateUserSessionStats(): Promise<void> {
+    try {
+      const stamps = await this.local.get('stamps') ?? [];
+      const visits = await this.local.get('visits') ?? [];
+      const userSession = await this.local.get('userSession');
+      
+      if (userSession) {
+        userSession.stampsCollected = Array.isArray(stamps) ? stamps.length : 0;
+        userSession.visitCount = Array.isArray(visits) ? visits.length : 0;
+        await this.local.set('userSession', userSession);
+        
+      }
+    } catch (error) {
+      console.error('❌ Error updating user session stats:', error);
     }
   }
 
@@ -433,7 +555,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       return;
     }
 
-    // Show tips in an alert
     const tipsText = this.userTips.map((tip, index) => 
       `${index + 1}. ${tip.tipText}\n   - ${tip.userName} (${tip.tipType})\n   Rating: ${tip.rating}/5\n`
     ).join('\n');
@@ -541,7 +662,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     await loading.present();
 
     try {
-      // Get user info from storage
       const user = await this.local.get('user');
       const userId = user?.uid || 'anonymous';
       const userName = user?.displayName || 'Anonymous User';
@@ -556,19 +676,17 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
         tipText: tipData.tipText.trim(),
         tipType: tipData.tipType || 'general',
         rating: parseInt(tipData.rating) || 5,
-        isApproved: false, // Tips need approval
+        isApproved: false, 
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
-      // Save to Firebase
       const tipsRef = collection(db, 'user_tips');
       await addDoc(tipsRef, tip);
 
       await loading.dismiss();
       this.showToast('Thank you! Your tip has been submitted for review.', 'success');
       
-      // Refresh tips
       await this.loadUserTips();
       
     } catch (error) {
@@ -611,9 +729,7 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('🗺️ Opening landmark in app map:', currentLandmark.name, 'ID:', currentLandmark.id);
     
-    // Navigate to the map page with the landmark ID as a query parameter
     this.router.navigate(['/map'], {
       queryParams: { 
         landmarkId: currentLandmark.id,
@@ -621,7 +737,6 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
       }
     }).then(success => {
       if (success) {
-        console.log('✅ Successfully navigated to map with landmark');
         this.showToast(`Opening ${currentLandmark.name} on map`, 'success');
       } else {
         console.error('❌ Failed to navigate to map');
@@ -633,18 +748,62 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
     });
   }
 
+  async openTriviaManager(): Promise<void> {
+    const currentLandmark = this.landmark;
+    if (!currentLandmark) return;
+
+    const modal = await this.modalCtrl.create({
+      component: TriviaManagerComponent,
+      componentProps: {
+        landmarkId: currentLandmark.id,
+        landmarkName: currentLandmark.name,
+        mode: 'view' 
+      }
+    });
+
+    modal.onDidDismiss().then(async (result: any) => {
+      if (result.data) {
+        await this.loadTriviaQuestions(currentLandmark.id);
+      }
+    });
+
+    await modal.present();
+  }
+
+  async openQuizMode(): Promise<void> {
+    const currentLandmark = this.landmark;
+    if (!currentLandmark) return;
+
+    const modal = await this.modalCtrl.create({
+      component: TriviaManagerComponent,
+      componentProps: {
+        landmarkId: currentLandmark.id,
+        landmarkName: currentLandmark.name,
+        mode: 'quiz'
+      }
+    });
+
+    modal.onDidDismiss().then(async (result: any) => {
+      if (result.data && result.data.canCollectStamp) {
+        this.canCollectStamp = true;
+        await this.showToast('Great job! You can now collect your stamp! 🎉', 'success');
+      }
+    });
+
+    await modal.present();
+  }
+
   async playTrivia(): Promise<void> {
     const currentLandmark = this.landmark;
     if (!currentLandmark) return;
+
 
     if (this.triviaQuestions.length === 0) {
       await this.showToast('No trivia questions available for this landmark', 'warning');
       return;
     }
 
-    this.router.navigate(['/trivia'], {
-      queryParams: { landmarkId: currentLandmark.id }
-    });
+    await this.openQuizMode();
   }
 
   onSliderChange(event: any): void {
@@ -657,6 +816,55 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
 
   onImageError(event: any): void {
     event.target.src = 'assets/img/placeholder.jpg';
+  }
+
+  trackByCuratorImageId(index: number, curatorImage: any): string {
+    return curatorImage.id;
+  }
+
+  viewCuratorImage(curatorImage: any): void {
+  }
+
+  private async loadCuratorImages(landmarkId: string): Promise<CuratorImage[]> {
+    try {
+      
+      const tipsRef = collection(db, 'crowdsourced_tips');
+      const q = query(
+        tipsRef,
+        where('landmarkId', '==', landmarkId),
+        where('type', '==', 'photo'),
+        where('status', '==', 'approved')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const curatorImages: CuratorImage[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data['imageUrl']) {
+          curatorImages.push({
+            id: doc.id,
+            imageUrl: data['imageUrl'],
+            title: data['title'] || 'Curator Photo',
+            description: data['content'],
+            submittedBy: data['submittedBy'] || 'Anonymous',
+            submittedAt: data['created_at']?.toDate() || new Date(),
+            landmarkId: data['landmarkId'],
+            status: data['status'] || 'approved',
+            likes: data['likes'] || 0,
+            tags: data['tags'] || []
+          });
+        }
+      });
+      
+      curatorImages.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+      
+      return curatorImages;
+      
+    } catch (error) {
+      console.error('❌ Error loading curator images:', error);
+      return [];
+    }
   }
 
   private async syncStamp(id: string): Promise<void> {
@@ -725,5 +933,38 @@ export class LandmarkDetailsPage implements OnInit, OnDestroy {
 
   get hasLocationData(): boolean {
     return !!(this.landmark?.latitude && this.landmark?.longitude);
+  }
+
+  async submitContent() {
+    if (!this.landmark?.id) {
+      await this.showToast('No landmark selected', 'danger');
+      return;
+    }
+
+    this.router.navigate(['/submit-content'], {
+      queryParams: { landmarkId: this.landmark.id }
+    });
+  }
+
+  async refreshLandmark(): Promise<void> {
+    const loading = await this.loadingCtrl.create({
+      message: 'Refreshing landmark data...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    try {
+      this.loading = true;
+      this.landmark = null;
+      
+      await this.loadLandmarkFromRoute();
+      
+      await this.showToast('Landmark data refreshed!', 'success');
+    } catch (error) {
+      console.error('Error refreshing landmark:', error);
+      await this.showToast('Failed to refresh landmark data', 'danger');
+    } finally {
+      await loading.dismiss();
+    }
   }
 }
