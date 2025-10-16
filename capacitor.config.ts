@@ -11,6 +11,9 @@ const config: CapacitorConfig = {
           description: 'This app requires access to your camera for scanning QR codes'
         }
       }
+    },
+     Geolocation: {
+      permissions: ['location']
     }
   }
 };
