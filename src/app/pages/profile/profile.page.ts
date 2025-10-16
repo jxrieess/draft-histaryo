@@ -111,16 +111,27 @@ export class ProfilePage implements OnInit, OnDestroy {
         {
           text: 'Logout',
           handler: async () => {
-            await this.storage.clear();
-            
-            this.router.navigate(['/login']);
-        
-            const toast = await this.toastCtrl.create({
-              message: 'Logged out successfully',
-              duration: 2000,
-              position: 'bottom'
-            });
-            await toast.present();
+            try {
+              await this.authService.signOut();
+
+              await this.storage.clear();
+              
+              const toast = await this.toastCtrl.create({
+                message: 'Logged out successfully',
+                duration: 2000,
+                position: 'bottom'
+              });
+              await toast.present();
+            } catch (error) {
+              console.error('Logout error:', error);
+              const errorToast = await this.toastCtrl.create({
+                message: 'Error during logout. Please try again.',
+                duration: 2000,
+                position: 'bottom',
+                color: 'danger'
+              });
+              await errorToast.present();
+            }
           }
         }
       ]
@@ -189,6 +200,23 @@ export class ProfilePage implements OnInit, OnDestroy {
 
   async ngOnInit() {
     await this.storage.create();
+    
+    this.subscriptions.push(
+      this.authService.currentUser$.subscribe(async (user) => {
+        if (user) {
+          await this.loadUserData();
+        }
+      })
+    );
+    
+    this.subscriptions.push(
+      this.authService.userProfile$.subscribe(async (profile) => {
+        if (profile) {
+          await this.loadUserData();
+        }
+      })
+    );
+    
     await this.loadUserData();
     await this.loadUserStats();
     await this.loadBadges();
@@ -202,24 +230,74 @@ export class ProfilePage implements OnInit, OnDestroy {
 
   private async loadUserData() {
     try {
-      const sessionData = await this.storage.get('userSession');
-      if (sessionData) {
+      const currentUser = this.authService.getCurrentUser();
+      let userProfile = this.authService.getCurrentUserProfile();
+      
+      if (currentUser) {
+        const userName = this.getUserDisplayName(currentUser, userProfile);
+        
         this.userSession = {
-          ...sessionData,
-          createdAt: sessionData.createdAt ? new Date(sessionData.createdAt) : new Date()
+          uid: currentUser.uid,
+          email: currentUser.email || (userProfile ? userProfile.email : ''),
+          name: userName,
+          photoURL: currentUser.photoURL || (userProfile ? userProfile.photoURL : undefined),
+          createdAt: userProfile && userProfile.createdAt ? 
+            new Date(userProfile.createdAt.seconds * 1000) : 
+            new Date(),
+          visitCount: 0,
+          stampsCollected: 0
         };
-      } else {
-        this.userSession = {
-          uid: 'guest_' + Date.now(),
-          email: 'nixantigua@gmail.com',
-          name: 'Heritage Explorer',
-          createdAt: new Date()
-        };
+        
         await this.storage.set('userSession', this.userSession);
+      } else {
+        const sessionData = await this.storage.get('userSession');
+        if (sessionData) {
+          this.userSession = {
+            ...sessionData,
+            createdAt: sessionData.createdAt ? new Date(sessionData.createdAt) : new Date()
+          };
+        } else {
+          this.userSession = {
+            uid: 'guest_' + Date.now(),
+            email: 'guest@histaryo.com',
+            name: 'Guest Explorer',
+            createdAt: new Date(),
+            visitCount: 0,
+            stampsCollected: 0
+          };
+          await this.storage.set('userSession', this.userSession);
+        }
       }
     } catch (error) {
       console.error('Error loading user data:', error);
+      this.userSession = {
+        uid: 'guest_' + Date.now(),
+        email: 'guest@histaryo.com',
+        name: 'Guest Explorer',
+        createdAt: new Date(),
+        visitCount: 0,
+        stampsCollected: 0
+      };
     }
+  }
+
+  private getUserDisplayName(currentUser: any, userProfile: any): string {
+
+    if (userProfile && userProfile.fullName) {
+      return userProfile.fullName;
+    }
+    
+    if (currentUser.displayName) {
+      return currentUser.displayName;
+    }
+    
+    if (currentUser.email) {
+      const emailName = currentUser.email.split('@')[0];
+      return emailName.charAt(0).toUpperCase() + 
+             emailName.slice(1).replace(/[._]/g, ' ');
+    }
+    
+    return 'Heritage Explorer';
   }
 
   private async loadUserStats() {

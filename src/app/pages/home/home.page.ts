@@ -5,12 +5,14 @@ import { Storage } from '@ionic/storage-angular';
 import { Subscription } from 'rxjs';
 import { LandmarkService, Landmark } from '../../services/landmark.service';
 import { OfflineService } from '../../services/offline.service';
+import { AuthService } from '../../services/auth.service';
 
 interface UserSession {
   uid: string;
   email: string;
   name?: string;
   photoURL?: string;
+  createdAt?: Date;
   visitCount?: number;
   stampsCollected?: number;
 }
@@ -71,7 +73,8 @@ export class HomePage implements OnInit, OnDestroy {
     private loadingCtrl: LoadingController,
     private storage: Storage,
     private landmarkService: LandmarkService,
-    private offlineService: OfflineService
+    private offlineService: OfflineService,
+    private authService: AuthService
   ) {}
 
   goToProfile() {
@@ -90,16 +93,27 @@ export class HomePage implements OnInit, OnDestroy {
         {
           text: 'Logout',
           handler: async () => {
-            await this.storage.clear();
-            
-            this.router.navigate(['/login']);
-            
-            const toast = await this.toastCtrl.create({
-              message: 'Logged out successfully',
-              duration: 2000,
-              position: 'bottom'
-            });
-            await toast.present();
+            try {
+              await this.authService.signOut();
+              
+              await this.storage.clear();
+              
+              const toast = await this.toastCtrl.create({
+                message: 'Logged out successfully',
+                duration: 2000,
+                position: 'bottom'
+              });
+              await toast.present();
+            } catch (error) {
+              console.error('Logout error:', error);
+              const errorToast = await this.toastCtrl.create({
+                message: 'Error during logout. Please try again.',
+                duration: 2000,
+                position: 'bottom',
+                color: 'danger'
+              });
+              await errorToast.present();
+            }
           }
         }
       ]
@@ -160,6 +174,23 @@ export class HomePage implements OnInit, OnDestroy {
 
   async ngOnInit() {
     await this.storage.create();
+    
+    this.subscriptions.push(
+      this.authService.currentUser$.subscribe(async (user) => {
+        if (user) {
+          await this.initializeUser();
+        }
+      })
+    );
+    
+    this.subscriptions.push(
+      this.authService.userProfile$.subscribe(async (profile) => {
+        if (profile) {
+          await this.initializeUser();
+        }
+      })
+    );
+    
     await this.initializeUser();
     await this.checkUserLocation();
     this.setupRealtimeUpdates();
@@ -176,23 +207,63 @@ export class HomePage implements OnInit, OnDestroy {
 
   private async initializeUser() {
     try {
-      const sessionData = await this.storage.get('userSession');
-      if (sessionData) {
-        this.userSession = sessionData;
+      const currentUser = this.authService.getCurrentUser();
+      let userProfile = this.authService.getCurrentUserProfile();
+      
+      if (currentUser) {
+        const userName = this.getUserDisplayName(currentUser, userProfile);
+        
+        this.userSession = {
+          uid: currentUser.uid,
+          email: currentUser.email || (userProfile ? userProfile.email : ''),
+          name: userName,
+          photoURL: currentUser.photoURL || (userProfile ? userProfile.photoURL : undefined),
+          createdAt: userProfile && userProfile.createdAt ? 
+            new Date(userProfile.createdAt.seconds * 1000) : 
+            new Date(),
+          visitCount: 0,
+          stampsCollected: 0
+        };
+        
+        await this.storage.set('userSession', this.userSession);
         await this.loadUserStats();
       } else {
-        await this.createGuestSession();
+        const sessionData = await this.storage.get('userSession');
+        if (sessionData) {
+          this.userSession = sessionData;
+          await this.loadUserStats();
+        } else {
+          await this.createGuestSession();
+        }
       }
     } catch (error) {
       console.error('Error initializing user:', error);
     }
   }
 
+  private getUserDisplayName(currentUser: any, userProfile: any): string {
+    if (userProfile && userProfile.fullName) {
+      return userProfile.fullName;
+    }
+    
+    if (currentUser.displayName) {
+      return currentUser.displayName;
+    }
+    
+    if (currentUser.email) {
+      const emailName = currentUser.email.split('@')[0];
+      return emailName.charAt(0).toUpperCase() + 
+             emailName.slice(1).replace(/[._]/g, ' ');
+    }
+    
+    return 'Heritage Explorer';
+  }
+
   private async createGuestSession() {
     const guestSession: UserSession = {
       uid: 'guest_' + Date.now(),
       email: 'guest@histaryo.app',
-      name: 'Heritage Explorer'
+      name: 'Guest Explorer'
     };
     
     this.userSession = guestSession;
